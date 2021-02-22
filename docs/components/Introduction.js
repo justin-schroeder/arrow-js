@@ -1,7 +1,7 @@
-import { t } from '/dev/index.js';
-import example from './example.js';
-import HelloWorld, { HelloWorldCode } from '../examples/HelloWorld';
-import ListExample, { ListExampleCode } from '../examples/ListExample';
+import { t } from '/dev/index.js'
+import example from './Example.js'
+import HelloWorld, { HelloWorldCode } from '../examples/HelloWorld'
+import ListExample, { ListExampleCode } from '../examples/ListExample'
 
 export default function() {
   return t`

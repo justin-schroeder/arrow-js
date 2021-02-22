@@ -1,11 +1,14 @@
 {
-  "name": "@braid/arrow",
+  "name": "@arrow-js/core",
   "version": "0.1.0-alpha.0",
   "description": "Reactivity without the framework.",
   "author": "Justin Schroeder <justin@wearebraid.com>",
   "license": "UNLICENSED",
   "main": "dist/index.min.js",
   "module": "dist/index.min.js",
+  "publishConfig": {
+    "access": "restricted"
+  },
   "directories": {
     "doc": "docs",
     "test": "test"

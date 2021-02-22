@@ -2,7 +2,7 @@ import { r, t } from '/dev/index.js'
 
 const data = r({
   clicks: 0
-});
+})
 
 export default t`
   <button @click="${() => data.clicks++}">
@@ -18,8 +18,7 @@ const data = r({
 });
 
 t\`
-  <div>Hello world</div>
   <button @click="\${() => data.clicks++}">
     Fired \${() => data.clicks} arrows
   </button>
-\``;
+\``
