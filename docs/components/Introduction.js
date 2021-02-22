@@ -11,7 +11,7 @@ export default function() {
       <p>
         ArrowJS is a tool and methodology for programming reactive interfaces
         using native JavaScript. It’s not really a framework, but not less
-        powerful than a framework either. At it’s core — ArrowJS is an admission
+        powerful than a framework either. At its core — ArrowJS is an admission
         that while we developers were falling in love with UI frameworks —
         JavaScript itself got good, really good.
       </p>
