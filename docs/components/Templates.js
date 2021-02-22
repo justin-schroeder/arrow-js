@@ -23,7 +23,7 @@ export default function () {
         <li>You can use <code>t</code> without <code>r</code> or&nbsp;<code>w</code>.</li>
         <li>You can use HTML.</li>
         <li>There is no need for root elements or fragment tags.</li>
-        <li>Templates are portable (even though we chose to mount our template to the DOM, we could have passed it around like any variable).</li>
+        <li>Templates are portable (even though we chose to mount our template to the DOM in this example, we could have passed it around like any variable).</li>
       </ul>
       <p>
         Since template literals are a native JavaScript feature, you probably

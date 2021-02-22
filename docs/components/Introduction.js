@@ -63,14 +63,14 @@ export default function() {
         >. For example, you'll immediately notice that Arrow does not have a
         special template "language" like so many other frameworks. Instead it
         relies on template literals (tick marks <code>\`</code>) — specifically
-        tagged template literals to interpolate expressions and render DOM
+        tagged template literals — to interpolate expressions and render DOM
         elements. For example:
       </p>
       ${example(ListExampleCode, ListExample)}
       <p>
         We’ll go in depth on templates in a bit, but a key concept to understand
-        here is that template literals, and tagged template literals, are a
-        native feature of JavaScript.
+        here is that template literals, and tagged template literals, are
+        <strong>native features of JavaScript</strong>.
       </p>
       <p>
         Why does this matter? Well for one it makes Arrow fast — most of the
@@ -102,9 +102,9 @@ export default function() {
       <h3>Commitment to performance</h3>
       <p>
         Arrow is <em>fast.</em> Downloading, booting, and patching are all fast.
-        In fact, you can generally expect on par or better performance for than
-        its bigger JS framework counterparts. Arrow will always be a guilt free
-        choice from a performance budget standpoint.
+        In fact, you can generally expect on-par-or-better performance than
+        its bigger JS framework counterparts. Arrow will always be a guilt-free
+        choice for those under a performance budget.
       </p>
       <h3>Commitment to Open Source</h3>
       <p>
