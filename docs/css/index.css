@@ -1,0 +1,491 @@
+:root {
+  --yellow: #ffb000;
+  --yellow-m: #ffe09c;
+  --yellow-l: #fffaee;
+  --yellow-ll: #f6f6f6;
+  --gray-l: #cecece;
+  --gray-ll: #e6e6e6;
+  --beige: #f5f2f0;
+  --dark: #565656;
+  --dark-d: #272727;
+  --green: #40b883;
+  --green-l: #e8f8f1;
+  --red-l: #fff3f6;
+  --red: #fd335e;
+  --purple: #f2efff;
+  --purple-d: #9e36ff;
+}
+
+::selection {
+  background-color: var(--yellow);
+  color: black;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+  padding: 0;
+  margin: 0;
+  line-height: 1.5;
+  font-size: 16px;
+  -webkit-font-smoothing: antialiased;
+  color: var(--dark);
+}
+
+.container {
+  max-width: 1100px;
+  padding: 0 1em;
+  margin: 0 auto;
+}
+
+.body-wrapper {
+  margin-bottom: 4em;
+}
+
+@media (min-width: 500px) {
+  .container {
+    padding: 0 2em;
+  }
+}
+
+@media (min-width: 650px) {
+  .body-wrapper {
+    display: flex;
+  }
+  .container {
+    padding: 1em;
+  }
+}
+
+ul li img {
+  display: inline-block;
+  vertical-align: middle;
+}
+
+.hero {
+  padding-top: 1em;
+  margin-bottom: 1em;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+@media (min-width: 650px) {
+  .hero {
+    padding: 2em;
+  }
+}
+
+.hero .logo {
+  display: block;
+  width: 150px;
+}
+
+.social-links {
+  display: block;
+  padding: 0;
+  margin: 0;
+}
+.social-links li,
+.social-links li img {
+  display: block;
+}
+
+.social-links img {
+  width: 1.5em;
+  opacity: .5;
+}
+
+.stage pre[class*="language-"] {
+  margin: 0;
+  font-size: .875em;
+}
+
+.stage .warning,
+.stage .error {
+  background-color: var(--yellow-l);
+  padding: 1em;
+  font-size: .875em;
+  border-bottom: 1px solid var(--gray-l);
+  align-items: center;
+  padding-left: 3.25em;
+  position: relative;
+}
+
+.stage .error {
+  background-color: var(--red-l);
+}
+
+.stage .warning img,
+.stage .error img {
+  width: 1.5em;
+  margin-right: .5em;
+  position: absolute;
+  left: 1em;
+}
+
+h1,
+h2,
+h3 {
+  margin: 0 0 1em 0;
+  color: black;
+}
+h1 {
+  font-size: 2.5em;
+  display: flex;
+  align-items: center;
+  white-space: nowrap;
+}
+h1::after {
+  content: '';
+  height: 1px;
+  width: 100%;
+  background-color: var(--gray-l);
+  margin-left: .5em;
+  position: relative;
+  top: .1em;
+}
+
+h2 {
+  font-size: 1.75em;
+  padding-left: 1em;
+}
+h3 {
+  font-size: 1.25em;
+  color: var(--dark);
+  margin: 1em 0;
+}
+
+h2::before {
+  content: '#';
+  display: inline-block;
+  width: 1em;
+  margin-left: -1em;
+  color: var(--yellow);
+}
+
+
+@media (min-width: 750px) {
+  h1,
+  h2,
+  h3 {
+    padding-left: 0;
+  }
+}
+
+article {
+  max-width: 40em;
+  margin: 0 auto;
+}
+
+section {
+  margin-bottom: 2em;
+}
+
+p.key-concept::before {
+  content: '❋ Key concept';
+  display: block;
+  padding: .25em;
+  border-radius: .33em;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: .1em;
+  font-weight: 500;
+  color: var(--yellow);
+  box-sizing: border-box;
+}
+
+@media (min-width: 650px) {
+  p.key-concept::before {
+    margin-left: -1.25em;
+  }
+  section {
+    margin-bottom: 3em;
+  }
+}
+
+.body-wrapper a {
+  color: black;
+}
+
+.body-wrapper a[href^="http"]::after {
+  content: '';
+  display: inline-block;
+  width: 1em;
+  height: 1em;
+  background-image: url(/img/linkout.svg);
+  background-size: contain;
+  margin-left: .25em;
+}
+
+.body-wrapper a[href^="http"]:hover::after {
+  filter: invert(61%) sepia(94%) saturate(464%) hue-rotate(358deg) brightness(100%) contrast(105%);
+}
+
+.body-wrapper section ul {
+  padding-left: 3em;
+  color: black;
+}
+.body-wrapper section ul li::marker {
+  color: var(--yellow);
+}
+
+.body-wrapper section .example ul li::marker {
+  color: var(--dark);
+}
+
+
+aside {
+  padding: 1em;
+  background-color: var(--green-l);
+  color: var(--dark-d);
+  font-size: .875em;
+  margin: 1em 0;
+  border-radius: .33em;
+}
+
+aside::before {
+  content: 'Tip';
+  text-transform: uppercase;
+  background-image: url(/img/lightbulb.svg);
+  background-repeat: no-repeat;
+  background-position: left center;
+  background-size: contain;
+  padding-left: 2em;
+  display: block;
+  font-size: 1em;
+  font-weight: bold;
+  margin-bottom: .75em;
+  color: var(--green);
+}
+aside[data-title]::before {
+  content: attr(data-title);
+}
+aside.info {
+  background-color: var(--purple);
+  position: relative;
+}
+aside.info::before {
+  color: var(--purple-d);
+  background-image: url(/img/info.svg);
+}
+aside.collapsed {
+  overflow: hidden;
+  max-height: 1.5em;
+  transition: max-height .25s;
+}
+aside.collapsed::after {
+  content: '';
+  display: block;
+  background-image: url(/img/right.svg);
+  background-size: contain;
+  width: 1.2em;
+  height: 1.4em;
+  right: 1em;
+  top: 1.2em;
+  position: absolute;
+  background-repeat: no-repeat;
+  transition: transform .25s;
+}
+aside[data-is-open] {
+  max-height: 40em;
+}
+aside[data-is-open]::after {
+  transform: rotate(90deg);
+}
+
+@media (min-width: 750px) {
+  aside {
+    margin: 2em 0;
+    padding: 1.5em;
+  }
+  aside.collapsed {
+    max-height: 1.3em;
+  }
+  aside[data-is-open] {
+    max-height: 25em;
+  }
+  aside.collapsed::after {
+    top: 1.6em;
+  }
+}
+
+.body-wrapper code {
+  background-color: var(--gray-ll);
+  color: var(--dark-d);
+  padding: .1em .15em;
+  font-size: .9em;
+  border-radius: .15em;
+  margin: 0 .1em;
+}
+.body-wrapper code.console {
+  background-color: transparent;
+  color: var(--green);
+}
+
+.stage {
+  border: 1px solid var(--gray-l);
+  border-radius: .33em;
+  overflow: hidden;
+  margin-bottom: 1em;
+}
+.stage .example {
+  font-size: 0.875em;
+  padding: 1em;
+  border-top: 1px solid var(--gray-l);
+}
+.stage pre {
+  margin: -1em -1em 1em -1em;
+}
+.example ul li{
+  color: var(--dark);
+}
+
+/* Navigation
+--------------------------------------------------------------------------------
+*/
+.navigation {
+  position: sticky;
+  top: 0;
+  background-color: white;
+  margin: 0 -1em 2em -1em;
+  height: 3.25em;
+  z-index: 50;
+}
+
+.navigation ul {
+  padding: 0;
+  margin: 0;
+  list-style-type: none;
+}
+
+.selection > ul > li ul {
+  padding-left: .75em;
+}
+
+.navigation li a {
+  display: none;
+  font-size: .875em;
+  margin: .5em 0;
+}
+.navigation a {
+  text-decoration: none;
+  color: var(--dark);
+  display: inline-block;
+  padding-left: 1em;
+  position: relative;
+}
+.navigation a::before {
+  content: '';
+  display: block;
+  width: 6px;
+  height: 6px;
+  border-radius: 6px;
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  background-color: transparent;
+}
+.navigation a:hover {
+  color: black;
+}
+
+.navigation a:hover::before {
+  background-color: var(--yellow);
+}
+
+.navigation li[data-selected] > a {
+  display: block;
+  pointer-events: none;
+  color: black;
+}
+.navigation li[data-selected] > a::before {
+  background-color: var(--yellow);
+}
+
+.navigation .selection {
+  cursor: pointer;
+  border: 1px solid var(--gray-l);
+  padding: 0 .5em;
+  margin: .5em 1em;
+  border-radius: .33em;
+  position: absolute;
+  width: calc(100% - 2em);
+  background-color: white;
+  box-sizing: border-box;
+}
+
+.navigation .selection[data-is-open] {
+  box-shadow: 0 0 1em rgba(0, 0, 0, .1);
+}
+
+.navigation .selection::before {
+  content: '';
+  display: block;
+  border: .25em solid transparent;
+  border-top-color: var(--gray-l);
+  position: absolute;
+  right: 1em;
+  top: 1em;
+}
+
+.navigation .selection[data-is-open] li > a {
+  display: block;
+}
+
+@media (min-width: 650px) {
+  .navigation .selection {
+    border: 0;
+    margin-top: 0;
+    position: sticky;
+    top: 2em;
+  }
+  .navigation .selection::before {
+    display: none;
+  }
+  .navigation li > a {
+    display: block;
+  }
+  .navigation {
+    width: 12em;
+    height: auto;
+    flex: 0 0 12em;
+    background-color: transparent;
+    margin-right: 1em;
+    box-sizing: border-box;
+  }
+  .navigation li ul {
+    padding-left: 1em;
+  }
+  .selection > ul > li {
+    margin-bottom: 1em;
+  }
+  .selection > ul > li > a {
+    color: black;
+    font-weight: 500;
+  }
+  .navigation .selection[data-is-open] {
+    box-shadow: none;
+  }
+}
+
+@media (min-width: 750px) {
+  .navigation .selection {
+    font-size: 1.2em;
+  }
+  .navigation {
+    width: 15em;
+    flex: 0 0 15em;
+  }
+}
+
+@media (min-width: 1100px) {
+  .navigation {
+    width: 17em;
+    flex: 0 0 17em;
+  }
+}

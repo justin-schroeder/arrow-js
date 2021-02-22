@@ -1,0 +1,61 @@
+{
+  "name": "@braid/arrow",
+  "version": "0.1.0-alpha.0",
+  "description": "Reactivity without the framework.",
+  "author": "Justin Schroeder <justin@wearebraid.com>",
+  "license": "UNLICENSED",
+  "main": "dist/index.min.js",
+  "module": "dist/index.min.js",
+  "directories": {
+    "doc": "docs",
+    "test": "test"
+  },
+  "type": "module",
+  "dependencies": {},
+  "devDependencies": {
+    "@size-limit/preset-small-lib": "^4.9.2",
+    "@snowpack/plugin-typescript": "^1.2.1",
+    "@types/jest": "^26.0.20",
+    "@typescript-eslint/eslint-plugin": "^4.14.1",
+    "@typescript-eslint/parser": "^4.14.1",
+    "eslint": "^7.19.0",
+    "eslint-config-prettier": "^7.2.0",
+    "eslint-config-standard": "^16.0.2",
+    "eslint-plugin-import": "^2.22.1",
+    "eslint-plugin-node": "^11.1.0",
+    "eslint-plugin-prettier": "^3.3.1",
+    "eslint-plugin-promise": "^4.3.1",
+    "jest": "^26.6.3",
+    "prettier": "^2.2.1",
+    "size-limit": "^4.9.2",
+    "snowpack": "^3.0.11",
+    "terser": "^5.5.1",
+    "ts-jest": "^26.5.0",
+    "typescript": "^4.1.3"
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  },
+  "size-limit": [
+    {
+      "path": "dist/index.min.js",
+      "limit": "3 KB",
+      "brotli": true
+    }
+  ],
+  "prettier": {
+    "printWidth": 80,
+    "semi": true,
+    "singleQuote": true,
+    "trailingComma": "es5",
+    "parser": "typescript"
+  },
+  "scripts": {
+    "dev": "snowpack dev",
+    "build:docs": "snowpack build",
+    "build": "tsc -b -v && node .build/terser.js && size-limit",
+    "test": "jest",
+    "size": "size-limit",
+    "minify": "node build/terser.js"
+  }
+}

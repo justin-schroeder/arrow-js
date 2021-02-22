@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="icon" href="/favicon.ico" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="FormKit examples and specimens" />
+    <link rel="stylesheet" type="text/css" href="/css/index.css" />
+    <link rel="stylesheet" type="text/css" href="fast-text.css" />
+    <link rel="stylesheet" type="text/css" href="/demos/demo-nav.css" />
+    <script src="https://unpkg.com/vue@next"></script>
+    <title>ArrowJS • Demo</title>
+  </head>
+  <body>
+    <nav id="demo-nav"></nav>
+    <div class="controls">
+      <button onClick="runVue()"><img src="/img/vue.png"></button>
+      <button onClick="runArrow()"><img src="/img/logo.png" class="arrow"></button>
+      <p>Test: 500 list items, each changing their own value on a 10ms timeout.</p>
+    </div>
+    <div id="arrow"></div>
+    <div id="vue"></div>
+    <script type="module">
+      import { t, r } from '/dev/index.js';
+      const el = document.getElementById('arrow');
+      const token = () => Math.random().toString(36).substring(2, 10);
+      const list = [];
+      for (let i = 0; i < 400; i++) {
+        list.push({name: token(), id: i });
+      }
+
+      window.runArrow = () => {
+        const data = r({
+          list
+        })
+        t`
+        <ul>
+          ${data.list.map(item => t`<li>${() => item.name}</li>`)}
+        </ul>`(el)
+
+        const go = () => {
+          data.list.forEach(item => {
+            setTimeout(() => {
+              item.name = token()
+            }, 10);
+          })
+          setTimeout(go, 10);
+        }
+        go();
+      }
+
+      window.runVue = () => {
+        Vue.createApp({
+          template: `<ul><li v-for="item in list">{{ item.name }}</li></ul>`,
+          data () {
+            return {
+              list
+            }
+          },
+          mounted () {
+            const go = () => {
+              this.list.forEach(item => {
+                setTimeout(() => {
+                  item.name = token()
+                }, 10);
+              })
+              setTimeout(go, 10);
+            }
+            go();
+          }
+        }).mount('#vue');
+      }
+    </script>
+    <script type="module" src="components/demos.js"></script>
+  </body>
+</html>

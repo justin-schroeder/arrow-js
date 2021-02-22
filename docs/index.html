@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="icon" href="/favicon.ico" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="FormKit examples and specimens" />
+    <link rel="stylesheet" type="text/css" href="/css/index.css" />
+    <link rel="stylesheet" type="text/css" href="/css/prism.css" />
+    <script src="https://unpkg.com/vue@next"></script>
+    <title>ArrowJS • Examples</title>
+  </head>
+  <body>
+    <div id="app"></div>
+    <script type="module">
+      import { t, r, w } from '/dev/index.js';
+      import store from './store';
+      import navigation from './components/Navigation';
+      import introduction from './components/Introduction';
+      import gettingStarted from './components/GettingStarted';
+      import guides from './components/Guides';
+      import events from './js/events'
+      const el = document.getElementById('app');
+
+      t`
+        <div class="container hero">
+          <a href="#">
+            <img src="/img/logo.png" class="logo">
+          </a>
+          <ul class="social-links">
+            <li>
+              <a href="https://www.github.com/arrow-js">
+                <img src="/img/github.svg">
+              </a>
+            </li>
+          </ul>
+        </div>
+        <div class="container">
+          <div class="body-wrapper">
+            ${navigation}
+            <article>
+              ${introduction}
+              ${gettingStarted}
+              ${guides}
+            </article>
+          </div>
+        </div>
+        </div>
+      `(el)
+
+      events();
+    </script>
+    <script src="/js/prism.js"></script>
+  </body>
+</html>
