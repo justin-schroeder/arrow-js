@@ -18,7 +18,6 @@ const data = r({
 });
 
 t\`
-  <div>Hello world</div>
   <button @click="\${() => data.clicks++}">
     Fired \${() => data.clicks} arrows
   </button>
