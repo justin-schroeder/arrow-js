@@ -1,11 +1,12 @@
 {
   "name": "@arrow-js/core",
-  "version": "0.1.0-alpha.0",
+  "version": "0.1.0-alpha.1",
   "description": "Reactivity without the framework.",
   "author": "Justin Schroeder <justin@wearebraid.com>",
   "license": "UNLICENSED",
   "main": "dist/index.min.js",
   "module": "dist/index.min.js",
+  "types": "dist/index.d.ts",
   "publishConfig": {
     "access": "restricted"
   },
@@ -14,7 +15,6 @@
     "test": "test"
   },
   "type": "module",
-  "dependencies": {},
   "devDependencies": {
     "@size-limit/preset-small-lib": "^4.9.2",
     "@snowpack/plugin-typescript": "^1.2.1",

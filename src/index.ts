@@ -1,11 +1,11 @@
-type DataSourceKey = string | number | symbol | null;
+export type DataSourceKey = string | number | symbol | null;
 
-interface DataSource {
+export interface DataSource {
   [index: string]: any;
   [index: number]: any;
 }
 
-interface ArrowTemplate {
+export interface ArrowTemplate {
   (parent?: ParentNode): ParentNode;
   isT: boolean;
   key: (key: ArrowTemplateKey) => void;
@@ -19,12 +19,12 @@ interface ArrowTemplate {
 
 type ArrowTemplateKey = string | number | undefined;
 
-type ArrowFragment = {
+export type ArrowFragment = {
   <T extends ParentNode>(parent: T): T;
   (): DocumentFragment;
 };
 
-interface ReactiveFunction {
+export interface ReactiveFunction {
   (el?: Node): string | ArrowTemplate;
   (ev: Event, listener: EventListenerOrEventListenerObject): void;
   $on: (observer: CallableFunction) => void;
@@ -32,10 +32,10 @@ interface ReactiveFunction {
   e: CallableFunction;
 }
 
-interface ObserverCallback {
+export interface ObserverCallback {
   (value?: any, oldValue?: any): void;
 }
-interface DependencyProps {
+export interface DependencyProps {
   $on: (p: DataSourceKey, c: ObserverCallback) => void;
   $off: (p: DataSourceKey, c: ObserverCallback) => void;
   _em: (p: DataSourceKey, newValue: any, oldValue?: any) => void;
@@ -43,11 +43,11 @@ interface DependencyProps {
   _p?: ReactiveProxyParent;
 }
 
-type ReactiveProxy = DataSource & DependencyProps;
+export type ReactiveProxy = DataSource & DependencyProps;
 
 type ReactiveProxyParent = [property: DataSourceKey, parent: ReactiveProxy];
 
-type ReactiveExpressions = Array<ReactiveFunction>;
+export type ReactiveExpressions = Array<ReactiveFunction>;
 
 type ReactiveProxyObservers = Map<DataSourceKey, Set<ObserverCallback>>;
 
@@ -58,7 +58,7 @@ type ReactiveProxyDependencyCollector = Map<
   Map<ReactiveProxy, Set<DataSourceKey>>
 >;
 
-type ParentNode = Element | DocumentFragment;
+export type ParentNode = Element | DocumentFragment;
 
 interface ReactiveProxyState {
   // o = observers
@@ -71,9 +71,9 @@ interface ReactiveProxyState {
   p?: ReactiveProxyParent;
 }
 
-type RenderGroup = ArrowTemplate | ArrowTemplate[] | Node | Node[] | string[];
+export type RenderGroup = ArrowTemplate | ArrowTemplate[] | Node | Node[] | string[];
 
-interface TemplatePartial {
+export interface TemplatePartial {
   (): DocumentFragment;
   add: (tpl: ArrowTemplate | number | string) => void;
   _up: () => void;
@@ -252,7 +252,7 @@ function createPartial(group = Symbol()): TemplatePartial {
     const subPartial = createPartial(group);
     let startChunking = 0;
     let lastNode: ChildNode = previousChunks[0].dom[0];
-    // If this is an empty update, we need to "placehold" it's spot in the dom
+    // If this is an empty update, we need to "placehold" its spot in the dom
     // with an empty placeholder chunk.
     if (!chunks.length) addPlaceholderChunk(document.createComment(''));
 
@@ -412,7 +412,7 @@ export function t(
   };
 
   // If the template contains no expressions, it is 100% static so it's key
-  // it's own content
+  // its own content
   template.isT = true;
   template._k = 0 as ArrowTemplateKey;
   template._h = () => [toString(), expressions, template._k];
