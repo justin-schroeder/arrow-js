@@ -1,11 +1,11 @@
 {
   "name": "@arrow-js/core",
-  "version": "0.1.0-alpha.1",
+  "version": "0.1.0-alpha.3",
   "description": "Reactivity without the framework.",
   "author": "Justin Schroeder <justin@wearebraid.com>",
   "license": "UNLICENSED",
-  "main": "dist/index.min.js",
-  "module": "dist/index.min.js",
+  "main": "dist/index.min.mjs",
+  "module": "dist/index.min.mjs",
   "types": "dist/index.d.ts",
   "publishConfig": {
     "access": "restricted"
@@ -41,7 +41,7 @@
   },
   "size-limit": [
     {
-      "path": "dist/index.min.js",
+      "path": "dist/index.min.mjs",
       "limit": "3 KB",
       "brotli": true
     }

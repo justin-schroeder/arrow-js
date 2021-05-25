@@ -7,7 +7,7 @@ const tsSourceMap = fileURLToPath(
   new URL('../dist/index.js.map', import.meta.url)
 );
 const outputFile = fileURLToPath(
-  new URL('../dist/index.min.js', import.meta.url)
+  new URL('../dist/index.min.mjs', import.meta.url)
 );
 
 let result = await minify(fs.readFileSync(inputFile, 'utf-8'), {
