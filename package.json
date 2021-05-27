@@ -22,14 +22,12 @@
     "@typescript-eslint/eslint-plugin": "^4.14.1",
     "@typescript-eslint/parser": "^4.14.1",
     "eslint": "^7.19.0",
-    "eslint-config-prettier": "^7.2.0",
     "eslint-config-standard": "^16.0.2",
     "eslint-plugin-import": "^2.22.1",
     "eslint-plugin-node": "^11.1.0",
-    "eslint-plugin-prettier": "^3.3.1",
     "eslint-plugin-promise": "^4.3.1",
     "jest": "^26.6.3",
-    "prettier": "^2.2.1",
+    "prettier": "^2.3.0",
     "size-limit": "^4.9.2",
     "snowpack": "^3.0.11",
     "terser": "^5.5.1",
@@ -46,13 +44,6 @@
       "brotli": true
     }
   ],
-  "prettier": {
-    "printWidth": 80,
-    "semi": true,
-    "singleQuote": true,
-    "trailingComma": "es5",
-    "parser": "typescript"
-  },
   "scripts": {
     "dev": "snowpack dev",
     "build:docs": "snowpack build",
