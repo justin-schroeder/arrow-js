@@ -5,6 +5,12 @@ export interface DataSource {
   [index: number]: any
 }
 
+export type DataSourceArray<T> = Array<unknown> & T
+
+export type ProxyDataSource<T> = {
+  [K in keyof T]: ReactiveProxy<T[K]> | T[K]
+}
+
 export interface ArrowTemplate {
   (parent?: ParentNode): ParentNode
   isT: boolean
@@ -43,9 +49,16 @@ export interface DependencyProps {
   _p?: ReactiveProxyParent
 }
 
-export type ReactiveProxy = DataSource & DependencyProps
+export type ReactiveProxy<T> = {
+  [K in keyof T]: T[K] extends DataSource ? ReactiveProxy<T[K]> : T[K]
+} &
+  DataSource &
+  DependencyProps
 
-type ReactiveProxyParent = [property: DataSourceKey, parent: ReactiveProxy]
+type ReactiveProxyParent = [
+  property: DataSourceKey,
+  parent: ReactiveProxy<DataSource>
+]
 
 export type ReactiveExpressions = Array<ReactiveFunction>
 
@@ -55,7 +68,7 @@ type ReactiveProxyPropertyObservers = Map<ObserverCallback, Set<DataSourceKey>>
 
 type ReactiveProxyDependencyCollector = Map<
   symbol,
-  Map<ReactiveProxy, Set<DataSourceKey>>
+  Map<ReactiveProxy<DataSource>, Set<DataSourceKey>>
 >
 
 export type ParentNode = Element | DocumentFragment
@@ -162,7 +175,7 @@ export function nextTick(fn?: CallableFunction): Promise<unknown> {
  * @param  {ReactiveProxy} proxy
  * @param  {DataSourceKey} property
  */
-function addDep(proxy: ReactiveProxy, property: DataSourceKey) {
+function addDep(proxy: ReactiveProxy<DataSource>, property: DataSourceKey) {
   dependencyCollector.forEach((tracker) => {
     let properties = tracker.get(proxy)
     if (!properties) {
@@ -177,7 +190,7 @@ function isTpl(template: any): template is ArrowTemplate {
   return typeof template === 'function' && !!(template as ArrowTemplate).isT
 }
 
-function isR(obj: any): obj is ReactiveProxy {
+function isR(obj: any): obj is ReactiveProxy<DataSource> {
   return typeof obj === 'object' && typeof obj.$on === 'function'
 }
 
@@ -588,13 +601,14 @@ export function w(fn: CallableFunction, after?: CallableFunction): unknown {
   if (!dependencyCollector.has(trackingId)) {
     dependencyCollector.set(trackingId, new Map())
   }
-  let currentDeps: Map<ReactiveProxy, Set<DataSourceKey>> = new Map()
+  let currentDeps: Map<ReactiveProxy<DataSource>, Set<DataSourceKey>> =
+    new Map()
   const queuedCallFn = queue(callFn)
   function callFn() {
     dependencyCollector.set(trackingId, new Map())
     const value: unknown = fn()
     const newDeps = dependencyCollector.get(trackingId) as Map<
-      ReactiveProxy,
+      ReactiveProxy<DataSource>,
       Set<DataSourceKey>
     >
     dependencyCollector.delete(trackingId)
@@ -627,9 +641,9 @@ export function w(fn: CallableFunction, after?: CallableFunction): unknown {
  * @returns ReactiveProxy
  */
 function reactiveMerge(
-  reactiveTarget: ReactiveProxy,
-  reactiveSource: ReactiveProxy
-): ReactiveProxy {
+  reactiveTarget: ReactiveProxy<DataSource>,
+  reactiveSource: ReactiveProxy<DataSource>
+): ReactiveProxy<DataSource> {
   const state = reactiveSource._st()
   if (state.o) {
     state.o.forEach((callbacks, property) => {
@@ -647,7 +661,7 @@ function reactiveMerge(
 function arrayOperation(
   op: string,
   arr: Array<unknown>,
-  proxy: ReactiveProxy,
+  proxy: ReactiveProxy<DataSource>,
   native: unknown
 ) {
   const synthetic = (...args: any[]) => {
@@ -689,10 +703,10 @@ function arrayOperation(
  * @param  {DataSource} data
  * @returns ReactiveProxy
  */
-export function r(
-  data: DataSource,
+export function r<T extends DataSource>(
+  data: T,
   state: ReactiveProxyState = {}
-): ReactiveProxy {
+): ReactiveProxy<T> {
   // If this is already reactive or a non object, just return it.
   if (isR(data) || typeof data !== 'object') return data
   // This is the observer registry itself, with properties as keys and callbacks as watchers.
@@ -702,6 +716,19 @@ export function r(
     state.op || new Map()
   // If the data is an array, we should know...but only once.
   const isArray = Array.isArray(data)
+
+  const children: string[] = []
+  const proxySource: ProxyDataSource<T> = isArray ? [] : Object.create(data, {})
+  for (const property in data) {
+    if (typeof data[property] === 'object') {
+      proxySource[property] = !isR(data[property])
+        ? r(data[property])
+        : data[property]
+      children.push(property)
+    } else {
+      proxySource[property] = data[property]
+    }
+  }
 
   // The add/remove dependency function(s)
   const dep =
@@ -740,7 +767,7 @@ export function r(
     return {
       o: observers,
       op: observerProperties,
-      r: data,
+      r: proxySource,
       p: proxy._p,
     }
   }
@@ -755,7 +782,7 @@ export function r(
   }
 
   // Create the actual proxy object itself.
-  const proxy = new Proxy(data, {
+  const proxy = new Proxy(proxySource, {
     get(...args) {
       const [, p] = args
       // For properties of the DependencyProps type, return their values from
@@ -769,7 +796,12 @@ export function r(
 
       // We have special handling of array operations to prevent O(n^2) issues.
       if (isArray && has(Array.prototype, p)) {
-        return arrayOperation(p as string, data as Array<unknown>, proxy, value)
+        return arrayOperation(
+          p as string,
+          proxySource as DataSourceArray<T>,
+          proxy,
+          value
+        )
       }
       return value
     },
@@ -819,18 +851,12 @@ export function r(
       }
       return didSet
     },
-  }) as ReactiveProxy
+  }) as ReactiveProxy<T>
 
-  // Before we return the proxy object, quickly map through the values to ensure
-  // any nested objects are reactive.
-  // Note: this is only run on the initial setup.
-  for (const property in data) {
-    if (typeof data[property] === 'object') {
-      if (!isR(data[property])) {
-        data[property] = r(data[property])
-      }
-      proxy[property]._p = [property, proxy]
-    }
-  }
+  // Before we return the proxy object, quickly map through the children
+  // and set the parents (this is only run on the initial setup).
+  children.map((c) => {
+    proxy[c]._p = [c, proxy]
+  })
   return proxy
 }
