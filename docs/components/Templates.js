@@ -37,7 +37,10 @@ export default function () {
         and <strong>reactive expressions</strong>. Reactive expressions are
         <em>callable functions</em>, everything else is a static expression.
       </p>
-      ${example(TemplateExamples.expressions.code, TemplateExamples.expressions.example)}
+      ${example(
+        TemplateExamples.expressions.code,
+        TemplateExamples.expressions.example
+      )}
       <p>
         In other words, <strong>Arrow is static by default and reactive by choice</strong>.
         This is an intentional decision that improves performance and helps
@@ -82,14 +85,18 @@ export default function () {
         Reactive expressions <strong>cannot</strong> be used to alter the types
         of DOM nodes being rendered. This is an invalid template:<br>
       </p>
-      ${example(TemplateExamples.invalid)
-        .error('Don’t use reactive expressions as <code>Element</code> types. Instead use <a href="#nested-templates">nested templates</a>.')}
+      ${example(TemplateExamples.invalid).error(
+        'Don’t use reactive expressions as <code>Element</code> types. Instead use <a href="#nested-templates">nested templates</a>.'
+      )}
       <h3>Attributes</h3>
       <p>
         Reactive expressions can be used to alter the value of attributes
         dynamically by using an expression as the attribute value.
       </p>
-      ${example(TemplateExamples.attributes.code, TemplateExamples.attributes.example)}
+      ${example(
+        TemplateExamples.attributes.code,
+        TemplateExamples.attributes.example
+      )}
       <aside class="tip">
         Returning <code>false</code> from an attribute expression will remove
         the attribute. This makes it easy to toggle attributes.
@@ -102,8 +109,6 @@ export default function () {
         expression as the event handler.
       </p>
       ${example(TemplateExamples.events.code, TemplateExamples.events.example)}
-      <h3>Nested Templates</h3>
-      <p>[TK]</p>
     </section>
   `
 }

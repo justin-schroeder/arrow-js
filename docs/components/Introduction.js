@@ -3,13 +3,13 @@ import example from './Example.js'
 import HelloWorld, { HelloWorldCode } from '../examples/HelloWorld'
 import ListExample, { ListExampleCode } from '../examples/ListExample'
 
-export default function() {
+export default function () {
   return t`
     <h1 id="intro">Introduction</h1>
     <h2 id="what-is-arrow">What is Arrow?</h2>
     <section>
       <p>
-        ArrowJS is a tool and methodology for programming reactive interfaces
+        ArrowJS is an experimental tool for programming reactive interfaces
         using native JavaScript. It’s not really a framework, but not less
         powerful than a framework either. At its core — ArrowJS is an admission
         that while we developers were falling in love with UI frameworks —
@@ -108,14 +108,10 @@ export default function() {
       </p>
       <h3>Commitment to Open Source</h3>
       <p>
-        Arrow is built by a team of passionate engineers who love JavaScript and
-        the Open Source community that has made it such a successful language.
-        Arrow will always be Open Source.
+        Arrow was created by me, <a href="https://twitter.com/jpschroeder">Justin Schroeder</a>.
+        It is Open Source. It will always be Open Source. My hope is this
+        project helps reframe developer’s expectations of "native" JavaScript.
       </p>
     </section>
-    <h2 id="why-not">Why not...</h2>
-    <section>
-      <p>[TK]</p>
-    </section>
-  `;
+  `
 }

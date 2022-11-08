@@ -10,8 +10,7 @@ const store = r({
       children: [
         { title: 'What is Arrow?', id: 'what-is-arrow' },
         { title: 'Key Commitments', id: 'key-commitments' },
-        { title: 'Why not...', id: 'why-not' }
-      ]
+      ],
     },
     {
       title: 'Getting Started',
@@ -20,20 +19,14 @@ const store = r({
         { title: 'Installation', id: 'installation' },
         { title: 'Reactive data (r)', id: 'reactive-data' },
         { title: 'Watching data (w)', id: 'watching-data' },
-        { title: 'Templates (t)', id: 'templates' }
-      ]
+        { title: 'Templates (t)', id: 'templates' },
+      ],
     },
     {
-      title: 'Guides',
-      id: 'guides',
-      children: [
-        { title: 'Components', id: 'components' },
-        { title: 'State management', id: 'state-management' },
-        { title: 'Routing', id: 'routing' },
-        { title: 'SSR', id: 'server-side-rendering' }
-      ]
-    }
-  ]
+      title: 'Examples',
+      id: 'examples',
+    },
+  ],
 })
 
 // Always set the store section to the first navigation item.

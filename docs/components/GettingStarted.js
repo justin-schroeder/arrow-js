@@ -4,6 +4,7 @@ import reactiveData from './ReactiveData'
 import watchingData from './WatchingData'
 import templates from './Templates'
 import InstallationExamples from '../examples/InstallationExamples'
+import examples from './Examples'
 
 export default function () {
   return t`
@@ -43,5 +44,6 @@ export default function () {
     ${reactiveData}
     ${watchingData}
     ${templates}
+    ${examples}
   `
 }

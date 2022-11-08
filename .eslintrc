@@ -8,6 +8,7 @@
   ],
   "rules": {
     "@typescript-eslint/no-explicit-any": "off",
+    "comma-dangle": "off",
     "@typescript-eslint/no-non-null-assertion": "off"
   },
   "ignorePatterns": ["dist/"],
