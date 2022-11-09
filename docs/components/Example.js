@@ -17,10 +17,10 @@ export default function (example, component, language = 'javascript') {
   <div class="stage">
     ${() =>
       data.warning &&
-      t`<div class="warning"><img src="/img/warning.svg" role="presentation">${data.warning}</div>`}
+      t`<div class="warning"><img src="/img/warning.svg" alt="warning" role="presentation">${data.warning}</div>`}
     ${() =>
       data.error &&
-      t`<div class="error"><img src="/img/stop.svg" role="presentation">${data.error}</div>`}
+      t`<div class="error"><img src="/img/stop.svg" alt="stop" role="presentation">${data.error}</div>`}
     <pre><code class="language-${language}">${htmlEntities(
     example
   )}</code></pre>

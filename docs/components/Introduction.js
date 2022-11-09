@@ -37,7 +37,7 @@ export default function () {
         <li>No build tools required (or even suggested).</li>
         <li>
           Less than <code>3KB</code> min+gzip. (22x smaller than this itty bitty gif →
-          <img src="/img/mind-blown.gif" />)
+          <img src="/img/mind-blown.gif" alt="gif of mind blown individual">)
         </li>
       </ul>
       <p>Got time for a quick example? Great.</p>
