@@ -30,7 +30,7 @@ export default function() {
       </p>
       ${example(ReactiveDataExamples.on.code, ReactiveDataExamples.on.example)}
       <p>
-        Ok, that's a bit more interesting! Using this information, lets try to
+        Ok, that's a bit more interesting! Using this information, let’s try to
         make a total cost calculator for a shopping cart. We’ll need to observe
         both the <code>quantity</code> and the <code>price</code>, and perhaps
         we should add a flag to know if we need to log the value or not — we'll

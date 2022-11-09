@@ -15,10 +15,6 @@ export default function () {
         Arrow can be used with simple <code>&lt;script&gt;</code>
         tags or from <code>npm</code>/<code>yarn</code> with a bundler.
       </p>
-      <aside class="tip">
-        Starting a new project? Consider using <code>create-arrow-app</code>
-        to jump start it. <a href="#create-arrow-app">Read more about it</a>.
-      </aside>
       <h3>From npm or yarn (using a bundler)</h3>
       <p>
         Even though Arrow does not require any build tools, it is often
