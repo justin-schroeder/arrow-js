@@ -1,6 +1,6 @@
-import { t, r } from '/dist/index.js'
+import { t, r } from '/dev/index.js'
 
-function htmlEntities (str) {
+function htmlEntities(str) {
   return String(str)
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
@@ -11,7 +11,7 @@ function htmlEntities (str) {
 export default function (example, component, language = 'javascript') {
   const data = r({
     warning: false,
-    error: false
+    error: false,
   })
   const template = t`
   <div class="stage">
@@ -27,12 +27,12 @@ export default function (example, component, language = 'javascript') {
     ${() => !!component && t`<div class="example">${component}</div>`}
   </div>`
 
-  template.warning = message => {
+  template.warning = (message) => {
     data.warning = message
     return template
   }
 
-  template.error = message => {
+  template.error = (message) => {
     data.error = message
     return template
   }

@@ -1,4 +1,4 @@
-import { t, r } from '../dist/index.js'
+import { t, r } from '../dev/index.js'
 
 export default function () {
   const token = () => Math.random().toString(36).substring(2, 5)
