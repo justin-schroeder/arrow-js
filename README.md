@@ -9,7 +9,8 @@
 
 - The smallest (probably) reactive JavaScript library.
 - Static by default, reactive by choice.
-- Ultra fast DOM manipulation.
+- No Virtual DOM
+- Ultra fast.
 - Zero dependencies.
 - No build tools required (or even suggested).
 
