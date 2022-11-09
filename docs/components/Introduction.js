@@ -16,7 +16,7 @@ export default function () {
         JavaScript itself got good, really good.
       </p>
       <p>
-        If JavaScript is so good, then what does a tool like arrow bring to the
+        If JavaScript is so good, then what does a tool like Arrow bring to the
         table? So glad you asked. Arrow has 2 primary features:
       </p>
       <ul>
@@ -28,7 +28,7 @@ export default function () {
         because this site serves as documentation for Arrow's utilities but also
         as an opinionated guide to implementing components, events, routes,
         plugins, state management, server side rendering, and nearly everything
-        else required ot build apps using Arrow and modern <em>native</em>
+        else required to build apps using Arrow and modern <em>native</em>
         JavaScript.
       </p>
       <p>Additionally, Arrow boasts a few more important talking points:</p>
@@ -74,7 +74,7 @@ export default function () {
       </p>
       <p>
         Why does this matter? Well for one it makes Arrow fast — most of the
-        parsing is done using language-level features. More importantly
+        parsing is done using language-level features. More importantly,
         however, learning Arrow is mostly learning how to use modern native
         JavaScript to create UI systems, so the concepts here are portable.
       </p>
