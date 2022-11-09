@@ -2,3 +2,6 @@
 test/
 public/
 docs/
+.vscode
+.github
+.build
