@@ -21,7 +21,7 @@ export default function () {
     <h3>Dropdown</h3>
     <p>A simple synthetic (not a native select element) dropdown list component written with Arrow. Demonstrates how reusability.</p>
     <ul>
-      <li><a href="/demos/dropdown.html">Demo</a></li>
+      <li><a href="/demos/dropdowns.html">Demo</a></li>
       <li><a href="https://github.com/justin-schroeder/arrow-js/blob/master/docs/demos/components/dropdowns.js">Source code</a></li>
     </ul>
 

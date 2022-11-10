@@ -24,12 +24,10 @@ export default function () {
         <li>Declarative/Reactive DOM rendering.</li>
       </ul>
       <p>
-        How can you build a full app with such a short feature list? Read on
-        because this site serves as documentation for Arrow's utilities but also
-        as an opinionated guide to implementing components, events, routes,
-        plugins, state management, server side rendering, and nearly everything
-        else required ot build apps using Arrow and modern <em>native</em>
-        JavaScript.
+        For many applications, these two features are all you need to build
+        delightful and complex user interfaces. Need state management? Use the
+        module scope. Need components? Use functions. Need routing? The web
+        platform already does this pretty well 😉.
       </p>
       <p>Additionally, Arrow boasts a few more important talking points:</p>
       <ul>
