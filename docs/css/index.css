@@ -85,18 +85,29 @@ ul li img {
 }
 
 .social-links {
-  display: block;
+  display: flex;
   padding: 0;
   margin: 0;
+  align-items: center;
+}
+.social-links li {
+  margin-left: 1em;
+  line-height: 0;
+}
+.social-links li a {
+  color: var(--gray);
+}
+.social-links li a:hover {
+  color: var(--dark-d);
 }
 .social-links li,
-.social-links li img {
+.social-links li svg {
   display: block;
 }
 
-.social-links img {
+.social-links svg {
   width: 1.5em;
-  opacity: .5;
+  height: 1.5em;
 }
 
 .stage pre[class*="language-"] {
