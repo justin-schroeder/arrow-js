@@ -12,14 +12,14 @@ export default function () {
       <li><a href="https://github.com/justin-schroeder/arrow-js/blob/master/docs/demos/components/calculator.js">Source code</a></li>
     </ul>
     <h3>Performance</h3>
-    <p>A performance demonstration (Vue vs Arrow) of a updating 500 nodes reactively.</p>
+    <p>A performance demonstration (Vue vs Arrow) with 500 nodes changing reactively.</p>
     <ul>
       <li><a href="/demos/fast-text.html">Demo</a></li>
       <li><a href="https://github.com/justin-schroeder/arrow-js/blob/master/docs/demos/fast-text.html">Source code</a></li>
     </ul>
 
     <h3>Dropdown</h3>
-    <p>A simple synthetic (not a native select element) dropdown list component written with Arrow. Demonstrates how reusability.</p>
+    <p>A simple synthetic (not a native select element) dropdown list component written with Arrow. Demonstrates Arrow’s ability to reuse code via components.</p>
     <ul>
       <li><a href="/demos/dropdowns.html">Demo</a></li>
       <li><a href="https://github.com/justin-schroeder/arrow-js/blob/master/docs/demos/components/dropdowns.js">Source code</a></li>
