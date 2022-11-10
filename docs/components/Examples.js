@@ -3,7 +3,7 @@ import { t } from '/dev/index.js'
 export default function () {
   return t`<section>
     <h1 id="examples">Examples</h1>
-    <p>To spice up your imagination of what Arrow can do checkout the following basic examples.</p>
+    <p>To spice up your imagination of what Arrow can do, check out the following basic examples.</p>
 
     <h3>Calculator</h3>
     <p>A simple point and click calculator.</p>

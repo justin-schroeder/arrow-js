@@ -11,7 +11,7 @@ export default function () {
       <p>
         Arrow uses a <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Template_literals">tagged template literal</a>
         to declaratively render content. To tag a template literal as an
-        <code>ArrowTemplate</code> prefix the tick marks with the
+        <code>ArrowTemplate</code>, prefix the tick marks with the
         <code>t</code> function. To mount a template to the DOM, you call the
         return value with an <code>Element</code> as the argument.
       </p>
@@ -63,7 +63,7 @@ export default function () {
           need to be "reactive". Let’s say we're building a product page — just
           because we fetched the product’s data from the back end does not mean
           the page elements need to be reactive. They should be injected into
-          the DOM only once on initial page load. In fact most of the page
+          the DOM only once on initial page load. In fact, most of the page
           probably shouldn't be reactive.
         </p>
         <p>
@@ -86,7 +86,7 @@ export default function () {
         of DOM nodes being rendered. This is an invalid template:<br>
       </p>
       ${example(TemplateExamples.invalid).error(
-        'Don’t use reactive expressions as <code>Element</code> types. Instead use <a href="#nested-templates">nested templates</a>.'
+        'Don’t use reactive expressions as <code>Element</code> types. Instead use nested templates.'
       )}
       <h3>Attributes</h3>
       <p>
