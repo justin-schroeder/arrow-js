@@ -192,6 +192,18 @@ article {
   margin: 0 auto;
 }
 
+@media (min-width: 650px) {
+  article {
+    width: calc(100% - 15em);
+  }
+}
+
+@media (min-width: 750px) {
+  article {
+    width: calc(100% - 17em);
+  }
+}
+
 section {
   margin-bottom: 2em;
 }
