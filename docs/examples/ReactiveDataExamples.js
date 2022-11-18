@@ -53,7 +53,7 @@ function total () {
 data.$on('price', total)
 data.$on('quantity', total)
 data.$on('logTotal', total)
-console.log(total())
+total()
 data.price = 35
 `,
     example:
@@ -90,7 +90,7 @@ const data = r({
 })
 
 w(
-  () => data.total && data.price * data.quantity,
+  () => data.logTotal && data.price * data.quantity,
   (total) => total !== false && console.log(\`Total: \${total}\`)
 )
 
