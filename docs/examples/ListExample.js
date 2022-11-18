@@ -11,7 +11,7 @@ export default t`
 `
 
 export const ListExampleCode = `\
-const third = 'third';
+const third = 'Third';
 
 export default t\`
   <ul>
