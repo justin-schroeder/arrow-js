@@ -191,7 +191,9 @@ function isTpl(template: any): template is ArrowTemplate {
 }
 
 function isR(obj: any): obj is ReactiveProxy<DataSource> {
-  return typeof obj === 'object' && typeof obj.$on === 'function'
+  return (
+    typeof obj === 'object' && obj !== null && typeof obj.$on === 'function'
+  )
 }
 
 function has(obj: DataSource, property: DataSourceKey) {
@@ -720,13 +722,13 @@ export function r<T extends DataSource>(
   const children: string[] = []
   const proxySource: ProxyDataSource<T> = isArray ? [] : Object.create(data, {})
   for (const property in data) {
-    if (typeof data[property] === 'object') {
-      proxySource[property] = !isR(data[property])
-        ? r(data[property])
-        : data[property]
+    const entry = data[property]
+    
+    if (typeof entry === 'object' && entry !== null) {
+      proxySource[property] = !isR(entry) ? r(entry) : entry
       children.push(property)
     } else {
-      proxySource[property] = data[property]
+      proxySource[property] = entry
     }
   }
 
