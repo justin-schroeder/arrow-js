@@ -1,37 +1,10 @@
-import { t, r, nextTick, w } from '../src'
+import { t, r, nextTick } from '../src'
 import { setValue } from './utils/events'
 
 interface User {
   name: string
   id: number
 }
-
-describe('nextTick', () => {
-  it('executes callback tick when nothing needs to be done', () => {
-    const callback = jest.fn()
-    nextTick(callback)
-    expect(callback.mock.calls.length).toBe(1)
-  })
-
-  it('returns a promise when nothing needs to be done', () => {
-    expect(nextTick()).toBeInstanceOf(Promise)
-  })
-
-  it('squashes watcher events to a single call', () => {
-    const data = r({
-      l: 100,
-    })
-    const watchCallback = jest.fn()
-    const onCallback = jest.fn()
-    data.$on('l', onCallback)
-    w(() => data.l, watchCallback)
-    for (let i = 0; i < 100; i++) {
-      data.l--
-    }
-    expect(onCallback.mock.calls.length).toBe(100)
-    nextTick(() => expect(watchCallback.mock.calls.length).toBe(2))
-  })
-})
 
 describe('t', () => {
   it('can render simple strings', () => {
