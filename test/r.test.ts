@@ -14,13 +14,6 @@ describe('r', () => {
     expect(reactive.x).toBe('foo')
   })
 
-  it('allows setting properties', () => {
-    const reactive = r({})
-    expect(reactive.x).toBe(undefined)
-    reactive.x = 'foo'
-    expect(reactive.x).toBe('foo')
-  })
-
   it('can record dependencies', async () => {
     const reactive = r({
       a: 'foo',
