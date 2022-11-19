@@ -42,7 +42,7 @@ describe('w', () => {
     w(callback)
 
     await nextTick()
-    expect(inner).toHaveBeenCalledTimes(0) // while value is null, inner should not be called
+    expect(inner).toHaveBeenCalledTimes(0) // if value is null, inner should not be called
 
     d.value = 10
     await nextTick()
