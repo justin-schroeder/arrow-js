@@ -190,7 +190,7 @@ function isTpl(template: any): template is ArrowTemplate {
   return typeof template === 'function' && !!(template as ArrowTemplate).isT
 }
 
-function isR(obj: any): obj is ReactiveProxy<DataSource> {
+function isR<T = DataSource>(obj: any): obj is ReactiveProxy<T> {
   return (
     typeof obj === 'object' && obj !== null && typeof obj.$on === 'function'
   )
@@ -723,7 +723,7 @@ export function r<T extends DataSource>(
   const proxySource: ProxyDataSource<T> = isArray ? [] : Object.create(data, {})
   for (const property in data) {
     const entry = data[property]
-    
+
     if (typeof entry === 'object' && entry !== null) {
       proxySource[property] = !isR(entry) ? r(entry) : entry
       children.push(property)
@@ -815,12 +815,13 @@ export function r<T extends DataSource>(
         return Reflect.set(depProps, property, value)
       }
 
-      if (value && typeof value === 'object' && isR(old)) {
+      if (value && isR<T>(old)) {
+        const o: ReactiveProxy<T> = old
         // We're assigning an object (array or pojo probably), so we want to be
         // reactive, but if we already have a reactive object in this
         // property, then we need to replace it and transfer the state of deps.
-        const oldState = old._st()
-        const newR = isR(value) ? reactiveMerge(value, old) : r(value, oldState)
+        const oldState = o._st()
+        const newR = isR(value) ? reactiveMerge(value, o) : r(value, oldState)
         Reflect.set(
           target,
           property,
@@ -835,7 +836,7 @@ export function r<T extends DataSource>(
           const oldValue = Reflect.get(old, property!)
           const newValue = Reflect.get(newR, property!)
           if (oldValue !== newValue) {
-            old._em(property, newValue, oldValue)
+            o._em(property, newValue, oldValue)
           }
         })
         return true
