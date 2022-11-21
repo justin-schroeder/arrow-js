@@ -93,9 +93,24 @@ export type RenderGroup =
 
 export interface TemplatePartial {
   (): DocumentFragment
+  /**
+   * Adds a template or string to the partials chunks.
+   * @param tpl - A template or string to render.
+   * @returns
+   */
   add: (tpl: ArrowTemplate | number | string) => void
+  /**
+   * Update the partial.
+   */
   _up: () => void
+  /**
+   * Length — the number of html elements.
+   */
   l: number
+  /**
+   * Returns partial chunks of a render group.
+   * @returns
+   */
   ch: () => PartialChunk[]
 }
 
@@ -111,8 +126,9 @@ type PartialChunk = {
  * The delimiter that describes where expressions are located.
  */
 const delimiter = '➳❍'
-const delimiterCapture = /(➳❍)/
+const bookend = '❍⇚'
 const delimiterComment = `<!--${delimiter}-->`
+const bookendComment = `<!--${bookend}-->`
 
 /**
  * A "global" dependency tracker object.
@@ -125,6 +141,17 @@ const dependencyCollector: ReactiveProxyDependencyCollector = new Map()
 const queueStack: Set<CallableFunction> = new Set()
 const nextTicks: Set<CallableFunction> = new Set()
 let consumingQueue = false
+
+/**
+ * Given a string, sanitize for inclusion in html.
+ * @param str - A string to sanitize.
+ * @returns
+ */
+const sanitize = (str: string) => {
+  return str === '<!---->'
+    ? str
+    : str.replace(/[<>]/g, (m) => (m === '>' ? '&gt;' : '&lt;'))
+}
 
 /**
  * Queue an item to execute after all synchronous functions have been run. This
@@ -245,9 +272,9 @@ function createPartial(group = Symbol()): TemplatePartial {
     let key: ArrowTemplateKey
     isTpl(tpl)
       ? ([template, localExpressions, key] = tpl._h())
-      : (tpl = String(tpl))
+      : (template = sanitize(String(tpl)))
     html += template
-    html += delimiterComment
+    html += bookendComment
     const keyedChunk = key && keyedChunks.get(key)
     const chunk = keyedChunk || {
       html: template as string,
@@ -256,13 +283,13 @@ function createPartial(group = Symbol()): TemplatePartial {
       tpl,
       key,
     }
-    chunks.push(chunk)
+    chunks.push(chunk as PartialChunk)
     if (key) {
       // Since this is a keyed chunk, we need to either add it to the
       // keyedChunks map, or we need to update the expressions in that chunk.
       keyedChunk
         ? keyedChunk.exp.forEach((exp, i) => exp._up(localExpressions[i].e))
-        : keyedChunks.set(key, chunk)
+        : keyedChunks.set(key, chunk as PartialChunk)
     }
     localExpressions.forEach((callback) => expressions.push(callback))
     partial.l++
@@ -352,7 +379,7 @@ function createPartial(group = Symbol()): TemplatePartial {
     let chunkIndex = 0
     const toRemove: ChildNode[] = []
     frag.childNodes.forEach((node) => {
-      if (node.nodeType === 8 && (node as Comment).data === delimiter) {
+      if (node.nodeType === 8 && (node as Comment).data === bookend) {
         chunkIndex++
         // Remove the comment
         toRemove.push(node as ChildNode)
@@ -405,7 +432,7 @@ export function t(
           },
         })
       )
-      return html + delimiter
+      return html + delimiterComment
     }
     if (Array.isArray(expression)) {
       return expression.reduce((html, exp) => addExpressions(exp, html), html)
@@ -424,7 +451,6 @@ export function t(
     }
     return str
   }
-
   const template: ArrowTemplate = (el?: ParentNode) => {
     const dom = createNodes(toString())
     const frag = fragment(dom, expressions)
@@ -455,12 +481,12 @@ function fragment(
   const frag = document.createDocumentFragment()
   let node: Node | undefined | null
   while ((node = dom.item(0))) {
-    // Bind text nodes to reactive data.
-    if (node.nodeType === 3 && node.nodeValue!.length >= 2) {
-      frag.append(text(node, expressions))
+    // Delimiters in the body are found inside comments.
+    if (node.nodeType === 8 && node.nodeValue === delimiter) {
+      // We are dealing with a reactive node.
+      frag.append(comment(node, expressions))
       continue
     }
-
     // Bind attributes, add events, and push onto the fragment.
     if (node instanceof Element) attrs(node, expressions)
     if (node.hasChildNodes()) {
@@ -495,7 +521,7 @@ function attrs(node: Element, expressions: ReactiveExpressions): void {
   }
   attrs.forEach((attr) => {
     const attrName = attr.name
-    if (attr.value.indexOf(delimiter) !== -1) {
+    if (attr.value.indexOf(delimiterComment) !== -1) {
       const expression = expressions.shift() as unknown
       if (attrName.charAt(0) === '@') {
         node.addEventListener(attrName.substr(1), expression as EventListener)
@@ -519,43 +545,35 @@ function attrs(node: Element, expressions: ReactiveExpressions): void {
  * @param  {ReactiveExpressions} tokens
  * @returns DocumentFragment
  */
-function text(node: Node, expressions: ReactiveExpressions): DocumentFragment {
+function comment(
+  node: Node,
+  expressions: ReactiveExpressions
+): DocumentFragment {
   const frag = document.createDocumentFragment()
-  if (node.nodeValue!.indexOf(delimiter) === -1) {
-    // In this case we really are dealing with a textNode.
-    frag.appendChild(node)
-    return frag
-  }
-  const segments = node.nodeValue!.split(delimiterCapture).filter(Boolean)
+  // const segments = node.nodeValue!.split(delimiterCapture).filter(Boolean)
   // in this case, we're going to throw the value away because we are creating
   // new nodes, so we remove it from any parent tree.
   ;(node as ChildNode).remove()
   const partial = createPartial()
-  segments.forEach(function eachSegment(txt) {
-    if (txt !== delimiter) {
-      // this is a simple text node.
-      return partial.add(txt)
+  // At this point, we know we're dealing with some kind of reactive token fn
+  const expression = expressions.shift()
+  if (expression && isTpl(expression.e)) {
+    // If the expression is an t`` (ArrowTemplate), then call it with data
+    // and then call the ArrowTemplate with no parent, so we get the nodes.
+    partial.add(expression.e)
+  } else {
+    if (partial.l) {
+      frag.appendChild(partial())
     }
-    // At this point, we know we're dealing with some kind of reactive token fn
-    const expression = expressions.shift()
-    if (expression && isTpl(expression.e)) {
-      // If the expression is an t`` (ArrowTemplate), then call it with data
-      // and then call the ArrowTemplate with no parent, so we get the nodes.
-      // n = (arrow as ArrowTemplate)(data)();
-      partial.add(expression.e)
-    } else {
-      if (partial.l) {
-        frag.appendChild(partial())
-      }
-      let n: Text | TemplatePartial = document.createTextNode(txt)
-      // in this case we have an expression inline as a text node, so we
-      // need to reactively bind it here.
-      n = w(expression!, (value: any) => setNode(n, value)) as
-        | Text
-        | TemplatePartial
-      frag.appendChild(n instanceof Node ? n : n())
-    }
-  })
+
+    let n: Text | TemplatePartial = document.createTextNode('')
+    // in this case we have an expression inline as a text node, so we
+    // need to reactively bind it here.
+    n = w(expression!, (value: any) => setNode(n, value)) as
+      | Text
+      | TemplatePartial
+    frag.appendChild(n instanceof Node ? n : n())
+  }
   if (partial.l) {
     frag.appendChild(partial())
   }
@@ -573,7 +591,6 @@ function setNode(
   n: Text | TemplatePartial,
   value: unknown
 ): Node | TemplatePartial {
-  // if (isRenderGroup(value) || !(n instanceof Text) || !value) {
   // If we need to render a template partial, or we need to render a render group (no partial yet)
   if (!Array.isArray(value)) {
     return setNode(n, [value] as RenderGroup)
@@ -583,12 +600,6 @@ function setNode(
   value.forEach((item: string | number | ArrowTemplate) => partial.add(item))
   if (isUpdate) partial._up()
   return partial
-  // }
-
-  // // In this case, we are doing a direct textual replacement.
-  // const strVal = String(value);
-  // if (strVal !== n.nodeValue) n.nodeValue = strVal;
-  // return n;
 }
 
 /**

@@ -1,4 +1,4 @@
-import { t, r, nextTick } from '../src'
+import { t, r, nextTick, ArrowTemplate } from '../src'
 import { setValue } from './utils/events'
 
 interface User {
@@ -195,7 +195,7 @@ describe('t', () => {
     const data = r({ list: ['a', 'b', 'c'] as string[] })
     const parent = document.createElement('div')
     function list(items: any[]): Array<CallableFunction> {
-      const els = []
+      const els: ArrowTemplate[] = []
       for (const i in items) {
         els.push(t`<li>${items[i]}</li>`)
       }
@@ -223,7 +223,7 @@ describe('t', () => {
     })
     const parent = document.createElement('div')
     function list(items: any): Array<CallableFunction> {
-      const els = []
+      const els: ArrowTemplate[] = []
       for (const i in items) {
         els.push(t`<li>${i}: ${items[i]}</li>`)
       }
@@ -517,5 +517,42 @@ describe('t', () => {
         <option value="c" selected="${() => 'c' === data.selected}">C</option>
       </select>`(parent)
     expect(parent.querySelector('select')?.value).toBe('b')
+  })
+
+  it('can create a table with dynamic columns and rows', () => {
+    const parent = document.createElement('div')
+    const rows = [
+      ['Detroit', 'MI'],
+      ['Boston', 'MA'],
+    ]
+    t`<table>
+      <tbody>
+        ${rows.map(
+          (row) => t`<tr>${row.map((column) => t`<td>${column}</td>`)}</tr>`
+        )}
+      </tbody>
+    </table>`(parent)
+    expect(parent.innerHTML).toBe(`<table>
+      <tbody>
+        <tr><td>Detroit</td><td>MI</td></tr><tr><td>Boston</td><td>MA</td></tr>
+      </tbody>
+    </table>`)
+  })
+
+  it('renders sanitized HTML when reading from a variable.', () => {
+    const data = r({
+      foo: '<h1>Hello world</h1>'
+    })
+    expect(t`<div>${() => data.foo}</div>`().querySelector('h1')).toBe(null)
+  })
+  it('renders sanitized HTML when updating from a variable.', async () => {
+    const data = r({
+      html: 'foo'
+    })
+    const stage = document.createElement('div')
+    t`<div>${() => data.html}</div>`(stage)
+    data.html = '<h1>Some text</h1>'
+    await nextTick()
+    expect(stage.querySelector('h1')).toBe(null)
   })
 })
