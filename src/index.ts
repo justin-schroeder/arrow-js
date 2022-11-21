@@ -875,6 +875,6 @@ export function r<T extends DataSource>(
   return proxy
 }
 
-export const template = t
+export const html = t
 export const reactive = r
 export const watch = w
