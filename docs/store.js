@@ -17,14 +17,18 @@ const store = r({
       id: 'getting-started',
       children: [
         { title: 'Installation', id: 'installation' },
-        { title: 'Reactive data (r)', id: 'reactive-data' },
-        { title: 'Watching data (w)', id: 'watching-data' },
-        { title: 'Templates (t)', id: 'templates' },
+        { title: 'Reactive (r)', id: 'reactive-data' },
+        { title: 'Watch (w)', id: 'watching-data' },
+        { title: 'HTML (t)', id: 'templates' },
       ],
     },
     {
       title: 'Examples',
       id: 'examples',
+    },
+    {
+      title: 'Changelog',
+      id: 'changelog',
     },
   ],
 })

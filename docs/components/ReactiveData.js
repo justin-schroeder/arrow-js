@@ -1,16 +1,17 @@
-import { t } from '/dev/index.js';
-import example from './Example';
-import ReactiveDataExamples from '../examples/ReactiveDataExamples';
+import { t } from '/dev/index.js'
+import example from './Example'
+import ReactiveDataExamples from '../examples/ReactiveDataExamples'
 
-export default function() {
+export default function () {
   return t`
     <h2 id="reactive-data">Reactive Data <code>r</code></h2>
     <section>
       <p>
-        The <code>r</code> function's duty is to transform a generic data
-        object into an "observed" data object. Let’s call these "reactive" data
-        objects. Converting your data object into a reactive object is as simple
-        as wrapping it in an call to <code>r()</code>:
+        The <code>reactive</code> function (<code>r</code> for shorthand)
+        transforms a generic data object into an "observed" data object.
+        Let’s call these "reactive" data objects. Converting your data object
+        into a reactive object is as simple as wrapping it in an call to
+        <code>reactive()</code>:
       </p>
       ${example(
         ReactiveDataExamples.intro.code,
@@ -26,7 +27,9 @@ export default function() {
         Simple enough, but that wasn’t very useful. However, we can now
         "observe" properties of our <code>data</code> object. Reactive data
         objects have an <code>$on</code> and <code>$off</code> methods that
-        allow us to observe mutations to their properties.
+        allow us to observe mutations to their properties. As the names imply
+        <code>$on</code> adds a function to be called when the given property
+        changes, and <code>$off</code> removes that callback.
       </p>
       ${example(ReactiveDataExamples.on.code, ReactiveDataExamples.on.example)}
       <p>
@@ -55,5 +58,5 @@ export default function() {
         <code>w</code>.
       </p>
     </section>
-  `;
+  `
 }

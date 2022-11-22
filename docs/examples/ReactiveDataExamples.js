@@ -1,10 +1,10 @@
-import { r, t } from '/dev/index.js';
+import { r, t } from '/dev/index.js'
 
 export default {
   intro: {
-    code: `import { r } from '@arrow-js/core'
+    code: `import { reactive } from '@arrow-js/core'
 
-const data = r({
+const data = reactive({
   price: 25,
   quantity: 10
 })
@@ -14,15 +14,15 @@ console.log(data.price);`,
       const data = r({
         price: 25,
         quantity: 10,
-      });
-      return t`<code class="console">// outputs ${data.price}</code>`;
+      })
+      return t`<code class="console">// outputs ${data.price}</code>`
     },
   },
 
   on: {
-    code: `import { r } from '@arrow-js/core'
+    code: `import { reactive } from '@arrow-js/core'
 
-const data = r({
+const data = reactive({
   price: 25,
   quantity: 10
 })
@@ -36,9 +36,9 @@ data.price = 35
     example: '<code class="console">// outputs \'Price changed to 35\' </code>',
   },
   calculator: {
-    code: `import { r } from '@arrow-js/core'
+    code: `import { reactive } from '@arrow-js/core'
 
-const data = r({
+const data = reactive({
   price: 25,
   quantity: 10,
   logTotal: true
@@ -60,9 +60,9 @@ data.price = 35
       "<code class=\"console\">// outputs:<br>'Total: 250'<br>'Total: 350'</code>",
   },
   watcher: {
-    code: `import { r, w } from '@arrow-js/core'
+    code: `import { reactive, watch } from '@arrow-js/core'
 
-const data = r({
+const data = reactive({
   price: 25,
   quantity: 10,
   logTotal: true
@@ -74,22 +74,22 @@ function total () {
   }
 }
 
-w(total)
+watch(total)
 
 data.price = 35`,
     example:
       "<code class=\"console\">// outputs:<br>'Total: 250'<br>'Total: 350'</code>",
   },
   watcher2: {
-    code: `import { r, w } from '@arrow-js/core'
+    code: `import { reactive, watch } from '@arrow-js/core'
 
-const data = r({
+const data = reactive({
   price: 25,
   quantity: 10,
   logTotal: true
 })
 
-w(
+watch(
   () => data.logTotal && data.price * data.quantity,
   (total) => total !== false && console.log(\`Total: \${total}\`)
 )
@@ -98,4 +98,4 @@ data.price = 35`,
     example:
       "<code class=\"console\">// outputs:<br>'Total: 250'<br>'Total: 350'</code>",
   },
-};
+}

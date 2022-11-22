@@ -12,15 +12,16 @@ export default function () {
         Arrow uses a <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Template_literals">tagged template literal</a>
         to declaratively render content. To tag a template literal as an
         <code>ArrowTemplate</code>, prefix the tick marks with the
-        <code>t</code> function. To mount a template to the DOM, you call the
-        return value with an <code>Element</code> as the argument.
+        <code>html</code> function (<code>t</code> for shorthand). To mount a
+        template to the DOM, you call the return value with an
+        <code>Element</code> as the argument.
       </p>
       ${example(TemplateExamples.intro.code, TemplateExamples.intro.example)}
       <p>
         There are some interesting things about this simple example.
       </p>
       <ul>
-        <li>You can use <code>t</code> without <code>r</code> or&nbsp;<code>w</code>.</li>
+        <li>You can use <code>html</code> without <code>reactive</code> or&nbsp;<code>watch</code>.</li>
         <li>You can use HTML.</li>
         <li>There is no need for root elements or fragment tags.</li>
         <li>Templates are portable (even though we chose to mount our template to the DOM in this example, we could have passed it around like any variable).</li>
