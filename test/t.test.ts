@@ -1,4 +1,4 @@
-import { t, r, nextTick, w } from '../src'
+import { t, r, nextTick, ArrowTemplate } from '../src'
 import { setValue } from './utils/events'
 
 interface User {
@@ -6,48 +6,21 @@ interface User {
   id: number
 }
 
-describe('nextTick', () => {
-  it('executes callback tick when nothing needs to be done', () => {
-    const callback = jest.fn()
-    nextTick(callback)
-    expect(callback.mock.calls.length).toBe(1)
-  })
-
-  it('returns a promise when nothing needs to be done', () => {
-    expect(nextTick()).toBeInstanceOf(Promise)
-  })
-
-  it('squashes watcher events to a single call', () => {
-    const data = r({
-      l: 100,
-    })
-    const watchCallback = jest.fn()
-    const onCallback = jest.fn()
-    data.$on('l', onCallback)
-    w(() => data.l, watchCallback)
-    for (let i = 0; i < 100; i++) {
-      data.l--
-    }
-    expect(onCallback.mock.calls.length).toBe(100)
-    nextTick(() => expect(watchCallback.mock.calls.length).toBe(2))
-  })
-})
-
 describe('t', () => {
-  it('Can render simple strings', () => {
+  it('can render simple strings', () => {
     const nodes = t`foo bar`().childNodes
     expect(nodes.length).toBe(1)
     expect(nodes[0].nodeName).toBe('#text')
   })
 
-  it('Can render simple numeric expressions', () => {
+  it('can render simple numeric expressions', () => {
     const nodes = t`${10 * 10}`().childNodes
     expect(nodes.length).toBe(1)
     expect(nodes[0].nodeName).toBe('#text')
     expect(nodes[0].nodeValue).toBe('100')
   })
 
-  it('Can render simple text with expressions', async () => {
+  it('can render simple text with expressions', async () => {
     const world = 'World'
     const nodes = t`Hello ${world}`().childNodes
     await nextTick()
@@ -56,7 +29,7 @@ describe('t', () => {
     expect(nodes[0].nodeValue).toBe('Hello World')
   })
 
-  it('Can render reactive data once without arrow fn', async () => {
+  it('can render reactive data once without arrow fn', async () => {
     const data = r({ name: 'World' })
     const node = t`Hello ${data.name}`()
     expect(node.childNodes.length).toBe(1)
@@ -66,7 +39,7 @@ describe('t', () => {
     expect(node.childNodes[0].nodeValue).toBe('Hello World')
   })
 
-  it('Automatically updates expressions with arrow fn', async () => {
+  it('automatically updates expressions with arrow fn', async () => {
     const data = r({ name: 'World' })
     const parent = document.createElement('div')
     t`Hello ${() => data.name}`(parent)
@@ -76,7 +49,7 @@ describe('t', () => {
     expect(parent.textContent).toBe('Hello Justin')
   })
 
-  it('Can create a token expression at the beginning of template', async () => {
+  it('can create a token expression at the beginning of template', async () => {
     const data = r({ name: 'Hello' })
     const parent = document.createElement('div')
     t`${() => data.name} Worldilocks`(parent)
@@ -101,7 +74,7 @@ describe('t', () => {
     )
   })
 
-  it('Can sub-render templates without reactivity.', async () => {
+  it('can sub-render templates without reactivity.', async () => {
     const data = r({ name: 'World' })
     const parent = document.createElement('div')
     t`Hello ${t`<div>${data.name}</div>`}`(parent)
@@ -111,7 +84,7 @@ describe('t', () => {
     expect(parent.innerHTML).toBe('Hello <div>World</div>')
   })
 
-  it('Can render a simple non-reactive list', async () => {
+  it('can render a simple non-reactive list', async () => {
     const data = r({ list: ['a', 'b', 'c'] })
     const parent = document.createElement('div')
     t`Hello <ul>${data.list.map((item: string) => t`<li>${item}</li>`)}</ul>`(
@@ -128,7 +101,7 @@ describe('t', () => {
     )
   })
 
-  it('Can render a simple reactive list', async () => {
+  it('can render a simple reactive list', async () => {
     const data = r({ list: ['a', 'b', 'c'] })
     const parent = document.createElement('div')
     t`Hello <ul>${() =>
@@ -143,7 +116,7 @@ describe('t', () => {
     )
   })
 
-  it('Can render a list with multiple repeated roots.', () => {
+  it('can render a list with multiple repeated roots.', () => {
     const data = r({ list: ['a', 'b', 'c'] })
     const parent = document.createElement('div')
     t`<div>
@@ -154,7 +127,7 @@ describe('t', () => {
     </div>`)
   })
 
-  it('Can render a list with new values un-shifted on', async () => {
+  it('can render a list with new values un-shifted on', async () => {
     const data = r({ list: ['a', 'b', 'c'] })
     const parent = document.createElement('div')
     t`<ul>
@@ -170,7 +143,7 @@ describe('t', () => {
     </ul>`)
   })
 
-  it('Can render a list with new values pushed', async () => {
+  it('can render a list with new values pushed', async () => {
     const data = r({ list: ['a', 'b', 'c'] })
     const parent = document.createElement('div')
     t`<ul>
@@ -186,7 +159,7 @@ describe('t', () => {
     </ul>`)
   })
 
-  it('Can render a list with new values spliced in', async () => {
+  it('can render a list with new values spliced in', async () => {
     const data = r({ list: ['a', 'b', 'c'] })
     const parent = document.createElement('div')
     t`<ul>
@@ -202,7 +175,7 @@ describe('t', () => {
     </ul>`)
   })
 
-  it('Can render a list with new values spliced in', async () => {
+  it('can render a list with new values spliced in', async () => {
     const data = r({ list: ['a', 'b', 'c'] })
     const parent = document.createElement('div')
     t`<ul>
@@ -218,11 +191,11 @@ describe('t', () => {
     </ul>`)
   })
 
-  it('Can render a list with a for loop', async () => {
+  it('can render a list with a for loop', async () => {
     const data = r({ list: ['a', 'b', 'c'] as string[] })
     const parent = document.createElement('div')
     function list(items: any[]): Array<CallableFunction> {
-      const els = []
+      const els: ArrowTemplate[] = []
       for (const i in items) {
         els.push(t`<li>${items[i]}</li>`)
       }
@@ -250,7 +223,7 @@ describe('t', () => {
     })
     const parent = document.createElement('div')
     function list(items: any): Array<CallableFunction> {
-      const els = []
+      const els: ArrowTemplate[] = []
       for (const i in items) {
         els.push(t`<li>${i}: ${items[i]}</li>`)
       }
@@ -544,5 +517,42 @@ describe('t', () => {
         <option value="c" selected="${() => 'c' === data.selected}">C</option>
       </select>`(parent)
     expect(parent.querySelector('select')?.value).toBe('b')
+  })
+
+  it('can create a table with dynamic columns and rows', () => {
+    const parent = document.createElement('div')
+    const rows = [
+      ['Detroit', 'MI'],
+      ['Boston', 'MA'],
+    ]
+    t`<table>
+      <tbody>
+        ${rows.map(
+          (row) => t`<tr>${row.map((column) => t`<td>${column}</td>`)}</tr>`
+        )}
+      </tbody>
+    </table>`(parent)
+    expect(parent.innerHTML).toBe(`<table>
+      <tbody>
+        <tr><td>Detroit</td><td>MI</td></tr><tr><td>Boston</td><td>MA</td></tr>
+      </tbody>
+    </table>`)
+  })
+
+  it('renders sanitized HTML when reading from a variable.', () => {
+    const data = r({
+      foo: '<h1>Hello world</h1>'
+    })
+    expect(t`<div>${() => data.foo}</div>`().querySelector('h1')).toBe(null)
+  })
+  it('renders sanitized HTML when updating from a variable.', async () => {
+    const data = r({
+      html: 'foo'
+    })
+    const stage = document.createElement('div')
+    t`<div>${() => data.html}</div>`(stage)
+    data.html = '<h1>Some text</h1>'
+    await nextTick()
+    expect(stage.querySelector('h1')).toBe(null)
   })
 })

@@ -7,11 +7,12 @@ export default function () {
     <h2 id="watching-data">Watching data <code>w</code></h2>
     <section>
       <p>
-        Arrow has a built in watcher function (<code>w</code>) which performs an
-        important task: it calls a function, tracks any reactive data
-        dependencies of that function, and then re-calls that function if any of
-        the dependencies change. It's not unlike the file watchers employed in
-        many development build tools that update a page when you save a file.
+        Arrow has a built in <code>watch</code> function (<code>w</code> for
+        shorthand) which performs an important task: it calls a function, tracks
+        any reactive data dependencies of that function, and then re-calls that
+        function if any of the dependencies change. It's not unlike the file
+        watchers employed in many development build tools that update a page
+        when you save a file.
       </p>
       <p>
         A watcher can receive any function at all, and that function can

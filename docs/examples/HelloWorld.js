@@ -11,13 +11,13 @@ export default t`
 `
 
 export const HelloWorldCode = `\
-import { r, t } from '@arrow-js/core'
+import { reactive, html } from '@arrow-js/core'
 
-const data = r({
+const data = reactive({
   clicks: 0
 });
 
-t\`
+html\`
   <button @click="\${() => data.clicks++}">
     Fired \${() => data.clicks} arrows
   </button>

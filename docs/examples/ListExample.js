@@ -1,8 +1,8 @@
-import { t } from '/dev/index.js'
+import { html } from '/dev/index.js'
 
 const third = 'Third'
 
-export default t`
+export default html`
   <ul>
     <li>First</li>
     <li>Second</li>
@@ -13,7 +13,7 @@ export default t`
 export const ListExampleCode = `\
 const third = 'Third';
 
-export default t\`
+html\`
   <ul>
     <li>First</li>
     <li>Second</li>
