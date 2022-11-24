@@ -11,6 +11,7 @@ export default function () {
       <li><a href="/demos/calculator.html">Demo</a></li>
       <li><a href="https://github.com/justin-schroeder/arrow-js/blob/master/docs/demos/components/calculator.js">Source code</a></li>
     </ul>
+
     <h3>Performance</h3>
     <p>A performance demonstration (Vue vs Arrow) with 500 nodes changing reactively.</p>
     <ul>
@@ -23,6 +24,13 @@ export default function () {
     <ul>
       <li><a href="/demos/dropdowns.html">Demo</a></li>
       <li><a href="https://github.com/justin-schroeder/arrow-js/blob/master/docs/demos/components/dropdowns.js">Source code</a></li>
+    </ul>
+
+    <h3>Carousel</h3>
+    <p>A simple, interactive image carousel.</p>
+    <ul>
+      <li><a href="/demos/carousel.html">Demo</a></li>
+      <li><a href="https://github.com/justin-schroeder/arrow-js/blob/master/docs/demos/components/carousel.js">Source code</a></li>
     </ul>
 
   </section>`
