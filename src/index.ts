@@ -320,7 +320,7 @@ function createPartial(group = Symbol()): TemplatePartial {
       if (chunk.key && chunk.dom.length) {
         closeSubPartial()
         // This is a keyed dom chunk that has already been rendered.
-        if (prev.dom !== chunk.dom) {
+        if (!prev || prev.dom !== chunk.dom) {
           lastNode[index ? 'after' : 'before'](...chunk.dom)
         }
         lastNode = chunk.dom[chunk.dom.length - 1] as ChildNode
