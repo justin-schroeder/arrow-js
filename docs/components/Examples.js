@@ -33,5 +33,12 @@ export default function () {
       <li><a href="https://github.com/justin-schroeder/arrow-js/blob/master/docs/demos/components/carousel.js">Source code</a></li>
     </ul>
 
+    <h3>Tabs</h3>
+    <p>A basic example of navigating through content with tabs.</p>
+    <ul>
+      <li><a href="/demos/tabs.html">Demo</a></li>
+      <li><a href="https://github.com/justin-schroeder/arrow-js/blob/master/docs/demos/components/tabs.js">Source code</a></li>
+    </ul>
+
   </section>`
 }
