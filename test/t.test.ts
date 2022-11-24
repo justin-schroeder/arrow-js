@@ -555,4 +555,31 @@ describe('t', () => {
     await nextTick()
     expect(stage.querySelector('h1')).toBe(null)
   })
+  it('renders keyed list and updates child value without removing/moving any nodes', async () => {
+    const data = r({
+      list: [{
+        id: 1,
+        name: 'foo'
+      },
+      {
+        id: 2,
+        name: 'bar'
+      }]
+    })
+    const stage = document.createElement('div')
+    t`<ul>
+      ${() => data.list.map(item => t`
+        <li>
+          ${() => item.name}<input @input="${(e: InputEvent) => {item.name = (e.target as HTMLInputElement).value}}">
+        </li>`.key(item.id)
+      )}
+    </ul>`(stage)
+    const callback = jest.fn()
+    const observer = new MutationObserver(callback)
+    observer.observe(stage.querySelector('ul')!, { childList: true });
+    const input = stage.querySelector('input') as HTMLInputElement
+    setValue(input, 'foobar')
+    await nextTick()
+    expect(callback).not.toHaveBeenCalled()
+  })
 })

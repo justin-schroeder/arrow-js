@@ -51,8 +51,7 @@ export interface DependencyProps {
 
 export type ReactiveProxy<T> = {
   [K in keyof T]: T[K] extends DataSource ? ReactiveProxy<T[K]> : T[K]
-} &
-  DataSource &
+} & DataSource &
   DependencyProps
 
 type ReactiveProxyParent = [
@@ -321,7 +320,9 @@ function createPartial(group = Symbol()): TemplatePartial {
       if (chunk.key && chunk.dom.length) {
         closeSubPartial()
         // This is a keyed dom chunk that has already been rendered.
-        lastNode[index ? 'after' : 'before'](...chunk.dom)
+        if (prev.dom !== chunk.dom) {
+          lastNode[index ? 'after' : 'before'](...chunk.dom)
+        }
         lastNode = chunk.dom[chunk.dom.length - 1] as ChildNode
         // Note: we don't need to update keyed chunks expressions here because
         // it is done in partial.add as soon as a keyed chunk is added to the
@@ -614,8 +615,10 @@ export function w(fn: CallableFunction, after?: CallableFunction): unknown {
   if (!dependencyCollector.has(trackingId)) {
     dependencyCollector.set(trackingId, new Map())
   }
-  let currentDeps: Map<ReactiveProxy<DataSource>, Set<DataSourceKey>> =
-    new Map()
+  let currentDeps: Map<
+    ReactiveProxy<DataSource>,
+    Set<DataSourceKey>
+  > = new Map()
   const queuedCallFn = queue(callFn)
   function callFn() {
     dependencyCollector.set(trackingId, new Map())
