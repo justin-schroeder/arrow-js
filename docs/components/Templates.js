@@ -102,6 +102,18 @@ export default function () {
         Returning <code>false</code> from an attribute expression will remove
         the attribute. This makes it easy to toggle attributes.
       </aside>
+      <h3>Lists</h3>
+      <p>
+        To render a list, simply iterate over your data and return new
+        <code>ArrowTemplate</code>s. If you want to preserve the DOM nodes and
+        their state you can also provide a unique key to the template by
+        calling the <code>key()</code> method on your template.
+      </p>
+      ${example(TemplateExamples.list.code, TemplateExamples.list.example)}
+      <aside class="tip">
+        Keys are only necessary if you want to preserve the DOM nodes and their
+        state. Avoid using the index as a key.
+      </aside>
       <h3>Events</h3>
       <p>
         You can bind an event listener to a DOM element by using the

@@ -3,6 +3,19 @@ import { html } from '/dev/index.js'
 export default function () {
   return html`
     <h1 id="changelog">Changelog</h1>
+    <h2>Alpha 4</h2>
+    <ul>
+      <li>Fixes a bug in keyed list rendering when unshifting.</li>
+    </ul>
+    <h2>Alpha 3</h2>
+    <ul>
+      <li>
+        Fixes a bug that caused unnecessary DOM patches on keyed lists (<a
+          href="https://github.com/justin-schroeder/arrow-js/issues/24"
+          >#24</a
+        >).
+      </li>
+    </ul>
     <h2>Alpha 2</h2>
     <ul>
       <li>

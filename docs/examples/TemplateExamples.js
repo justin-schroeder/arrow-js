@@ -4,6 +4,11 @@ const data = r({
   location: 'World',
   progress: 0,
   textInput: '',
+  items: [
+    { id: 1, task: 'Check email' },
+    { id: 2, task: 'Get groceries' },
+    { id: 3, task: 'Make dinner' },
+  ],
 })
 
 export const intro = {
@@ -43,7 +48,7 @@ html\`
 
 export const invalid = `html\`<p>
   A list of items:
-  <\${() => data.ordered ? 'ol' : 'li'} class="list">
+  <\${() => data.ordered ? 'ol' : 'ul'} class="list">
     <li>First item</li>
     <li>Second item</li>
     <li>Third item</li>
@@ -92,5 +97,56 @@ t\`
     }}">
     <br>
     <em>${() => data.textInput}</em>
+  `,
+}
+
+export const list = {
+  code: `import { reactive, html } from '@arrow/core'
+
+const data = reactive({
+  items: [
+    { id: 17, task: 'Check email' },
+    { id: 21, task: 'Get groceries' },
+    { id: 44, task: 'Make dinner' },
+  ]
+})
+
+function addItem(e) {
+  e.preventDefault()
+  const input = document.getElementById('new-item')
+  data.items.push({
+    id: Math.random(),
+    task: input.value,
+  })
+  input.value = ''
+}
+
+html\`
+<ul>
+  \${() => data.items.map(
+      item => html\`<li>\${item.task}</li>\`.key(item.id)
+    )}
+</ul>
+
+<form @submit="\${addItem}">
+  <input type="text" id="new-item>
+  <button>Add</button>
+</form>\``,
+
+  example: t`
+    <ul>
+      ${() => data.items.map((item) => t`<li>${item.task}</li>`.key(item.id))}
+    </ul>
+    <form @submit="${(e) => {
+      e.preventDefault()
+      data.items.push({
+        id: Math.random(),
+        task: document.getElementById('new-item').value,
+      })
+      document.getElementById('new-item').value = ''
+    }}">
+      <input type="text" placeholder="Add item..." id="new-item">
+      <button>Add</button>
+    </form>
   `,
 }
