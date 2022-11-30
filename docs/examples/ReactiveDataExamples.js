@@ -60,7 +60,7 @@ data.$off('quantity', total)
 data.quantity = 20
 `,
     example:
-      "<code class=\"console\">// outputs:<br>'Total: 250'<br>'Total: 350'<br>// note: after stop observing 'quantity', value change won't log anything</code>",
+      "<code class=\"console\">// outputs:<br>'Total: 250'<br>'Total: 350'<br>// Note: We stopped observing 'quantity' with $off<br>// so changing data.quantity will not log anything</code>",
   },
   watcher: {
     code: `import { reactive, watch } from '@arrow-js/core'
