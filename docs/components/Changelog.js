@@ -7,7 +7,15 @@ export default function () {
     <ul>
       <li>
         Binding the <code>value</code> attribute of input, textarea, and select
-        elements now changes the IDL property instead of the content attribute.
+        elements now changes the IDL property instead of the content attribute
+        (<a href="https://github.com/justin-schroeder/arrow-js/issues/31">#31</a
+        >).
+      </li>
+      <li>
+        Removes event listeners from Nodes that are removed from the DOM (<a
+          href="https://github.com/justin-schroeder/arrow-js/issues/11"
+          >#11</a
+        >).
       </li>
     </ul>
     <h2>Alpha 4</h2>
