@@ -3,6 +3,13 @@ import { html } from '/dev/index.js'
 export default function () {
   return html`
     <h1 id="changelog">Changelog</h1>
+    <h2>Alpha 5</h2>
+    <ul>
+      <li>
+        Binding the <code>value</code> attribute of input, textarea, and select
+        elements now changes the IDL property instead of the content attribute.
+      </li>
+    </ul>
     <h2>Alpha 4</h2>
     <ul>
       <li>Fixes a bug in keyed list rendering when unshifting.</li>

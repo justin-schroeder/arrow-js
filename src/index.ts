@@ -142,6 +142,15 @@ const nextTicks: Set<CallableFunction> = new Set()
 let consumingQueue = false
 
 /**
+ * Event listeners that were bound by arrow and should be cleaned up should the
+ * given node be garbage collected.
+ */
+const listeners = new WeakMap<
+  ChildNode,
+  Map<string, EventListenerOrEventListenerObject>
+>()
+
+/**
  * Given a string, sanitize for inclusion in html.
  * @param str - A string to sanitize.
  * @returns
@@ -350,7 +359,7 @@ function createPartial(group = Symbol()): TemplatePartial {
     let node = lastNode.nextSibling
     while (node && has(node, group)) {
       const next = node.nextSibling
-      node.remove()
+      removeNode(node)
       node = next
     }
     reset()
@@ -514,6 +523,10 @@ function fragment(
  */
 function attrs(node: Element, expressions: ReactiveExpressions): void {
   if (!node.hasAttributes()) return
+  const hasValueIDL =
+    node instanceof HTMLInputElement ||
+    node instanceof HTMLSelectElement ||
+    node instanceof HTMLTextAreaElement
   const total = node.attributes.length
   const toRemove: string[] = []
   const attrs = []
@@ -525,18 +538,36 @@ function attrs(node: Element, expressions: ReactiveExpressions): void {
     if (attr.value.indexOf(delimiterComment) !== -1) {
       const expression = expressions.shift() as unknown
       if (attrName.charAt(0) === '@') {
-        node.addEventListener(attrName.substr(1), expression as EventListener)
+        const event = attrName.substring(1)
+        node.addEventListener(event, expression as EventListener)
+        if (!listeners.has(node)) listeners.set(node, new Map())
+        listeners.get(node)?.set(event, expression as EventListener)
         toRemove.push(attrName)
       } else {
         w(expression as ReactiveFunction, (value: any) => {
-          value !== false
-            ? node.setAttribute(attrName, value)
-            : node.removeAttribute(attrName)
+          if (hasValueIDL && attrName === 'value') {
+            node.value = value
+          } else {
+            value !== false
+              ? node.setAttribute(attrName, value)
+              : node.removeAttribute(attrName)
+          }
         })
       }
     }
   })
   toRemove.forEach((attrName) => node.removeAttribute(attrName))
+}
+
+/**
+ * Removes the node from the dom and cleans up any attached listeners.
+ * @param node - A DOM element to remove
+ */
+function removeNode(node: ChildNode) {
+  node.remove()
+  listeners
+    .get(node)
+    ?.forEach((listener, event) => node.removeEventListener(event, listener))
 }
 
 /**

@@ -1,5 +1,5 @@
 import { t, r, nextTick, ArrowTemplate } from '../src'
-import { setValue } from './utils/events'
+import { click, setValue } from './utils/events'
 
 interface User {
   name: string
@@ -506,6 +506,45 @@ describe('t', () => {
     setValue(parent.querySelector('input'), 'pizza')
     await nextTick()
     expect(parent.innerHTML).toBe('<input type="text">pizza')
+  })
+
+  it('sets the IDL value attribute on input elements', async () => {
+    const parent = document.createElement('div')
+    const data = r({ value: '' })
+    const update = (event: InputEvent) => {
+      data.value = (event.target as HTMLInputElement).value
+    }
+    t`<input type="text" value="${() => data.value}" @input="${update}" id="a">
+      <input type="text" value="${() => data.value}" @input="${update}" id="b">${() => data.value}`(parent)
+    const a = parent.querySelector('[id="a"]') as HTMLInputElement
+    const b = parent.querySelector('[id="b"]') as HTMLInputElement
+    setValue(a, 'pizza')
+    await nextTick()
+    expect(b.value).toBe('pizza')
+    setValue(b, 'pie')
+    await nextTick()
+    expect(a.value).toBe('pie')
+  })
+
+  it('cleans up event listeners when a node has been removed', async () => {
+    const clickHandler = jest.fn()
+    const parent = document.createElement('div')
+    const data = r({
+      show: true
+    })
+    t`${() => data.show ? t`<button @click="${clickHandler}"></button>` : ''}`(parent);
+    let button = parent.querySelector('button') as HTMLButtonElement
+    click(button)
+    expect(clickHandler).toHaveBeenCalledTimes(1)
+    data.show = false
+    await nextTick()
+    click(button)
+    expect(clickHandler).toHaveBeenCalledTimes(1)
+    data.show = true
+    await nextTick()
+    button = parent.querySelector('button') as HTMLButtonElement
+    click(button)
+    expect(clickHandler).toHaveBeenCalledTimes(2)
   })
 
   it('defaults to the proper option select element', () => {
