@@ -129,7 +129,7 @@ html\`
 </ul>
 
 <form @submit="\${addItem}">
-  <input type="text" id="new-item>
+  <input type="text" id="new-item">
   <button>Add</button>
 </form>\``,
 
