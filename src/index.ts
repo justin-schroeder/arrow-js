@@ -139,7 +139,6 @@ const dependencyCollector: ReactiveProxyDependencyCollector = new Map()
  */
 const queueStack: Set<CallableFunction> = new Set()
 const nextTicks: Set<CallableFunction> = new Set()
-let consumingQueue = false
 
 /**
  * Event listeners that were bound by arrow and should be cleaned up should the
@@ -163,24 +162,32 @@ const sanitize = (str: string) => {
 
 /**
  * Queue an item to execute after all synchronous functions have been run. This
- * is used for `w()` to ensure multiple dependency mutations tracked on the the
+ * is used for `w()` to ensure multiple dependency mutations tracked on the
  * same expression do not result in multiple calls.
  * @param  {CallableFunction} fn
  * @returns ObserverCallback
  */
 function queue(fn: ObserverCallback): ObserverCallback {
   return (newValue?: unknown, oldValue?: unknown) => {
-    if (!queueStack.size) {
-      setTimeout(() => {
-        consumingQueue = true
-        queueStack.forEach((fn) => fn(newValue, oldValue))
-        queueStack.clear()
-        consumingQueue = false
-        nextTicks.forEach((fn) => fn())
-        nextTicks.clear()
-      })
+    function executeQueue() {
+      // copy the current queues and clear it to allow new items to be added
+      // during the execution of the current queue.
+      const queue = Array.from(queueStack)
+      queueStack.clear()
+      const ticks = Array.from(nextTicks)
+      nextTicks.clear()
+      queue.forEach((fn) => fn(newValue, oldValue))
+      ticks.forEach((fn) => fn())
+      if (queueStack.size) {
+        // we received new items while executing the queue, so we need to
+        // execute the queue again.
+        setTimeout(executeQueue)
+      }
     }
-    !consumingQueue && queueStack.add(fn)
+    if (!queueStack.size) {
+      setTimeout(executeQueue)
+    }
+    queueStack.add(fn)
   }
 }
 
