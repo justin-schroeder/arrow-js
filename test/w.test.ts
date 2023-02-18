@@ -92,7 +92,7 @@ describe('w', () => {
     expect(d2.value).toStrictEqual(2)
   })
 
-  it.only('should handle own changes inside a watcher on initial call', async () => {
+  it('should handle own changes inside a watcher on initial call', async () => {
     const d = r<Data>({ value: 1 })
 
     const cb1 = jest.fn()

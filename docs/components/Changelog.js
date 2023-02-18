@@ -3,6 +3,16 @@ import { html } from '/dev/index.js'
 export default function () {
   return html`
     <h1 id="changelog">Changelog</h1>
+    <h2>Alpha 6</h2>
+    <ul>
+      <li>
+        Fixes an issue that cased watchers that modified reactive data to not
+        properly queue their own effects (<a
+          href="https://github.com/justin-schroeder/arrow-js/issues/31"
+          >#31</a
+        >).
+      </li>
+    </ul>
     <h2>Alpha 5</h2>
     <ul>
       <li>
@@ -26,9 +36,9 @@ export default function () {
     <ul>
       <li>
         Fixes a bug that caused unnecessary DOM patches on keyed lists (<a
-          href="https://github.com/justin-schroeder/arrow-js/issues/24"
-          >#24</a
-        >).
+          href="https://github.com/justin-schroeder/arrow-js/issues/36"
+          >#36</a
+        >, thanks @jukart).
       </li>
     </ul>
     <h2>Alpha 2</h2>
