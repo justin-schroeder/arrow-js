@@ -28,7 +28,7 @@ export default function () {
       ${example(InstallationExamples.yarn, null, 'shell')}
       <h3>From a CDN</h3>
       <p>
-        You can install arrow directly from a CDN. We recommend using [esm.sh](https://esm.sh/)
+        You can install arrow directly from a CDN. We recommend using <a href="https://esm.sh/">esm.sh</a>
         since it is optimized for loading ESM modules. Just plop this into your
         <code>.html</code> file.
       </p>
