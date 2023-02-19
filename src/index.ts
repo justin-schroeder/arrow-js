@@ -266,6 +266,8 @@ function createPartial(group = Symbol()): TemplatePartial {
   let chunks: Array<PartialChunk> = []
   let previousChunks: Array<PartialChunk> = []
   const keyedChunks: Map<ArrowTemplateKey, PartialChunk> = new Map()
+  const toRemove: ChildNode[] = []
+
   /**
    * This is the actual document partial function.
    */
@@ -328,12 +330,12 @@ function createPartial(group = Symbol()): TemplatePartial {
       transferChunks(subPartial, chunks, startChunking)
       lastNode = last
     }
-
     chunks.forEach((chunk, index) => {
-      // There are 3 things that can happen in here:
+      // There are a few things that can happen in here:
       // 1. We match a key and output previously rendered nodes.
       // 2. We use a previous rendered dom, and swap the expression.
-      // 3. We render totally new nodes using a partial.
+      // 3. The actual HTML chunk is changed/new so we need to remove the nodes.
+      // 4. We render totally new nodes using a partial.
       const prev = previousChunks[index]
       if (chunk.key && chunk.dom.length) {
         closeSubPartial()
@@ -358,6 +360,12 @@ function createPartial(group = Symbol()): TemplatePartial {
         chunk.dom = prev.dom
         lastNode = chunk.dom[chunk.dom.length - 1]
       } else {
+        if (prev && chunk.html !== prev.html && !prev.key) {
+          // The previous chunk in this position has changed its underlying html
+          // this happens when someone is using non-reactive values in the
+          // template. We need to remove the previous nodes.
+          toRemove.push(...prev.dom)
+        }
         // Ok, now we're building some new DOM up y'all, let the chunking begin!
         if (!subPartial.l) startChunking = index
         subPartial.add(chunk.tpl)
@@ -367,15 +375,17 @@ function createPartial(group = Symbol()): TemplatePartial {
     closeSubPartial()
     let node = lastNode.nextSibling
     while (node && has(node, group)) {
+      toRemove.push(node)
       const next = node.nextSibling
-      removeNode(node)
       node = next
     }
+    removeNodes(toRemove)
     reset()
   }
 
   // What follows are internal "methods" for each partial.
   const reset = () => {
+    toRemove.length = 0
     html = ''
     partial.l = 0
     expressions = []
@@ -573,6 +583,14 @@ function attrs(node: Element, expressions: ReactiveExpressions): void {
     }
   })
   toRemove.forEach((attrName) => node.removeAttribute(attrName))
+}
+
+/**
+ * Removes DOM nodes from the dom and cleans up any attached listeners.
+ * @param node - A DOM element to remove
+ */
+function removeNodes(node: ChildNode[]) {
+  node.forEach(removeNode)
 }
 
 /**

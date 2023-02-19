@@ -649,4 +649,13 @@ describe('t', () => {
     await nextTick()
     expect(div.innerHTML).toBe('<!---->')
   })
+
+  it('can render an array of items and mutate an item in the array (#49)', async () => {
+    const div = document.createElement('div')
+    const data = r({order: [1, 2, 3]});
+    t`<ul>${() => data.order.map(item => t`<li>${item}</li>`)}</ul>`(div);
+    data.order[1] += 10
+    await nextTick()
+    expect(div.innerHTML).toBe('<ul><li>1</li><li>12</li><li>3</li></ul>')
+  })
 })
