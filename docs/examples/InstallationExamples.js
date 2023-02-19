@@ -1,6 +1,6 @@
 export default {
   cdn: `<script type="module">
-  import { reactive, html } from 'https://cdn.skypack.dev/@arrow-js/core';
+  import { reactive, html } from 'https://esm.sh/@arrow-js/core';
   // Start your app here!
 </script>`,
   local: `<script type="module">

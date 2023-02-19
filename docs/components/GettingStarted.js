@@ -20,8 +20,7 @@ export default function () {
         Even though Arrow does not require any build tools, it is often
         desirable to build your projects using tools that support Hot Module
         Reloading. Because Arrow is an ESM it works very well with newer build
-        and bundler tools like <a href="http://www.snowpack.dev">Snowpack</a>
-        and <a href="https://vitejs.dev/">Vite</a>.
+        and dev tools like <a href="https://vitejs.dev/">Vite</a>.
       </p>
       <strong>From NPM:</strong>
       ${example(InstallationExamples.npm, null, 'shell')}
@@ -29,7 +28,7 @@ export default function () {
       ${example(InstallationExamples.yarn, null, 'shell')}
       <h3>From a CDN</h3>
       <p>
-        You can install arrow directly from a CDN. We recommend using SkyPack
+        You can install arrow directly from a CDN. We recommend using [esm.sh](https://esm.sh/)
         since it is optimized for loading ESM modules. Just plop this into your
         <code>.html</code> file.
       </p>
