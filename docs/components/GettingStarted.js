@@ -36,6 +36,16 @@ export default function () {
       <h3>On your local filesystem</h3>
       ${example(InstallationExamples.local, null, 'html')}
     </section>
+    <h2>Editor support</h2>
+    <section>
+      <p>
+        Since Arrow uses tagged template literals its syntax is very similar
+        to lit-html. Editors that support lit-html will also
+        support Arrow. If you are using VSCode you can install the
+        <a href="https://marketplace.visualstudio.com/items?itemName=bierner.lit-html">lit-html</a>
+        extension to enable syntax highlighting on <code>html</code> blocks.
+      </p>
+    </section>
     ${reactiveData}
     ${watchingData}
     ${templates}
