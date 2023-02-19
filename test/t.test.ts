@@ -526,6 +526,24 @@ describe('t', () => {
     expect(a.value).toBe('pie')
   })
 
+  it('sets the IDL checked attribute on checkbox elements', async () => {
+    const parent = document.createElement('div')
+    const data = r({ checked: false })
+    t`<input type="checkbox" checked="${() => data.checked}" id="a">`(parent)
+    const a = parent.querySelector('[id="a"]') as HTMLInputElement
+    expect(a.checked).toBe(false)
+    a.checked = true
+    await nextTick()
+    expect(a.checked).toBe(true)
+    expect(data.checked).toBe(false)
+    data.checked = true
+    await nextTick()
+    expect(a.checked).toBe(true)
+    data.checked = false
+    await nextTick()
+    expect(a.checked).toBe(false)
+  })
+
   it('cleans up event listeners when a node has been removed', async () => {
     const clickHandler = jest.fn()
     const parent = document.createElement('div')

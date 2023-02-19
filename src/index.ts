@@ -51,7 +51,8 @@ export interface DependencyProps {
 
 export type ReactiveProxy<T> = {
   [K in keyof T]: T[K] extends DataSource ? ReactiveProxy<T[K]> : T[K]
-} & DataSource &
+} &
+  DataSource &
   DependencyProps
 
 type ReactiveProxyParent = [
@@ -552,8 +553,11 @@ function attrs(node: Element, expressions: ReactiveExpressions): void {
         toRemove.push(attrName)
       } else {
         w(expression as ReactiveFunction, (value: any) => {
-          if (hasValueIDL && attrName === 'value') {
-            node.value = value
+          if (
+            (hasValueIDL && attrName === 'value') ||
+            (attrName === 'checked' && node instanceof HTMLInputElement)
+          ) {
+            node[attrName as 'value'] = value
           } else {
             value !== false
               ? node.setAttribute(attrName, value)
@@ -653,10 +657,8 @@ export function w(fn: CallableFunction, after?: CallableFunction): unknown {
   if (!dependencyCollector.has(trackingId)) {
     dependencyCollector.set(trackingId, new Map())
   }
-  let currentDeps: Map<
-    ReactiveProxy<DataSource>,
-    Set<DataSourceKey>
-  > = new Map()
+  let currentDeps: Map<ReactiveProxy<DataSource>, Set<DataSourceKey>> =
+    new Map()
   const queuedCallFn = queue(callFn)
   function callFn() {
     dependencyCollector.set(trackingId, new Map())
