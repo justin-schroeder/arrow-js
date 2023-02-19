@@ -573,7 +573,15 @@ function attrs(node: Element, expressions: ReactiveExpressions): void {
             (attrName === 'checked' && node instanceof HTMLInputElement)
           ) {
             node[attrName as 'value'] = value
+          } else if (attrName.startsWith('.')) {
+            // Set a property on the node. In this context we ignore the fact
+            // that the given property may not exist on the given node since
+            // JavaScript is happy to set properties on nodes that may or may
+            // not be previously defined.
+            // @ts-ignore:next-line
+            node[attrName.substring(1)] = value
           } else {
+            // Set a standard content attribute.
             value !== false
               ? node.setAttribute(attrName, value)
               : node.removeAttribute(attrName)

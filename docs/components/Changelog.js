@@ -3,6 +3,29 @@ import { html } from '/dev/index.js'
 export default function () {
   return html`
     <h1 id="changelog">Changelog</h1>
+    <h2>Alpha 7</h2>
+    <ul>
+      <li>
+        Fixes a bug that could leave behind non-reactive template partials on
+        update when those partials were not the first or last DOM node children.
+        (<a href="https://github.com/justin-schroeder/arrow-js/issues/49">#49</a
+        >).
+      </li>
+      <li>
+        Replaces empty templates with a comment node to prevent an exception
+        from being thrown (<a
+          href="https://github.com/justin-schroeder/arrow-js/issues/37"
+          >#37</a
+        >).
+      </li>
+      <li>
+        Checkboxes now set the <code>checked<code> IDL attribute rather than the
+        content attribute (<a
+          href="https://github.com/justin-schroeder/arrow-js/issues/40"
+          >#40</a
+        >).
+      </li>
+    </ul>
     <h2>Alpha 6</h2>
     <ul>
       <li>

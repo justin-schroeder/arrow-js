@@ -658,4 +658,15 @@ describe('t', () => {
     await nextTick()
     expect(div.innerHTML).toBe('<ul><li>1</li><li>12</li><li>3</li></ul>')
   })
+
+  it('can set any arbitrary IDL attribute', async () => {
+    const div = document.createElement('div')
+    const data = r({ align: 'left' })
+    t`<h1 .align="${() => data.align}">Some text</h1>`(div)
+    const h1 = div.querySelector('h1') as HTMLInputElement
+    expect(h1.align).toBe('left')
+    data.align = 'center'
+    await nextTick()
+    expect(h1.align).toBe('center')
+  })
 })
