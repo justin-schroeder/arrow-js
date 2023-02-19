@@ -315,6 +315,7 @@ function createPartial(group = Symbol()): TemplatePartial {
     const subPartial = createPartial(group)
     let startChunking = 0
     let lastNode: ChildNode = previousChunks[0].dom[0]
+
     // If this is an empty update, we need to "placehold" its spot in the dom
     // with an empty placeholder chunk.
     if (!chunks.length) addPlaceholderChunk(document.createComment(''))
@@ -460,12 +461,16 @@ export function t(
 
   const toString = () => {
     if (!str) {
-      str = strings.reduce(function interlaceTemplate(html, strVal, i) {
-        html += strVal
-        return expSlots[i] !== undefined
-          ? addExpressions(expSlots[i], html)
-          : html
-      }, '')
+      if (!expSlots.length && strings.length === 1 && strings[0] === '') {
+        str = '<!---->'
+      } else {
+        str = strings.reduce(function interlaceTemplate(html, strVal, i) {
+          html += strVal
+          return expSlots[i] !== undefined
+            ? addExpressions(expSlots[i], html)
+            : html
+        }, '')
+      }
     }
     return str
   }

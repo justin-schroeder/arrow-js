@@ -639,4 +639,14 @@ describe('t', () => {
     await nextTick()
     expect(callback).not.toHaveBeenCalled()
   })
+
+  it('can render an empty template', async () => {
+    const div = document.createElement('div')
+    const store = r({ show: true })
+    expect(() => t`${() => store.show ? t`<br>` : t``}`(div)).not.toThrow()
+    expect(div.innerHTML).toBe('<br>')
+    store.show = false
+    await nextTick()
+    expect(div.innerHTML).toBe('<!---->')
+  })
 })
