@@ -3,6 +3,16 @@ import { html } from '/dev/index.js'
 export default function () {
   return html`
     <h1 id="changelog">Changelog</h1>
+    <h2>Alpha 8</h2>
+    <ul>
+      <li>
+        Fixes an issue with setting
+        <a href="https://developer.mozilla.org/en-US/docs/Glossary/IDL"
+          >IDL attributes</a
+        >
+        reactively multiple times.
+      </li>
+    </ul>
     <h2>Alpha 7</h2>
     <ul>
       <li>

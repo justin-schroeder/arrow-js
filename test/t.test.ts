@@ -524,6 +524,7 @@ describe('t', () => {
     setValue(b, 'pie')
     await nextTick()
     expect(a.value).toBe('pie')
+    expect(a.getAttribute('value')).toBe(null)
   })
 
   it('sets the IDL checked attribute on checkbox elements', async () => {
@@ -542,6 +543,7 @@ describe('t', () => {
     data.checked = false
     await nextTick()
     expect(a.checked).toBe(false)
+    expect(a.getAttribute('checked')).toBe(null)
   })
 
   it('cleans up event listeners when a node has been removed', async () => {
@@ -661,12 +663,21 @@ describe('t', () => {
 
   it('can set any arbitrary IDL attribute', async () => {
     const div = document.createElement('div')
-    const data = r({ align: 'left' })
-    t`<h1 .align="${() => data.align}">Some text</h1>`(div)
-    const h1 = div.querySelector('h1') as HTMLInputElement
-    expect(h1.align).toBe('left')
-    data.align = 'center'
+    class XFoo extends HTMLDivElement {
+      foo: string
+      constructor() {
+        super();
+        this.foo = 'bar'
+      }
+    }
+    customElements.define('x-foo', XFoo, { extends: 'div'})
+    const data = r({ foo: 'bim' })
+    t`<x-foo .foo="${() => data.foo}"></x-foo>`(div)
+    const x = div.querySelector('x-foo') as XFoo
+    expect(x.foo).toBe('bim')
+    data.foo = 'baz'
     await nextTick()
-    expect(h1.align).toBe('center')
+    expect(x.foo).toBe('baz')
+    expect(x.getAttribute('foo')).toBe(null)
   })
 })

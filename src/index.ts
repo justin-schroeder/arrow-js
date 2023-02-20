@@ -557,7 +557,7 @@ function attrs(node: Element, expressions: ReactiveExpressions): void {
     attrs.push(node.attributes[i])
   }
   attrs.forEach((attr) => {
-    const attrName = attr.name
+    let attrName = attr.name
     if (attr.value.indexOf(delimiterComment) !== -1) {
       const expression = expressions.shift() as unknown
       if (attrName.charAt(0) === '@') {
@@ -567,25 +567,26 @@ function attrs(node: Element, expressions: ReactiveExpressions): void {
         listeners.get(node)?.set(event, expression as EventListener)
         toRemove.push(attrName)
       } else {
+        // Logic to determine if this is an IDL attribute or a content attribute
+        const isIDL =
+          (hasValueIDL && attrName === 'value') ||
+          (attrName === 'checked' && node instanceof HTMLInputElement) ||
+          (attrName.startsWith('.') && (attrName = attrName.substring(1)))
+
         w(expression as ReactiveFunction, (value: any) => {
-          if (
-            (hasValueIDL && attrName === 'value') ||
-            (attrName === 'checked' && node instanceof HTMLInputElement)
-          ) {
-            node[attrName as 'value'] = value
-          } else if (attrName.startsWith('.')) {
-            // Set a property on the node. In this context we ignore the fact
-            // that the given property may not exist on the given node since
-            // JavaScript is happy to set properties on nodes that may or may
-            // not be previously defined.
+          if (isIDL) {
+            // Handle all IDL attributes, TS won’t like this since it is not
+            // fully are of the type we are operating on, but JavaScript is
+            // perfectly fine with it, so we’ll just ignore TS here.
             // @ts-ignore:next-line
-            node[attrName.substring(1)] = value
-          } else {
-            // Set a standard content attribute.
-            value !== false
-              ? node.setAttribute(attrName, value)
-              : node.removeAttribute(attrName)
+            node[attrName as 'value'] = value
+            // Explicitly set the "value" to false remove the attribute.
+            value = false
           }
+          // Set a standard content attribute.
+          value !== false
+            ? node.setAttribute(attrName, value)
+            : node.removeAttribute(attrName)
         })
       }
     }
