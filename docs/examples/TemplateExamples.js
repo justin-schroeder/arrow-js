@@ -1,4 +1,4 @@
-import { r, t } from '/dev/index.js'
+import { r, html } from '/dev/index.js'
 
 const data = r({
   location: 'World',
@@ -19,7 +19,7 @@ const appElement = document.getElementById('app');
 const template = html\`Hello <em>World</em>\`
 
 template(appElement)`,
-  example: t`Hello <em>World</em>`,
+  example: html`Hello <em>World</em>`,
 }
 
 export const expressions = {
@@ -30,11 +30,14 @@ html\`
     <li>Hello \${() => data.location} (⚡ dynamic expression)</li>
   </ul>
 \``,
-  example: t`
+  example: html`
     <label><code>data.location</code> = </label>
-    <select id="change-location" @change="${(e) => {
-      data.location = e.target.value
-    }}">
+    <select
+      id="change-location"
+      @change="${(e) => {
+        data.location = e.target.value
+      }}"
+    >
       <option value="World">World</option>
       <option value="Mars">Mars</option>
       <option value="Pluto">Pluto</option>
@@ -72,13 +75,16 @@ const updateProgress = () => setTimeout(
   () => upload.progress++ && upload.progress < 100 && updateProgress()
 , 20)
 
-t\`<progress value="\${() => upload.progress}" max="100"></progress>\``,
-  example: t`
-  <button @click="${() => {
-    data.progress = 0
-    updateProgress()
-  }}">Start</button>
-  <progress value="${() => data.progress}" max="100"></progress>`,
+html\`<progress value="\${() => upload.progress}" max="100"></progress>\``,
+  example: html` <button
+      @click="${() => {
+        data.progress = 0
+        updateProgress()
+      }}"
+    >
+      Start
+    </button>
+    <progress value="${() => data.progress}" max="100"></progress>`,
 }
 
 export const events = {
@@ -86,18 +92,30 @@ export const events = {
   value: ''
 })
 
-t\`
+html\`
 <input type="text" @input="\${e => { data.value = e.target.value }}">
 <br>
 <em>\${() => data.value}</em>
 \``,
-  example: t`
-    <input type="text" @input="${(e) => {
-      data.textInput = e.target.value
-    }}">
-    <br>
+  example: html`
+    <input
+      type="text"
+      @input="${(e) => {
+        data.textInput = e.target.value
+      }}"
+    />
+    <br />
     <em>${() => data.textInput}</em>
   `,
+}
+export const idl = {
+  code: `const data = r({
+  colors: ['red', 'green', 'blue']
+})
+
+html\`
+<my-custom-element .colors="\${() => data.colors}"></my-custom-element>
+\``,
 }
 
 export const list = {
@@ -133,19 +151,22 @@ html\`
   <button>Add</button>
 </form>\``,
 
-  example: t`
+  example: html`
     <ul>
-      ${() => data.items.map((item) => t`<li>${item.task}</li>`.key(item.id))}
+      ${() =>
+        data.items.map((item) => html`<li>${item.task}</li>`.key(item.id))}
     </ul>
-    <form @submit="${(e) => {
-      e.preventDefault()
-      data.items.push({
-        id: Math.random(),
-        task: document.getElementById('new-item').value,
-      })
-      document.getElementById('new-item').value = ''
-    }}">
-      <input type="text" placeholder="Add item..." id="new-item">
+    <form
+      @submit="${(e) => {
+        e.preventDefault()
+        data.items.push({
+          id: Math.random(),
+          task: document.getElementById('new-item').value,
+        })
+        document.getElementById('new-item').value = ''
+      }}"
+    >
+      <input type="text" placeholder="Add item..." id="new-item" />
       <button>Add</button>
     </form>
   `,

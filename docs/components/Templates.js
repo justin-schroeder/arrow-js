@@ -1,11 +1,10 @@
-import { t } from '/dev/index.js'
+import { html } from '/dev/index.js'
 import example from './Example'
 import collapsable from './Collapsable'
 import * as TemplateExamples from '../examples/TemplateExamples'
-import { r } from '../../src'
 
 export default function () {
-  return t`
+  return html`
     <h2 id="templates">Templates <code>t</code></h2>
     <section>
       <p>
@@ -58,7 +57,7 @@ export default function () {
           </li>
         </ol>
       </p>
-      ${collapsable(t`
+      ${collapsable(html`
         <p>
           In the real world, you’ll find a large swath of dynamic data does not
           need to be "reactive". Let’s say we're building a product page — just
@@ -68,10 +67,10 @@ export default function () {
           probably shouldn't be reactive.
         </p>
         <p>
-          A shopping cart’s details on the other hand probably <em>should</em> be
-          reactive. Which products are in the cart, their quantities, the total
-          price — these are all items that may dynamically change as a user
-          interacts with the page.
+          A shopping cart’s details on the other hand probably
+          <em>should</em> be reactive. Which products are in the cart, their
+          quantities, the total price — these are all items that may dynamically
+          change as a user interacts with the page.
         </p>
       `)}
       <p>
@@ -102,6 +101,15 @@ export default function () {
         Returning <code>false</code> from an attribute expression will remove
         the attribute. This makes it easy to toggle attributes.
       </aside>
+      <h3>Properties</h3>
+      <p>
+        In addition to setting an element’s content attributes, you can also set
+        an element’s internal properties (<a href="https://developer.mozilla.org/en-US/docs/Glossary/IDL">IDL attributes</a>)
+        by prefixing an attribute with a dot <code>.</code> (note: this is done
+        automatically for the <code>value</code> and <code>checked</code>
+        attributes on input elements).
+      </p>
+      ${example(TemplateExamples.idl.code, TemplateExamples.idl.example)}
       <h3>Lists</h3>
       <p>
         To render a list, simply iterate over your data and return new
@@ -121,7 +129,7 @@ export default function () {
         <code>document.addEventListener('eventName')</code> and registers your
         expression as the event handler.
       </p>
-      ${example(TemplateExamples.events.code, TemplateExamples.events.example)}
+      ${example(TemplateExamples.events.code)}
     </section>
   `
 }

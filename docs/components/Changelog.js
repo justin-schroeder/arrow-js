@@ -6,6 +6,14 @@ export default function () {
     <h2>Alpha 7</h2>
     <ul>
       <li>
+        Introduces a dot <code>.</code> prefix for setting the an element’s
+        <a href="https://developer.mozilla.org/en-US/docs/Glossary/IDL"
+          >IDL attribute</a
+        >
+        (<a href="https://github.com/justin-schroeder/arrow-js/issues/33">#33</a
+        >).
+      </li>
+      <li>
         Fixes a bug that could leave behind non-reactive template partials on
         update when those partials were not the first or last DOM node children.
         (<a href="https://github.com/justin-schroeder/arrow-js/issues/49">#49</a
@@ -19,8 +27,8 @@ export default function () {
         >).
       </li>
       <li>
-        Checkboxes now set the <code>checked<code> IDL attribute rather than the
-        content attribute (<a
+        Checkboxes now set the <code>checked</code> IDL attribute rather than
+        the content attribute (<a
           href="https://github.com/justin-schroeder/arrow-js/issues/40"
           >#40</a
         >).
