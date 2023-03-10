@@ -14,6 +14,15 @@
   --red: #fd335e;
   --purple: #f2efff;
   --purple-d: #9e36ff;
+
+  --white: #ffffff;
+  --black: #000000;
+  --black-soft:#1e1e20;
+
+  --yellow-dimm: rgba(234, 179, 8, .05);
+  --red-dimm: rgba(244, 63, 94, .05);
+  --green-dimm: rgba(16, 185, 129, .05);
+  --purple-dimm: rgba(100, 108, 255, .05);
 }
 
 ::selection {
