@@ -13,7 +13,6 @@ export default async function () {
 
   codeBlocks.forEach((block) => {
     const lang = block.className.replace('language-', '')
-    console.log(langs.lang)
     const html = highlighter.codeToHtml(block.textContent, {
       lang: langs[lang] || lang,
     })
