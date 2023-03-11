@@ -3,17 +3,22 @@
   --yellow-m: #ffe09c;
   --yellow-l: #fffaee;
   --yellow-ll: #f6f6f6;
+  --gray: #a9a9a9;
   --gray-l: #cecece;
   --gray-ll: #e6e6e6;
   --beige: #f5f2f0;
   --dark: #565656;
   --dark-d: #272727;
+  --green-d: #1e7e5a;
   --green: #40b883;
   --green-l: #e8f8f1;
   --red-l: #fff3f6;
   --red: #fd335e;
   --purple: #f2efff;
   --purple-d: #9e36ff;
+  --light: #fff;
+
+  --code-background: #fafafa;
 }
 
 ::selection {
@@ -77,6 +82,29 @@ ul li img {
   .hero {
     padding: 2em;
   }
+}
+
+.center {
+  text-align: center;
+}
+
+.button {
+  display: inline-block;
+  padding: .5em 1em;
+  border-radius: 4px;
+  background-color: var(--yellow);
+  color: black;
+  font-weight: 600;
+  text-decoration: none;
+  transition: background-color 0.2s ease;
+  margin-right: 0.75em;
+}
+.button:last-child {
+  margin-right: 0;
+}
+.button--hollow {
+  background-color: transparent;
+  border: 1px solid var(--yellow);
 }
 
 .hero .logo {
@@ -161,11 +189,11 @@ h1::after {
 }
 
 h2 {
-  font-size: 1.75em;
+  font-size: 1.5em;
   padding-left: 1em;
 }
 h3 {
-  font-size: 1.25em;
+  font-size: 1.1em;
   color: var(--dark);
   margin: 1em 0;
 }
@@ -176,6 +204,22 @@ h2::before {
   width: 1em;
   margin-left: -1em;
   color: var(--yellow);
+}
+
+p code {
+  background-color: var(--gray-ll);
+  padding: .15em .25em;
+  border-radius: 4px;
+  font-size: 0.85em;
+}
+
+@media (min-width: 500) {
+  h2 {
+    font-size: 1.75em;
+  }
+  h3 {
+    font-size: 1.25em;
+  }
 }
 
 
@@ -336,19 +380,14 @@ aside[data-is-open]::after {
   }
 }
 
-.body-wrapper code {
-  background-color: var(--gray-ll);
-  color: var(--dark-d);
-  padding: .1em .15em;
-  font-size: .9em;
-  border-radius: .15em;
-  margin: 0 .1em;
+.body-wrapper .example {
+  width: 100%;
 }
-.body-wrapper code.console {
-  background-color: transparent;
-  color: var(--green);
+.body-wrapper .example .console {
+  width: 100%;
+  display: inline-block;
+  color: var(--green-d);
 }
-
 .stage {
   border: 1px solid var(--gray-l);
   border-radius: .33em;
@@ -360,11 +399,35 @@ aside[data-is-open]::after {
   padding: 1em;
   border-top: 1px solid var(--gray-l);
 }
-.stage pre {
-  margin: -1em -1em 1em -1em;
+.stage > pre {
+  padding: 1rem;
+  margin: 0;
+  background: var(--code-background);
+}
+.stage pre pre {
+  background-color: transparent !important;
+  margin: 0;
+}
+.stage code {
+  font-size: 0.9rem;
+  background: none;
+  margin: 0;
+}
+.example ul {
+  margin: 0;
 }
 .example ul li{
+  color: var(--dark-d);
+}
+
+footer {
+  margin: 2em 0;
+  font-size: .875em;
   color: var(--dark);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
 }
 
 /* Navigation

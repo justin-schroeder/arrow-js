@@ -5,28 +5,27 @@
     <link rel="icon" href="/favicon.ico" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <link rel="stylesheet" type="text/css" href="/css/index.css" />
-    <link rel="stylesheet" type="text/css" href="/css/home.css" />
     <script src="https://stirring-harmonious.arrow-js.com/script.js" data-site="NPEEWMAQ" defer></script>
-    <meta name="description" content="ArrowJS is a tool for programming reactive interfaces using native JavaScript. It’s 2Kb, requires no build tools, has no virtual DOM, and is blazing fast.">
+    <meta name="description" content="Docs — ArrowJS is a tool for programming reactive interfaces using native JavaScript. It’s 2Kb, requires no build tools, has no virtual DOM, and is blazing fast.">
 
     <!-- Twitter Meta Tags -->
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:domain" content="arrow-js.com">
-    <meta name="twitter:description" content="ArrowJS is a tool for programming reactive interfaces using native JavaScript. It’s 2Kb, requires no build tools, has no virtual DOM, and is blazing fast.">
-    <meta name="twitter:url" content="https://www.arrow-js.com">
+    <meta name="twitter:description" content="Docs — ArrowJS is a tool for programming reactive interfaces using native JavaScript. It’s 2Kb, requires no build tools, has no virtual DOM, and is blazing fast.">
+    <meta name="twitter:url" content="https://www.arrow-js.com/docs">
     <meta name="twitter:title" content="ArrowJS">
     <meta name="twitter:description" content="ArrowJS is a tool for programming reactive interfaces using native JavaScript. It’s 2Kb, requires no build tools, has no virtual DOM, and is blazing fast.">
     <meta name="twitter:image" content="https://www.arrow-js.com/img/og.png?bust=1">
     <meta name="twitter:creator" content="@jpschroeder" />
 
     <!-- Facebook Meta Tags -->
-    <meta property="og:url" content="https://www.arrow-js.com">
+    <meta property="og:url" content="https://www.arrow-js.com/docs">
     <meta property="og:type" content="website">
     <meta property="og:title" content="ArrowJS">
     <meta property="og:description" content="ArrowJS is a tool for programming reactive interfaces using native JavaScript. It’s 2Kb, requires no build tools, has no virtual DOM, and is blazing fast.">
     <meta property="og:image" content="https://www.arrow-js.com/img/og.png?bust=1">
 
-    <title>ArrowJS - Reactive interfaces with no build tools & native JavaScript.</title>
+    <title>ArrowJS • Docs</title>
   </head>
   <body>
     <div class="container hero">
@@ -58,26 +57,33 @@
       </ul>
     </div>
     <div id="app"></div>
-
     <script type="module">
       import { t, r, w } from '/dev/index.js';
       import store from './store';
-      import homeHero from './components/home/hero.js';
-      import whyArrow from './components/home/why.js';
-      import footer from './components/footer.js';
+      import navigation from './components/Navigation';
+      import gettingStarted from './components/GettingStarted';
+      import changelog from './components/Changelog';
+      import footer from './components/Footer';
+      import events from './js/events'
       import highlight from './js/highlight.js';
       const el = document.getElementById('app');
 
       t`
         <div class="container">
-          ${homeHero}
-          ${whyArrow}
+          <div class="body-wrapper">
+            ${navigation}
+            <article>
+              ${gettingStarted}
+              ${changelog}
+            </article>
+          </div>
         </div>
 
         ${footer}
-      `(el);
+      `(el)
 
-      highlight()
+      events()
+      highlight();
     </script>
     <script src="https://cdn.jsdelivr.net/npm/shiki"></script>
     <script async defer src="https://buttons.github.io/buttons.js"></script>
