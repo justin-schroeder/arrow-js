@@ -75,8 +75,8 @@
 }
 
 ::selection {
-  background-color: var(--yellow);
-  color: black;
+  background-color: var(--color-selection-background);
+  color: var(--color-selection-text);
 }
 
 html {
@@ -90,7 +90,8 @@ body {
   line-height: 1.5;
   font-size: 16px;
   -webkit-font-smoothing: antialiased;
-  color: var(--dark);
+  color: var(--c-body-text);
+  background-color: var(--c-body-bg);
 }
 
 .container {
@@ -153,10 +154,10 @@ ul li img {
   line-height: 0;
 }
 .social-links li a {
-  color: var(--gray);
+  color: var(--c-link-social-icon);
 }
 .social-links li a:hover {
-  color: var(--dark-d);
+  color: var(--c-link-text-hover);
 }
 .social-links li,
 .social-links li svg {
@@ -175,17 +176,19 @@ ul li img {
 
 .stage .warning,
 .stage .error {
-  background-color: var(--yellow-l);
+  background-color: var(--c-warning-bg);
+  color:var(--c-warning-text);
   padding: 1em;
   font-size: .875em;
-  border-bottom: 1px solid var(--gray-l);
+  border-bottom: 1px solid var(--c-border-style);
   align-items: center;
   padding-left: 3.25em;
   position: relative;
 }
 
 .stage .error {
-  background-color: var(--red-l);
+  background-color: var(--c-error-bg);
+  color: var(--c-error-text);
 }
 
 .stage .warning img,
@@ -200,7 +203,7 @@ h1,
 h2,
 h3 {
   margin: 0 0 1em 0;
-  color: black;
+  color: var(--c-heading-text);
 }
 h1 {
   font-size: 2.5em;
@@ -212,7 +215,7 @@ h1::after {
   content: '';
   height: 1px;
   width: 100%;
-  background-color: var(--gray-l);
+  background-color: var(--c-decor-line-bg);
   margin-left: .5em;
   position: relative;
   top: .1em;
@@ -224,7 +227,7 @@ h2 {
 }
 h3 {
   font-size: 1.25em;
-  color: var(--dark);
+  color: var(--c-subheading-text);
   margin: 1em 0;
 }
 
@@ -233,7 +236,7 @@ h2::before {
   display: inline-block;
   width: 1em;
   margin-left: -1em;
-  color: var(--yellow);
+  color: var(--c-subheading-highlight);
 }
 
 
@@ -275,7 +278,7 @@ p.key-concept::before {
   text-transform: uppercase;
   letter-spacing: .1em;
   font-weight: 500;
-  color: var(--yellow);
+  color: var(--c-subheading-highlight);
   box-sizing: border-box;
 }
 
@@ -289,7 +292,7 @@ p.key-concept::before {
 }
 
 .body-wrapper a {
-  color: black;
+  color: var(--c-link-text);
 }
 
 .body-wrapper a[href^="http"]::after {
@@ -308,21 +311,21 @@ p.key-concept::before {
 
 .body-wrapper section ul {
   padding-left: 3em;
-  color: black;
+  color: var(--c-list-item-text);
 }
 .body-wrapper section ul li::marker {
-  color: var(--yellow);
+  color: var(--c-list-item-marker);
 }
 
 .body-wrapper section .example ul li::marker {
-  color: var(--dark);
+  color: var(--c-list-item-inner-marker);
 }
 
 
 aside {
   padding: 1em;
-  background-color: var(--green-l);
-  color: var(--dark-d);
+  background-color: var(--c-tip-bg);
+  color: var(--c-tip-text);
   font-size: .875em;
   margin: 1em 0;
   border-radius: .33em;
@@ -340,17 +343,18 @@ aside::before {
   font-size: 1em;
   font-weight: bold;
   margin-bottom: .75em;
-  color: var(--green);
+  color: var(--c-tip);
 }
 aside[data-title]::before {
   content: attr(data-title);
 }
 aside.info {
-  background-color: var(--purple);
+  background-color: var(--c-info-bg);
+  color: var(--c-info-text);
   position: relative;
 }
 aside.info::before {
-  color: var(--purple-d);
+  color: var(--c-info);
   background-image: url(/img/info.svg);
 }
 aside.collapsed {
@@ -395,20 +399,20 @@ aside[data-is-open]::after {
 }
 
 .body-wrapper code {
-  background-color: var(--gray-ll);
-  color: var(--dark-d);
+  background-color: var(--c-code-bg);
+  color: var(--c-code-text);
   padding: .1em .15em;
   font-size: .9em;
   border-radius: .15em;
   margin: 0 .1em;
 }
 .body-wrapper code.console {
-  background-color: transparent;
-  color: var(--green);
+  background-color:var(--c-code-console-bg);
+  color: var(--c-code-console-text);
 }
 
 .stage {
-  border: 1px solid var(--gray-l);
+  border: 1px solid var(--c-border-style);
   border-radius: .33em;
   overflow: hidden;
   margin-bottom: 1em;
@@ -416,13 +420,13 @@ aside[data-is-open]::after {
 .stage .example {
   font-size: 0.875em;
   padding: 1em;
-  border-top: 1px solid var(--gray-l);
+  border-top: 1px solid var(--c-border-style);
 }
 .stage pre {
   margin: -1em -1em 1em -1em;
 }
 .example ul li{
-  color: var(--dark);
+  color: var(--c-body-text);
 }
 
 /* Navigation
@@ -431,7 +435,7 @@ aside[data-is-open]::after {
 .navigation {
   position: sticky;
   top: 0;
-  background-color: white;
+  background-color: var(--c-nav-background);
   margin: 0 -1em 2em -1em;
   height: 3.25em;
   z-index: 50;
@@ -454,7 +458,7 @@ aside[data-is-open]::after {
 }
 .navigation a {
   text-decoration: none;
-  color: var(--dark);
+  color: var(--c-nav-link-text);
   display: inline-block;
   padding-left: 1em;
   position: relative;
@@ -472,43 +476,43 @@ aside[data-is-open]::after {
   background-color: transparent;
 }
 .navigation a:hover {
-  color: black;
+  color: var(--c-nav-link-text-hover);
 }
 
 .navigation a:hover::before {
-  background-color: var(--yellow);
+  background-color: var(--c-primary);
 }
 
 .navigation li[data-selected] > a {
   display: block;
   pointer-events: none;
-  color: black;
+  color: var(--c-nav-link-text-selected);
 }
 .navigation li[data-selected] > a::before {
-  background-color: var(--yellow);
+  background-color: var(--c-primary);
 }
 
 .navigation .selection {
   cursor: pointer;
-  border: 1px solid var(--gray-l);
+  border: 1px solid var(--c-nav-inner-border);
   padding: 0 .5em;
   margin: .5em 1em;
   border-radius: .33em;
   position: absolute;
   width: calc(100% - 2em);
-  background-color: white;
+  background-color: var(--c-nav-inner-bg);
   box-sizing: border-box;
 }
 
 .navigation .selection[data-is-open] {
-  box-shadow: 0 0 1em rgba(0, 0, 0, .1);
+  box-shadow: var(--nav-inner-shadow-opened);
 }
 
 .navigation .selection::before {
   content: '';
   display: block;
   border: .25em solid transparent;
-  border-top-color: var(--gray-l);
+  border-top-color: var(--c-nav-inner-border-top);
   position: absolute;
   right: 1em;
   top: 1em;
@@ -535,7 +539,7 @@ aside[data-is-open]::after {
     width: 12em;
     height: auto;
     flex: 0 0 12em;
-    background-color: transparent;
+    background-color: var(--c-nav-bg);
     margin-right: 1em;
     box-sizing: border-box;
   }
@@ -546,7 +550,7 @@ aside[data-is-open]::after {
     margin-bottom: 1em;
   }
   .selection > ul > li > a {
-    color: black;
+    color: var(--c-nav-link-text);
     font-weight: 500;
   }
   .navigation .selection[data-is-open] {
