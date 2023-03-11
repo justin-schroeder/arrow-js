@@ -206,7 +206,10 @@ h2::before {
   color: var(--yellow);
 }
 
-p code {
+p code,
+h1 code,
+h2 code,
+h3 code {
   background-color: var(--gray-ll);
   padding: .15em .25em;
   border-radius: 4px;
