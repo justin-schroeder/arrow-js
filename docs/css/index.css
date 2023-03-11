@@ -42,7 +42,7 @@
   --c-list-item-marker:var(--c-primary);
   --c-list-item-inner-marker: var(--dark);
 
-  --c-link-text: var(--color-neutral-inverse);
+  --c-link-text: var(--c-neutral-inverse);
   --c-link-text-hover: var(--dark-d);
   --c-link-social-icon: var(--dark);
 
@@ -81,13 +81,13 @@
   --c-code-console-text: var(--c-tip);
   --c-code-console-bg: transparent;
 
-  --color-selection-text: var(--black);
-  --color-selection-bg: var(--yellow);
+  --c-selection-text: var(--black);
+  --c-selection-bg: var(--yellow);
 }
 
 ::selection {
-  background-color: var(--color-selection-bg);
-  color: var(--color-selection-text);
+  background-color: var(--c-selection-bg);
+  color: var(--c-selection-text);
 }
 
 html {
