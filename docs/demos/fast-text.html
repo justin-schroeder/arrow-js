@@ -21,7 +21,7 @@
     <div id="arrow"></div>
     <div id="vue"></div>
     <script type="module">
-      import { t, r } from '/dev/index.js';
+      import { html, reactive } from '/dev/index.js';
       const el = document.getElementById('arrow');
       const token = () => Math.random().toString(36).substring(2, 10);
       const list = [];
@@ -30,12 +30,12 @@
       }
 
       window.runArrow = () => {
-        const data = r({
+        const data = reactive({
           list
         })
-        t`
+        html`
         <ul>
-          ${data.list.map(item => t`<li>${() => item.name}</li>`)}
+          ${data.list.map(item => html`<li>${() => item.name}</li>`)}
         </ul>`(el)
 
         const go = () => {

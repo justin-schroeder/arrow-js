@@ -434,7 +434,7 @@ function createPartial(group = Symbol()): TemplatePartial {
 }
 
 /**
- * The template tagging function, used like: t`<div></div>`(mountEl)
+ * The template tagging function, used like: html`<div></div>`(mountEl)
  * @param  {TemplateStringsArray} strings
  * @param  {any[]} ...expressions
  * @returns ArrowTemplate
@@ -633,7 +633,7 @@ function comment(
   // At this point, we know we're dealing with some kind of reactive token fn
   const expression = expressions.shift()
   if (expression && isTpl(expression.e)) {
-    // If the expression is an t`` (ArrowTemplate), then call it with data
+    // If the expression is an html`` (ArrowTemplate), then call it with data
     // and then call the ArrowTemplate with no parent, so we get the nodes.
     partial.add(expression.e)
   } else {

@@ -1,4 +1,4 @@
-import { r, t } from '/dev/index.js'
+import { html, reactive } from '/dev/index.js'
 
 export default {
   intro: {
@@ -11,11 +11,11 @@ const data = reactive({
 
 console.log(data.price);`,
     example: () => {
-      const data = r({
+      const data = reactive({
         price: 25,
         quantity: 10,
       })
-      return t`<code class="console">// outputs ${data.price}</code>`
+      return html`<code class="console">// outputs ${data.price}</code>`
     },
   },
 

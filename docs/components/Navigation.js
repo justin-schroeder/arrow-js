@@ -1,9 +1,9 @@
-import { t, r } from '../dev/index.js'
+import { html, reactive } from '../dev/index.js'
 import store from '../store'
 
 export default function () {
-  const d = r({
-    trayIsOpen: false
+  const d = reactive({
+    trayIsOpen: false,
   })
 
   document.addEventListener('click', (e) => {
@@ -12,10 +12,10 @@ export default function () {
     }
   })
 
-  function makeList (items) {
-    return t`<ul>
-      ${items.map(item => t`
-        <li data-selected="${() => store.section === item.id}">
+  function makeList(items) {
+    return html`<ul>
+      ${items.map(
+        (item) => html` <li data-selected="${() => store.section === item.id}">
           <a href="#${item.id}">${item.title}</a>
           ${item.children && item.children.length && makeList(item.children)}
         </li>`
@@ -24,10 +24,12 @@ export default function () {
   }
   const listOfLinks = makeList(store.navigation)
 
-  return t`<nav class="navigation">
+  return html`<nav class="navigation">
     <div
       class="selection"
-      @click="${() => { d.trayIsOpen = !d.trayIsOpen }}"
+      @click="${() => {
+        d.trayIsOpen = !d.trayIsOpen
+      }}"
       data-is-open="${() => d.trayIsOpen}"
     >
       ${listOfLinks}

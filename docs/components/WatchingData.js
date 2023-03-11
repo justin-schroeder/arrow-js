@@ -1,10 +1,11 @@
-import { t } from '/dev/index.js'
+import { html } from '/dev/index.js'
 import example from './Example'
 import ReactiveDataExamples from '../examples/ReactiveDataExamples'
 
 export default function () {
-  return t`
-    <h2 id="watching-data">Watching data <code>w</code></h2>
+  return html` <h2 id="watching-data">
+      Watching data <code>w</code> || <code>watch</code>
+    </h2>
     <section>
       <p>
         Arrow has a built in <code>watch</code> function (<code>w</code> for
@@ -15,20 +16,20 @@ export default function () {
         when you save a file.
       </p>
       <p>
-        A watcher can receive any function at all, and that function can
-        use any data objects created with the <code>r</code> function. To see
-        this in action, let's take a look at the previous example.
+        A watcher can receive any function at all, and that function can use any
+        data objects created with the <code>r</code> function. To see this in
+        action, let's take a look at the previous example.
       </p>
       ${example(
         ReactiveDataExamples.watcher.code,
         ReactiveDataExamples.watcher.example
       )}
       <p>
-        The <code>w</code> function automatically tracks all dependencies used by
-        our <code>total()</code> function and turns <code>$on</code> observers
-        for those properties. However, the watcher also detects when a dependency
-        is no longer being used by a function and turns <code>$off</code> tracking
-        for those properties.
+        The <code>w</code> function automatically tracks all dependencies used
+        by our <code>total()</code> function and turns
+        <code>$on</code> observers for those properties. However, the watcher
+        also detects when a dependency is no longer being used by a function and
+        turns <code>$off</code> tracking for those properties.
       </p>
       <p>
         In our example, this means that when <code>logTotal</code> is
@@ -42,9 +43,9 @@ export default function () {
         the watched function.
       </p>
       <p>
-        If we take all of this information and choose to write some concise code,
-        we can build expressive and powerful systems with very little code.
-        Here is our example written one last time.
+        If we take all of this information and choose to write some concise
+        code, we can build expressive and powerful systems with very little
+        code. Here is our example written one last time.
       </p>
       ${example(
         ReactiveDataExamples.watcher2.code,

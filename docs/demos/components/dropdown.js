@@ -1,31 +1,30 @@
-import { t, r } from '/dev/index.js'
+import { html, reactive } from '/dev/index.js'
 
-export default function dropdown (items) {
-  const state = r({
+export default function dropdown(items) {
+  const state = reactive({
     isOpen: false,
-    selection: items[0]
+    selection: items[0],
   })
 
-  return t`
-  <div
+  return html` <div
     class="dropdown"
-    @click="${() => { state.isOpen = !state.isOpen }}"
+    @click="${() => {
+      state.isOpen = !state.isOpen
+    }}"
   >
-    <ul
-      class="dropdown-list"
-      data-is-open="${() => state.isOpen}"
-    >
-      ${() => items.map(item =>
-        t`
-        <li
-          data-selected="${() => item === state.selection}"
-          @click="${() => {
-            state.selection = item
-          }}"
-        >
-          ${item}
-        </li>`
-      )}
+    <ul class="dropdown-list" data-is-open="${() => state.isOpen}">
+      ${() =>
+        items.map(
+          (item) =>
+            html` <li
+              data-selected="${() => item === state.selection}"
+              @click="${() => {
+                state.selection = item
+              }}"
+            >
+              ${item}
+            </li>`
+        )}
     </ul>
   </div>`
 }

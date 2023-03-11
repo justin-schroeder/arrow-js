@@ -1,4 +1,4 @@
-import { t, r } from '/dev/index.js'
+import { html, reactive } from '/dev/index.js'
 
 function htmlEntities(str) {
   return String(str)
@@ -9,22 +9,29 @@ function htmlEntities(str) {
 }
 
 export default function (example, component, language = 'javascript') {
-  const data = r({
+  const data = reactive({
     warning: false,
     error: false,
   })
-  const template = t`
-  <div class="stage">
+  const template = html` <div class="stage">
     ${() =>
       data.warning &&
-      t`<div class="warning"><img src="/img/warning.svg" alt="warning" role="presentation">${data.warning}</div>`}
+      html`<div class="warning">
+        <img
+          src="/img/warning.svg"
+          alt="warning"
+          role="presentation"
+        />${data.warning}
+      </div>`}
     ${() =>
       data.error &&
-      t`<div class="error"><img src="/img/stop.svg" alt="stop" role="presentation">${data.error}</div>`}
+      html`<div class="error">
+        <img src="/img/stop.svg" alt="stop" role="presentation" />${data.error}
+      </div>`}
     <pre><code class="language-${language}">${htmlEntities(
-    example
-  )}</code></pre>
-    ${() => !!component && t`<div class="example">${component}</div>`}
+      example
+    )}</code></pre>
+    ${() => !!component && html`<div class="example">${component}</div>`}
   </div>`
 
   template.warning = (message) => {

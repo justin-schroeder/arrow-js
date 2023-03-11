@@ -1,10 +1,10 @@
-import { t } from '/dev/index.js'
+import { html } from '/dev/index.js'
 import example from './Example.js'
 import HelloWorld, { HelloWorldCode } from '../examples/HelloWorld'
 import ListExample, { ListExampleCode } from '../examples/ListExample'
 
 export default function () {
-  return t`
+  return html`
     <h1 id="intro">Introduction</h1>
     <h2 id="what-is-arrow">What is Arrow?</h2>
     <section>

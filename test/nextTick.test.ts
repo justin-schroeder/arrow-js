@@ -1,4 +1,4 @@
-import { r, nextTick, w } from '../src'
+import { reactive, nextTick, watch } from '../src'
 
 describe('nextTick', () => {
   it('executes callback tick when nothing needs to be done', () => {
@@ -12,13 +12,13 @@ describe('nextTick', () => {
   })
 
   it('squashes watcher events to a single call', () => {
-    const data = r({
+    const data = reactive({
       l: 100,
     })
     const watchCallback = jest.fn()
     const onCallback = jest.fn()
     data.$on('l', onCallback)
-    w(() => data.l, watchCallback)
+    watch(() => data.l, watchCallback)
     for (let i = 0; i < 100; i++) {
       data.l--
     }

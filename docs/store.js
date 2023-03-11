@@ -1,7 +1,6 @@
-import { r } from '../dev/index.js'
-import { w } from '../src/index.js'
+import { reactive, watch } from '../dev/index.js'
 
-const store = r({
+const store = reactive({
   section: 'intro',
   navigation: [
     {
@@ -26,7 +25,7 @@ const store = r({
 })
 
 // Always set the store section to the first navigation item.
-w(() => {
+watch(() => {
   if (store.section === undefined) {
     store.section = store.navigation[0].id
   }

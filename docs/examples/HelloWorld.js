@@ -1,10 +1,10 @@
-import { r, t } from '/dev/index.js'
+import { html, reactive } from '/dev/index.js'
 
-const data = r({
-  clicks: 0
+const data = reactive({
+  clicks: 0,
 })
 
-export default t`
+export default html`
   <button @click="${() => data.clicks++}">
     Fired ${() => data.clicks} arrows
   </button>

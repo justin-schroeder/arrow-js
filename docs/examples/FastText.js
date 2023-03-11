@@ -1,8 +1,8 @@
-import { t, r } from '../dev/index.js'
+import { html, reactive } from '../dev/index.js'
 
 export default function () {
   const token = () => Math.random().toString(36).substring(2, 5)
-  const data = r({
+  const data = reactive({
     list: [],
   })
 
@@ -15,7 +15,7 @@ export default function () {
     setTimeout(() => rename(), 10)
   }
   rename()
-  return t`<ul>
-            ${() => data.list.map((item) => t`<li>${() => item.name}</li>`)}
-          </ul>`
+  return html`<ul>
+    ${() => data.list.map((item) => html`<li>${() => item.name}</li>`)}
+  </ul>`
 }
