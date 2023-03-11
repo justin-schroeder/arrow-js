@@ -5,14 +5,6 @@ const store = r({
   section: 'intro',
   navigation: [
     {
-      title: 'Introduction',
-      id: 'intro',
-      children: [
-        { title: 'What is Arrow?', id: 'what-is-arrow' },
-        { title: 'Key Commitments', id: 'key-commitments' },
-      ],
-    },
-    {
       title: 'Getting Started',
       id: 'getting-started',
       children: [
