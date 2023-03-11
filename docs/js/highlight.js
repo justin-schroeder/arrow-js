@@ -6,7 +6,7 @@ export default async function () {
   }
 
   const highlighter = await shiki.getHighlighter({
-    theme: 'min-light',
+    theme: 'css-variables',
     langs: ['js', 'html', 'shell'],
   })
   const codeBlocks = document.querySelectorAll('pre code[class*="language-"]')

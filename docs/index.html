@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" theme="light">
   <head>
     <meta charset="utf-8" />
     <link rel="icon" href="/favicon.ico" />
@@ -7,6 +7,18 @@
     <link rel="stylesheet" type="text/css" href="/css/index.css" />
     <link rel="stylesheet" type="text/css" href="/css/home.css" />
     <script src="https://stirring-harmonious.arrow-js.com/script.js" data-site="NPEEWMAQ" defer></script>
+
+    <!-- Checks User Color-Scheme Preference -->
+    <script>
+      // assumes a Light Mode default
+        if (
+          localStorage.getItem('arrowjs-theme') === 'dark' ||
+          (window.matchMedia('(prefers-color-scheme: dark)').matches &&
+            !localStorage.getItem('arrowjs-theme'))
+        ) {
+          document.documentElement.setAttribute('theme', 'dark')
+        }
+    </script>
     <meta name="description" content="ArrowJS is a tool for programming reactive interfaces using native JavaScript. It’s 2Kb, requires no build tools, has no virtual DOM, and is blazing fast.">
 
     <!-- Twitter Meta Tags -->

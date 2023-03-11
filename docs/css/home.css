@@ -23,7 +23,6 @@
   max-width: 600px;
   line-height: 1.1;
   margin-bottom: 0.25em;
-  color: var(--dark-d);
   font-weight: 900;
   margin: 0 auto 0.25em auto;
 }
@@ -36,7 +35,6 @@
 
 .the-home-hero h2 {
   font-size: 1.25em;
-  color: var(--dark);
   font-weight: 300;
 }
 
@@ -70,7 +68,6 @@ section {
 
 section li {
   font-weight: 500;
-  color: var(--dark-d);
 }
 
 section a {
@@ -83,7 +80,6 @@ section h2 {
 }
 
 section h3 {
-  color: var(--dark-d);
   margin-top: 2em;;
 }
 
@@ -91,7 +87,6 @@ section h3 {
   font-size: 1.5rem;
   font-weight: 600;
   margin-bottom: 4em;
-  color: var(--dark-d);
   position: relative;
 }
 
