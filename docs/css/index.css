@@ -28,7 +28,7 @@
 :root[theme="light"] {
   --c-primary: var(--yellow);
   --c-neutral: var(--white);
-  --c-neutral-inv: var(--black);
+  --c-neutral-inverse: var(--black);
   --c-highlight: var(--yellow);
   --c-mute: var(--dark);
 
