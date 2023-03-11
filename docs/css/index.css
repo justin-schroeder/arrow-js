@@ -38,13 +38,22 @@
   --c-subheading-text: var(--dark);
   --c-subheading-highlight: var(--yellow);
 
+  --c-list-item-text: var(--black);
+  --c-list-item-marker:var(--c-primary);
+  --c-list-item-inner-marker: var(--dark);
+
   --c-link-text: var(--color-neutral-inverse);
   --c-link-text-hover: var(--dark-d);
   --c-link-social-icon: var(--dark);
 
   --c-nav-link-text: var(--black);
   --c-nav-link-text-hover: var(--black);
-  --c-nav-bg: var(--white);
+  --c-nav-link-text-selected:var(--black);
+  --c-nav-bg: transparent;
+  --c-nav-inner-bg: var(--white);
+  --c-nav-inner-border:var(--gray-l);
+  --c-nav-inner-border-top: var(--gray-l);
+  --nav-inner-shadow-opened: 0 0 1em rgba(0, 0, 0, .1);
 
   --c-warning: var(--yellow);
   --c-tip: var(--green);
@@ -64,11 +73,13 @@
   --c-error-text: var(--dark);
   --c-info-text: var(--dark-d);
 
-  --c-divider: var(--gray-l);
+  --c-decor-line-bg: var(--gray-l);
   --c-border-style: var(--gray-l);
 
   --c-code-bg: var(--gray-ll);
   --c-code-text: var(--dark-d);
+  --c-code-console-text: var(--c-tip);
+  --c-code-console-bg: transparent;
 
   --color-selection-text: var(--black);
   --color-selection-bg: var(--yellow);
