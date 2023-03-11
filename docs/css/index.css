@@ -23,14 +23,17 @@
   --red-dimm: rgba(244, 63, 94, .05);
   --green-dimm: rgba(16, 185, 129, .05);
   --purple-dimm: rgba(100, 108, 255, .05);
-}
 
-:root[theme="light"] {
   --c-primary: var(--yellow);
   --c-neutral: var(--white);
   --c-neutral-inverse: var(--black);
   --c-highlight: var(--yellow);
   --c-mute: var(--dark);
+
+  --nav-inner-shadow-opened: 0 0 1em rgba(0, 0, 0, .1);
+}
+
+:root[theme="light"] {
 
   --c-body-text: var(--dark);
   --c-body-bg: var(--white);
@@ -53,7 +56,6 @@
   --c-nav-inner-bg: var(--white);
   --c-nav-inner-border:var(--gray-l);
   --c-nav-inner-border-top: var(--gray-l);
-  --nav-inner-shadow-opened: 0 0 1em rgba(0, 0, 0, .1);
 
   --c-warning: var(--yellow);
   --c-tip: var(--green);
@@ -83,6 +85,63 @@
 
   --c-selection-text: var(--black);
   --c-selection-bg: var(--yellow);
+}
+
+:root[theme="dark"] {
+  color-scheme: dark;
+
+  --c-body-text: var(--gray-l);
+  --c-body-bg: var(--black-soft);
+  --c-heading-text: var(--gray-ll);
+  --c-subheading-text: var(--gray-l);
+  --c-subheading-highlight: var(--yellow);
+
+  --c-list-item-text: var(--gray-ll);
+  --c-list-item-marker: var(--c-primary);
+  --c-list-item-inner-marker: var(--gray-l);
+
+  --c-link-text: var(--gray-l);
+  --c-link-text-hover: var(--gray-ll);
+  --c-link-social-icon: var(--gray-l);
+
+  --c-nav-link-text: var(--gray-l);
+  --c-nav-link-text-hover: var(--gray-ll);
+  --c-nav-link-text-selected: var(--gray-l);
+  --c-nav-bg: transparent;
+  --c-nav-inner-bg: var(--black-soft);
+  --c-nav-inner-border: var(--dark-d);
+  --c-nav-inner-border-top: var(--gray-l);
+
+
+  --c-warning: var(--yellow);
+  --c-tip: var(--green);
+  --c-tip-accent: var(--green-l);
+  --c-error: var(--red);
+  --c-error-accent: var(--red-l);
+  --c-info: var(--purple-d);
+  --c-info-accent: var(--purple);
+
+  --c-warning-bg: var(--yellow-dimm);
+  --c-error-bg: var(--red-dimm);
+  --c-info-bg: var(--purple-dimm);
+  --c-tip-bg: var(--green-dimm);
+
+  --c-tip-text: var(--green);
+  --c-warning-text: var(--yellow-m);
+  --c-error-text: var(--red);
+  --c-info-text: var(--purple);
+
+  --c-decor-line-bg: var(--dark);
+  --c-border-style: var(--c-neutral-inverse);
+
+  --c-code-bg: var(--dark-d);
+  --c-code-text: var(--gray-l);
+  --c-code-console-text: var(--c-tip);
+  --c-code-console-bg: transparent;
+
+  --c-selection-text: var(--black);
+  --c-selection-bg: var(--yellow);
+
 }
 
 ::selection {
