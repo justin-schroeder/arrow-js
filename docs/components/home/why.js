@@ -70,7 +70,7 @@ export default function () {
       </p>
       ${example(ListExampleCode, ListExample)}
       <p>
-        We’ll go in depth on templates in a bit, but a key concept to understand
+        We go in depth on templates in the docs, but a key concept to understand
         here is that template literals, and tagged template literals, are
         <strong>native features of JavaScript</strong>.
       </p>
