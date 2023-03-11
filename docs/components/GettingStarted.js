@@ -1,4 +1,4 @@
-import { t } from '/dev/index.js'
+import { html } from '/dev/index.js'
 import example from './Example'
 import reactiveData from './ReactiveData'
 import watchingData from './WatchingData'
@@ -7,13 +7,13 @@ import InstallationExamples from '../examples/InstallationExamples'
 import examples from './Examples'
 
 export default function () {
-  return t`
+  return html`
     <h1 id="getting-started">Getting Started</h1>
     <h2 id="installation">Installation</h2>
     <section>
       <p>
-        Arrow can be used with simple <code>&lt;script&gt;</code>
-        tags or from <code>npm</code>/<code>yarn</code> with a bundler.
+        Arrow can be used with simple <code>&lt;script&gt;</code> tags or from
+        <code>npm</code>/<code>yarn</code> with a bundler.
       </p>
       <h3>From npm or yarn (using a bundler)</h3>
       <p>
@@ -28,7 +28,8 @@ export default function () {
       ${example(InstallationExamples.yarn, null, 'shell')}
       <h3>From a CDN</h3>
       <p>
-        You can install arrow directly from a CDN. We recommend using <a href="https://esm.sh/">esm.sh</a>
+        You can install arrow directly from a CDN. We recommend using
+        <a href="https://esm.sh/">esm.sh</a>
         since it is optimized for loading ESM modules. Just plop this into your
         <code>.html</code> file.
       </p>
@@ -39,16 +40,16 @@ export default function () {
     <h2>Editor support</h2>
     <section>
       <p>
-        Since Arrow uses tagged template literals its syntax is very similar
-        to lit-html. Editors that support lit-html will also
-        support Arrow. If you are using VSCode you can install the
-        <a href="https://marketplace.visualstudio.com/items?itemName=bierner.lit-html">lit-html</a>
+        Since Arrow uses tagged template literals its syntax is very similar to
+        lit-html. Editors that support lit-html will also support Arrow. If you
+        are using VSCode you can install the
+        <a
+          href="https://marketplace.visualstudio.com/items?itemName=bierner.lit-html"
+          >lit-html</a
+        >
         extension to enable syntax highlighting on <code>html</code> blocks.
       </p>
     </section>
-    ${reactiveData}
-    ${watchingData}
-    ${templates}
-    ${examples}
+    ${reactiveData} ${watchingData} ${templates} ${examples}
   `
 }

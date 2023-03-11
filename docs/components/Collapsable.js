@@ -1,15 +1,16 @@
-import { t, r } from '/dev/index.js'
+import { html, reactive } from '/dev/index.js'
 
 export default function (slot) {
-  const data = r({
-    open: false
+  const data = reactive({
+    open: false,
   })
-  return t`
-  <aside
+  return html` <aside
     class="collapsed info"
     data-title="The how and why"
     data-is-open="${() => data.open}"
-    @click="${() => { data.open = !data.open }}"
+    @click="${() => {
+      data.open = !data.open
+    }}"
   >
     ${slot}
   </aside>`

@@ -1,4 +1,4 @@
-import { t } from '/dev/index.js'
+import { html } from '/dev/index.js'
 import dropdown from './dropdown'
 
 const planets = [
@@ -9,16 +9,10 @@ const planets = [
   'Jupiter',
   'Saturn',
   'Uranus',
-  'Neptune'
+  'Neptune',
 ]
 
-const rivers = [
-  'Amazon',
-  'Danube',
-  'Mississippi',
-  'Nile',
-  'Yangtze'
-]
+const rivers = ['Amazon', 'Danube', 'Mississippi', 'Nile', 'Yangtze']
 
 const cities = [
   'Atlanta',
@@ -27,10 +21,10 @@ const cities = [
   'Los Angeles',
   'Moscow',
   'New York',
-  'Rome'
+  'Rome',
 ]
 
-t`
+html`
   <ul class="dropdown-demo">
     <li>${dropdown(planets)}</li>
     <li>${dropdown(rivers)}</li>

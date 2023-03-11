@@ -59,7 +59,7 @@
     </div>
     <div id="app"></div>
     <script type="module">
-      import { t, r, w } from '/dev/index.js';
+      import { html, reactive, watch } from '/dev/index.js';
       import store from './store';
       import navigation from './components/Navigation';
       import introduction from './components/Introduction';
@@ -68,7 +68,7 @@
       import events from './js/events'
       const el = document.getElementById('app');
 
-      t`
+      html`
         <div class="container">
           <div class="body-wrapper">
             ${navigation}

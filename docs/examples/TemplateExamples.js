@@ -1,6 +1,6 @@
-import { r, html } from '/dev/index.js'
+import { html, reactive } from '/dev/index.js'
 
-const data = r({
+const data = reactive({
   location: 'World',
   progress: 0,
   textInput: '',
@@ -65,9 +65,7 @@ const updateProgress = () =>
   )
 
 export const attributes = {
-  code: `// Note: in this example, we use the r and t shorthands
-
-const upload = r({
+  code: `const upload = reactive({
   progress: 0
 })
 
@@ -88,7 +86,7 @@ html\`<progress value="\${() => upload.progress}" max="100"></progress>\``,
 }
 
 export const events = {
-  code: `const data = r({
+  code: `const data = reactive({
   value: ''
 })
 
@@ -109,7 +107,7 @@ html\`
   `,
 }
 export const idl = {
-  code: `const data = r({
+  code: `const data = reactive({
   colors: ['red', 'green', 'blue']
 })
 
@@ -119,7 +117,7 @@ html\`
 }
 
 export const list = {
-  code: `import { reactive, html } from '@arrow/core'
+  code: `import { html, reactive } from '@arrow/core'
 
 const data = reactive({
   items: [

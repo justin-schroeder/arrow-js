@@ -1,4 +1,4 @@
-import { nextTick, r, w } from '../src'
+import { nextTick, reactive, watch } from '../src'
 
 type Data = {
   value: number | null
@@ -6,13 +6,13 @@ type Data = {
 
 describe('w', () => {
   it('should call when depencency changes', async () => {
-    const d = r({ value: 0 })
+    const d = reactive({ value: 0 })
 
     const callback = jest.fn(() => {
       d.value
     })
 
-    w(callback)
+    watch(callback)
 
     await nextTick()
     expect(callback).toHaveBeenCalledTimes(1)
@@ -29,7 +29,7 @@ describe('w', () => {
   })
 
   it('should handle null values', async () => {
-    const d = r<Data>({ value: null })
+    const d = reactive<Data>({ value: null })
 
     const inner = jest.fn()
 
@@ -39,7 +39,7 @@ describe('w', () => {
       }
     }
 
-    w(callback)
+    watch(callback)
 
     await nextTick()
     expect(inner).toHaveBeenCalledTimes(0) // if value is null, inner should not be called
@@ -54,8 +54,8 @@ describe('w', () => {
   })
 
   it('should handle changes inside a watcher', async () => {
-    const d1 = r<Data>({ value: 0 })
-    const d2 = r<Data>({ value: 1 })
+    const d1 = reactive<Data>({ value: 0 })
+    const d2 = reactive<Data>({ value: 1 })
 
     const cb1 = jest.fn()
     const cb2 = jest.fn()
@@ -75,8 +75,8 @@ describe('w', () => {
         cb2()
       }
     }
-    w(callback2)
-    w(callback)
+    watch(callback2)
+    watch(callback)
     expect(cb1).toHaveBeenCalledTimes(0)
     expect(cb2).toHaveBeenCalledTimes(0)
 
@@ -93,7 +93,7 @@ describe('w', () => {
   })
 
   it('should handle own changes inside a watcher on initial call', async () => {
-    const d = r<Data>({ value: 1 })
+    const d = reactive<Data>({ value: 1 })
 
     const cb1 = jest.fn()
 
@@ -107,7 +107,7 @@ describe('w', () => {
     }
 
     // this only works if we separate the dependency from the callback
-    w(() => d.value, callback)
+    watch(() => d.value, callback)
 
     expect(cb1).toHaveBeenCalledTimes(0)
 

@@ -1,16 +1,18 @@
-import { t } from '/dev/index.js'
+import { html } from '/dev/index.js'
 import example from './Example'
 import ReactiveDataExamples from '../examples/ReactiveDataExamples'
 
 export default function () {
-  return t`
-    <h2 id="reactive-data">Reactive Data <code>r</code></h2>
+  return html`
+    <h2 id="reactive-data">
+      Reactive Data <code>r</code> || <code>reactive</code>
+    </h2>
     <section>
       <p>
         The <code>reactive</code> function (<code>r</code> for shorthand)
-        transforms a generic data object into an "observed" data object.
-        Let’s call these "reactive" data objects. Converting your data object
-        into a reactive object is as simple as wrapping it in an call to
+        transforms a generic data object into an "observed" data object. Let’s
+        call these "reactive" data objects. Converting your data object into a
+        reactive object is as simple as wrapping it in an call to
         <code>reactive()</code>:
       </p>
       ${example(
@@ -46,12 +48,11 @@ export default function () {
         'Read on to learn how to do this elegantly with <a href="#watching-data">watchers</a>!'
       )}
       <p>
-        Our example is starting to get moderately useful! However, it looks
-        a bit messy and if <code>data.logTotal</code> is <code>false</code>
-        it will still run our <code>total()</code> function uselessly, so
-        really we should use <code>$off</code> to stop observing
-        <code>cost</code> and <code>quantity</code> when
-        <code>logTotal</code> is <code>false</code>.
+        Our example is starting to get moderately useful! However, it looks a
+        bit messy and if <code>data.logTotal</code> is <code>false</code> it
+        will still run our <code>total()</code> function uselessly, so really we
+        should use <code>$off</code> to stop observing <code>cost</code> and
+        <code>quantity</code> when <code>logTotal</code> is <code>false</code>.
       </p>
       <p>
         To solve these issues, it's time we introduce our next hero

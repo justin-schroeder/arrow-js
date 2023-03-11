@@ -1,4 +1,4 @@
-import { t, r, nextTick, ArrowTemplate } from '../src'
+import { html, reactive, nextTick, ArrowTemplate } from '../src'
 import { click, setValue } from './utils/events'
 
 interface User {
@@ -8,13 +8,13 @@ interface User {
 
 describe('t', () => {
   it('can render simple strings', () => {
-    const nodes = t`foo bar`().childNodes
+    const nodes = html`foo bar`().childNodes
     expect(nodes.length).toBe(1)
     expect(nodes[0].nodeName).toBe('#text')
   })
 
   it('can render simple numeric expressions', () => {
-    const nodes = t`${10 * 10}`().childNodes
+    const nodes = html`${10 * 10}`().childNodes
     expect(nodes.length).toBe(1)
     expect(nodes[0].nodeName).toBe('#text')
     expect(nodes[0].nodeValue).toBe('100')
@@ -22,7 +22,7 @@ describe('t', () => {
 
   it('can render simple text with expressions', async () => {
     const world = 'World'
-    const nodes = t`Hello ${world}`().childNodes
+    const nodes = html`Hello ${world}`().childNodes
     await nextTick()
     expect(nodes.length).toBe(1)
     expect(nodes[0].nodeName).toBe('#text')
@@ -30,8 +30,8 @@ describe('t', () => {
   })
 
   it('can render reactive data once without arrow fn', async () => {
-    const data = r({ name: 'World' })
-    const node = t`Hello ${data.name}`()
+    const data = reactive({ name: 'World' })
+    const node = html`Hello ${data.name}`()
     expect(node.childNodes.length).toBe(1)
     expect(node.childNodes[0].nodeValue).toBe('Hello World')
     data.name = 'Justin'
@@ -40,9 +40,9 @@ describe('t', () => {
   })
 
   it('automatically updates expressions with arrow fn', async () => {
-    const data = r({ name: 'World' })
+    const data = reactive({ name: 'World' })
     const parent = document.createElement('div')
-    t`Hello ${() => data.name}`(parent)
+    html`Hello ${() => data.name}`(parent)
     expect(parent.textContent).toBe('Hello World')
     data.name = 'Justin'
     await nextTick()
@@ -50,9 +50,9 @@ describe('t', () => {
   })
 
   it('can create a token expression at the beginning of template', async () => {
-    const data = r({ name: 'Hello' })
+    const data = reactive({ name: 'Hello' })
     const parent = document.createElement('div')
-    t`${() => data.name} Worldilocks`(parent)
+    html`${() => data.name} Worldilocks`(parent)
     expect(parent.textContent).toBe('Hello Worldilocks')
     data.name = 'Justin'
     await nextTick()
@@ -60,9 +60,9 @@ describe('t', () => {
   })
 
   it('can place expression nested inside some elements inside a string', async () => {
-    const data = r({ name: 'Hello' })
+    const data = reactive({ name: 'Hello' })
     const parent = document.createElement('div')
-    t`This is cool <div>And here is more text <h2>Name: ${() =>
+    html`This is cool <div>And here is more text <h2>Name: ${() =>
       data.name} ok?</h2></div><span>${data.name}</span>`(parent)
     expect(parent.innerHTML).toBe(
       'This is cool <div>And here is more text <h2>Name: Hello ok?</h2></div><span>Hello</span>'
@@ -75,9 +75,9 @@ describe('t', () => {
   })
 
   it('can sub-render templates without reactivity.', async () => {
-    const data = r({ name: 'World' })
+    const data = reactive({ name: 'World' })
     const parent = document.createElement('div')
-    t`Hello ${t`<div>${data.name}</div>`}`(parent)
+    html`Hello ${html`<div>${data.name}</div>`}`(parent)
     expect(parent.innerHTML).toBe('Hello <div>World</div>')
     data.name = 'Justin'
     await nextTick()
@@ -85,9 +85,9 @@ describe('t', () => {
   })
 
   it('can render a simple non-reactive list', async () => {
-    const data = r({ list: ['a', 'b', 'c'] })
+    const data = reactive({ list: ['a', 'b', 'c'] })
     const parent = document.createElement('div')
-    t`Hello <ul>${data.list.map((item: string) => t`<li>${item}</li>`)}</ul>`(
+    html`Hello <ul>${data.list.map((item: string) => html`<li>${item}</li>`)}</ul>`(
       parent
     )
     expect(parent.innerHTML).toBe(
@@ -102,10 +102,10 @@ describe('t', () => {
   })
 
   it('can render a simple reactive list', async () => {
-    const data = r({ list: ['a', 'b', 'c'] })
+    const data = reactive({ list: ['a', 'b', 'c'] })
     const parent = document.createElement('div')
-    t`Hello <ul>${() =>
-      data.list.map((item: string) => t`<li>${item}</li>`)}</ul>`(parent)
+    html`Hello <ul>${() =>
+      data.list.map((item: string) => html`<li>${item}</li>`)}</ul>`(parent)
     expect(parent.innerHTML).toBe(
       'Hello <ul><li>a</li><li>b</li><li>c</li></ul>'
     )
@@ -117,10 +117,10 @@ describe('t', () => {
   })
 
   it('can render a list with multiple repeated roots.', () => {
-    const data = r({ list: ['a', 'b', 'c'] })
+    const data = reactive({ list: ['a', 'b', 'c'] })
     const parent = document.createElement('div')
-    t`<div>
-      ${() => data.list.map((item: string) => t`<h2>${item}</h2><p>foobar</p>`)}
+    html`<div>
+      ${() => data.list.map((item: string) => html`<h2>${item}</h2><p>foobar</p>`)}
     </div>`(parent)
     expect(parent.innerHTML).toBe(`<div>
       <h2>a</h2><p>foobar</p><h2>b</h2><p>foobar</p><h2>c</h2><p>foobar</p>
@@ -128,10 +128,10 @@ describe('t', () => {
   })
 
   it('can render a list with new values un-shifted on', async () => {
-    const data = r({ list: ['a', 'b', 'c'] })
+    const data = reactive({ list: ['a', 'b', 'c'] })
     const parent = document.createElement('div')
-    t`<ul>
-      ${() => data.list.map((item: string) => t`<li>${item}</li>`)}
+    html`<ul>
+      ${() => data.list.map((item: string) => html`<li>${item}</li>`)}
     </ul>`(parent)
     expect(parent.innerHTML).toBe(`<ul>
       <li>a</li><li>b</li><li>c</li>
@@ -144,10 +144,10 @@ describe('t', () => {
   })
 
   it('can render a list with new values pushed', async () => {
-    const data = r({ list: ['a', 'b', 'c'] })
+    const data = reactive({ list: ['a', 'b', 'c'] })
     const parent = document.createElement('div')
-    t`<ul>
-      ${() => data.list.map((item: string) => t`<li>${item}</li>`)}
+    html`<ul>
+      ${() => data.list.map((item: string) => html`<li>${item}</li>`)}
     </ul>`(parent)
     expect(parent.innerHTML).toBe(`<ul>
       <li>a</li><li>b</li><li>c</li>
@@ -160,10 +160,10 @@ describe('t', () => {
   })
 
   it('can render a list with new values spliced in', async () => {
-    const data = r({ list: ['a', 'b', 'c'] })
+    const data = reactive({ list: ['a', 'b', 'c'] })
     const parent = document.createElement('div')
-    t`<ul>
-      ${() => data.list.map((item: string) => t`<li>${item}</li>`)}
+    html`<ul>
+      ${() => data.list.map((item: string) => html`<li>${item}</li>`)}
     </ul>`(parent)
     expect(parent.innerHTML).toBe(`<ul>
       <li>a</li><li>b</li><li>c</li>
@@ -176,10 +176,10 @@ describe('t', () => {
   })
 
   it('can render a list with new values spliced in', async () => {
-    const data = r({ list: ['a', 'b', 'c'] })
+    const data = reactive({ list: ['a', 'b', 'c'] })
     const parent = document.createElement('div')
-    t`<ul>
-      ${() => data.list.map((item: string) => t`<li>${item}</li>`)}
+    html`<ul>
+      ${() => data.list.map((item: string) => html`<li>${item}</li>`)}
     </ul>`(parent)
     expect(parent.innerHTML).toBe(`<ul>
       <li>a</li><li>b</li><li>c</li>
@@ -192,16 +192,16 @@ describe('t', () => {
   })
 
   it('can render a list with a for loop', async () => {
-    const data = r({ list: ['a', 'b', 'c'] as string[] })
+    const data = reactive({ list: ['a', 'b', 'c'] as string[] })
     const parent = document.createElement('div')
     function list(items: any[]): Array<CallableFunction> {
       const els: ArrowTemplate[] = []
       for (const i in items) {
-        els.push(t`<li>${items[i]}</li>`)
+        els.push(html`<li>${items[i]}</li>`)
       }
       return els
     }
-    t`<ul>
+    html`<ul>
       ${() => list(data.list)}
     </ul>`(parent)
     expect(parent.innerHTML).toBe(`<ul>
@@ -215,7 +215,7 @@ describe('t', () => {
   })
 
   it('can render a list from an object', async () => {
-    const data = r({
+    const data = reactive({
       food: {
         main: 'Pizza',
         desert: 'ice cream',
@@ -225,11 +225,11 @@ describe('t', () => {
     function list(items: any): Array<CallableFunction> {
       const els: ArrowTemplate[] = []
       for (const i in items) {
-        els.push(t`<li>${i}: ${items[i]}</li>`)
+        els.push(html`<li>${i}: ${items[i]}</li>`)
       }
       return els
     }
-    t`<ul>
+    html`<ul>
       ${() => list(data.food)}
     </ul>`(parent)
     expect(parent.innerHTML).toBe(`<ul>
@@ -243,7 +243,7 @@ describe('t', () => {
   })
 
   it('re-uses nodes that had sub value change.', async () => {
-    const data = r({
+    const data = reactive({
       list: [
         { name: 'Justin', id: 3 },
         { name: 'Luan', id: 1 },
@@ -251,8 +251,8 @@ describe('t', () => {
       ],
     })
     const parent = document.createElement('div')
-    t`<ul>
-      ${() => data.list.map((user: User) => t`<li>${() => user.name}</li>`)}
+    html`<ul>
+      ${() => data.list.map((user: User) => html`<li>${() => user.name}</li>`)}
     </ul>`(parent)
     expect(parent.innerHTML).toBe(`<ul>
       <li>Justin</li><li>Luan</li><li>Andrew</li>
@@ -267,7 +267,7 @@ describe('t', () => {
   })
 
   it('can move keyed nodes in a list', async () => {
-    const data = r({
+    const data = reactive({
       list: [
         { name: 'Justin', id: 3 },
         { name: 'Luan', id: 0 },
@@ -275,16 +275,16 @@ describe('t', () => {
       ] as Array<{ name: string; id: number }>,
     })
     const parent = document.createElement('div')
-    t`<ul>
+    html`<ul>
       ${() =>
         data.list.map((user: User) =>
-          t`<li>${() => user.name}</li>`.key(user.id)
+          html`<li>${() => user.name}</li>`.key(user.id)
         )}
     </ul>`(parent)
 
     parent.querySelector('li')?.setAttribute('data-is-justin', 'true')
     data.list.splice(0, 1)
-    data.list.push(r({ name: 'Justin', id: 3 }), r({ name: 'Fred', id: 0 }))
+    data.list.push(reactive({ name: 'Justin', id: 3 }),reactive({ name: 'Fred', id: 0 }))
     await nextTick()
     expect(parent.innerHTML).toBe(`<ul>
       <li>Luan</li><li>Andrew</li><li data-is-justin="true">Justin</li><li>Fred</li>
@@ -292,7 +292,7 @@ describe('t', () => {
   })
 
   it('can sort keyed nodes in a list', async () => {
-    const data = r({
+    const data = reactive({
       list: [
         { name: 'Justin', id: 3 },
         { name: 'Luan', id: 1 },
@@ -300,10 +300,10 @@ describe('t', () => {
       ],
     })
     const parent = document.createElement('div')
-    t`<ul>
+    html`<ul>
       ${() =>
         data.list.map((user: User) =>
-          t`<li>${() => user.name}</li>`.key(user.id)
+          html`<li>${() => user.name}</li>`.key(user.id)
         )}
     </ul>`(parent)
     parent.querySelector('li')?.setAttribute('data-is-justin', 'true')
@@ -323,7 +323,7 @@ describe('t', () => {
   })
 
   it('can update the values in keyed nodes', async () => {
-    const data = r({
+    const data = reactive({
       list: [
         { name: 'Justin', id: 3 },
         { name: 'Luan', id: 1 },
@@ -331,10 +331,10 @@ describe('t', () => {
       ],
     })
     const parent = document.createElement('div')
-    t`<ul>
+    html`<ul>
       ${() =>
         data.list.map((user: User) =>
-          t`<li>${() => user.name}</li>`.key(user.id)
+          html`<li>${() => user.name}</li>`.key(user.id)
         )}
     </ul>`(parent)
     data.list[0].name = 'Bob'
@@ -347,10 +347,10 @@ describe('t', () => {
   })
 
   it('can render results of multiple data objects', async () => {
-    const a = r({ price: 45 })
-    const b = r({ quantity: 25 })
+    const a = reactive({ price: 45 })
+    const b = reactive({ quantity: 25 })
     const parent = document.createElement('div')
-    t`${() => a.price * b.quantity}`(parent)
+    html`${() => a.price * b.quantity}`(parent)
     expect(parent.innerHTML).toBe('1125')
     a.price = 100
     await nextTick()
@@ -358,15 +358,15 @@ describe('t', () => {
   })
 
   it('can conditionally swap nodes', async () => {
-    const data = r({
+    const data = reactive({
       price: 100,
       promo: 'free',
       showPromo: false,
     })
     const parent = document.createElement('div')
-    const componentA = t`Price: ${() => data.price}`
-    const componentB = t`Promo: <input type="text">`
-    t`<div class="checkout">
+    const componentA = html`Price: ${() => data.price}`
+    const componentB = html`Promo: <input type="text">`
+    html`<div class="checkout">
       ${() => (data.showPromo ? componentB : componentA)}
     </div>`(parent)
     expect(parent.innerHTML).toBe(`<div class="checkout">
@@ -380,14 +380,14 @@ describe('t', () => {
   })
 
   it('can conditionally show/remove nodes', async () => {
-    const data = r({
+    const data = reactive({
       showPromo: false,
     })
     const parent = document.createElement('div')
     // Note: this test seems obtuse but it isn't since it performing this toggle
     // action multiple times stress tests the underlying placeholder mechanism.
-    const promo = t`Promo: <input type="text">`
-    t`<div class="checkout">
+    const promo = html`Promo: <input type="text">`
+    html`<div class="checkout">
       ${() => data.showPromo && promo}
     </div>`(parent)
     expect(parent.innerHTML).toBe(`<div class="checkout">
@@ -412,29 +412,29 @@ describe('t', () => {
 
   it('outputs the boolean true, but not the boolean false', () => {
     const parent = document.createElement('div')
-    expect((t`${() => true}${() => false}`(parent) as Element).innerHTML).toBe(
+    expect((html`${() => true}${() => false}`(parent) as Element).innerHTML).toBe(
       'true<!---->'
     )
   })
 
   it('can render an attribute', () => {
     const parent = document.createElement('div')
-    const data = r({
+    const data = reactive({
       org: 'braid',
     })
     expect(
-      (t`<div data-org="${() => data.org}"></div>`(parent) as Element).innerHTML
+      (html`<div data-org="${() => data.org}"></div>`(parent) as Element).innerHTML
     ).toBe(`<div data-org="braid"></div>`)
   })
 
   it('can remove and re-add multiple attributes', async () => {
     const parent = document.createElement('div')
-    const data = r({
+    const data = reactive({
       org: 'braid' as boolean | string,
       precinct: false as boolean | string,
       state: 'virginia',
     })
-    t`<div x-precinct="${() => data.precinct}" data-org="${() =>
+    html`<div x-precinct="${() => data.precinct}" data-org="${() =>
       data.org}">${() => data.state}</div>`(parent) as Element
     await nextTick()
     expect(parent.innerHTML).toBe(`<div data-org="braid">virginia</div>`)
@@ -456,7 +456,7 @@ describe('t', () => {
 
   it('can render nested nodes with attribute expressions', async () => {
     const parent = document.createElement('div')
-    const data = r({
+    const data = reactive({
       country: 'usa',
       states: [
         { name: 'virginia', abbr: 'va' },
@@ -464,11 +464,11 @@ describe('t', () => {
         { name: 'california', abbr: 'ca' },
       ],
     })
-    t`<ul data-country="${data.country}">
+    html`<ul data-country="${data.country}">
         ${() =>
           data.states.map(
             (state: any) =>
-              t`<li data-abbr="${() => state.abbr}">${() => state.name}</li>`
+              html`<li data-abbr="${() => state.abbr}">${() => state.name}</li>`
           )}
           <li data-first-abbr="${() => data.states[0].abbr}">${() =>
       data.states[0].name}</li>
@@ -492,17 +492,17 @@ describe('t', () => {
 
   it('can render the number zero', async () => {
     const parent = document.createElement('div')
-    t`${() => 0}|${0}`(parent)
+    html`${() => 0}|${0}`(parent)
     expect(parent.innerHTML).toBe('0|0')
   })
 
   it('can bind to native events as easily as pecan pie', async () => {
     const parent = document.createElement('div')
-    const data = r({ value: '' })
+    const data = reactive({ value: '' })
     const update = (event: InputEvent) => {
       data.value = (event.target as HTMLInputElement).value
     }
-    t`<input type="text" @input="${update}">${() => data.value}`(parent)
+    html`<input type="text" @input="${update}">${() => data.value}`(parent)
     setValue(parent.querySelector('input'), 'pizza')
     await nextTick()
     expect(parent.innerHTML).toBe('<input type="text">pizza')
@@ -510,11 +510,11 @@ describe('t', () => {
 
   it('sets the IDL value attribute on input elements', async () => {
     const parent = document.createElement('div')
-    const data = r({ value: '' })
+    const data = reactive({ value: '' })
     const update = (event: InputEvent) => {
       data.value = (event.target as HTMLInputElement).value
     }
-    t`<input type="text" value="${() => data.value}" @input="${update}" id="a">
+    html`<input type="text" value="${() => data.value}" @input="${update}" id="a">
       <input type="text" value="${() => data.value}" @input="${update}" id="b">${() => data.value}`(parent)
     const a = parent.querySelector('[id="a"]') as HTMLInputElement
     const b = parent.querySelector('[id="b"]') as HTMLInputElement
@@ -529,8 +529,8 @@ describe('t', () => {
 
   it('sets the IDL checked attribute on checkbox elements', async () => {
     const parent = document.createElement('div')
-    const data = r({ checked: false })
-    t`<input type="checkbox" checked="${() => data.checked}" id="a">`(parent)
+    const data = reactive({ checked: false })
+    html`<input type="checkbox" checked="${() => data.checked}" id="a">`(parent)
     const a = parent.querySelector('[id="a"]') as HTMLInputElement
     expect(a.checked).toBe(false)
     a.checked = true
@@ -549,10 +549,10 @@ describe('t', () => {
   it('cleans up event listeners when a node has been removed', async () => {
     const clickHandler = jest.fn()
     const parent = document.createElement('div')
-    const data = r({
+    const data = reactive({
       show: true
     })
-    t`${() => data.show ? t`<button @click="${clickHandler}"></button>` : ''}`(parent);
+    html`${() => data.show ? html`<button @click="${clickHandler}"></button>` : ''}`(parent);
     let button = parent.querySelector('button') as HTMLButtonElement
     click(button)
     expect(clickHandler).toHaveBeenCalledTimes(1)
@@ -569,8 +569,8 @@ describe('t', () => {
 
   it('defaults to the proper option select element', () => {
     const parent = document.createElement('div')
-    const data = r({ selected: 'b' })
-    t`<select>
+    const data = reactive({ selected: 'b' })
+    html`<select>
         <option value="a" selected="${() => 'a' === data.selected}">A</option>
         <option value="b" selected="${() => 'b' === data.selected}">B</option>
         <option value="c" selected="${() => 'c' === data.selected}">C</option>
@@ -584,10 +584,10 @@ describe('t', () => {
       ['Detroit', 'MI'],
       ['Boston', 'MA'],
     ]
-    t`<table>
+    html`<table>
       <tbody>
         ${rows.map(
-          (row) => t`<tr>${row.map((column) => t`<td>${column}</td>`)}</tr>`
+          (row) => html`<tr>${row.map((column) => html`<td>${column}</td>`)}</tr>`
         )}
       </tbody>
     </table>`(parent)
@@ -599,23 +599,23 @@ describe('t', () => {
   })
 
   it('renders sanitized HTML when reading from a variable.', () => {
-    const data = r({
+    const data = reactive({
       foo: '<h1>Hello world</h1>'
     })
-    expect(t`<div>${() => data.foo}</div>`().querySelector('h1')).toBe(null)
+    expect(html`<div>${() => data.foo}</div>`().querySelector('h1')).toBe(null)
   })
   it('renders sanitized HTML when updating from a variable.', async () => {
-    const data = r({
+    const data = reactive({
       html: 'foo'
     })
     const stage = document.createElement('div')
-    t`<div>${() => data.html}</div>`(stage)
+    html`<div>${() => data.html}</div>`(stage)
     data.html = '<h1>Some text</h1>'
     await nextTick()
     expect(stage.querySelector('h1')).toBe(null)
   })
   it('renders keyed list and updates child value without removing/moving any nodes', async () => {
-    const data = r({
+    const data = reactive({
       list: [{
         id: 1,
         name: 'foo'
@@ -626,8 +626,8 @@ describe('t', () => {
       }]
     })
     const stage = document.createElement('div')
-    t`<ul>
-      ${() => data.list.map(item => t`
+    html`<ul>
+      ${() => data.list.map(item => html`
         <li>
           ${() => item.name}<input @input="${(e: InputEvent) => {item.name = (e.target as HTMLInputElement).value}}">
         </li>`.key(item.id)
@@ -644,8 +644,8 @@ describe('t', () => {
 
   it('can render an empty template', async () => {
     const div = document.createElement('div')
-    const store = r({ show: true })
-    expect(() => t`${() => store.show ? t`<br>` : t``}`(div)).not.toThrow()
+    const store = reactive({ show: true })
+    expect(() => html`${() => store.show ? html`<br>` : html``}`(div)).not.toThrow()
     expect(div.innerHTML).toBe('<br>')
     store.show = false
     await nextTick()
@@ -654,8 +654,8 @@ describe('t', () => {
 
   it('can render an array of items and mutate an item in the array (#49)', async () => {
     const div = document.createElement('div')
-    const data = r({order: [1, 2, 3]});
-    t`<ul>${() => data.order.map(item => t`<li>${item}</li>`)}</ul>`(div);
+    const data = reactive({order: [1, 2, 3]});
+    html`<ul>${() => data.order.map(item => html`<li>${item}</li>`)}</ul>`(div);
     data.order[1] += 10
     await nextTick()
     expect(div.innerHTML).toBe('<ul><li>1</li><li>12</li><li>3</li></ul>')
@@ -671,8 +671,8 @@ describe('t', () => {
       }
     }
     customElements.define('x-foo', XFoo, { extends: 'div'})
-    const data = r({ foo: 'bim' })
-    t`<x-foo .foo="${() => data.foo}"></x-foo>`(div)
+    const data = reactive({ foo: 'bim' })
+    html`<x-foo .foo="${() => data.foo}"></x-foo>`(div)
     const x = div.querySelector('x-foo') as XFoo
     expect(x.foo).toBe('bim')
     data.foo = 'baz'
