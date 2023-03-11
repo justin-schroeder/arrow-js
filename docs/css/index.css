@@ -375,6 +375,10 @@ p.key-concept::before {
   margin-left: .25em;
 }
 
+[theme="dark"] .body-wrapper a[href^="http"]::after {
+  filter: invert(100%);
+}
+
 .body-wrapper a[href^="http"]:hover::after {
   filter: invert(61%) sepia(94%) saturate(464%) hue-rotate(358deg) brightness(100%) contrast(105%);
 }
