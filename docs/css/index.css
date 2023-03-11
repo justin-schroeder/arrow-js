@@ -571,6 +571,7 @@ aside[data-is-open]::after {
   padding: 1rem;
   margin: 0;
   background: var(--shiki-color-background);
+  overflow: auto;
 }
 .stage pre pre {
   background-color: transparent !important;
