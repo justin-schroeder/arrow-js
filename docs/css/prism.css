@@ -141,3 +141,130 @@ pre[class*="language-"] {
 	cursor: help;
 }
 
+/*
+  For dark themed code blocks.
+*/
+/**
+ * Coldark Theme for Prism.js
+ * Theme variation: Dark
+ * @author Armand Philippot <contact@armandphilippot.com>
+ * @homepage https://github.com/ArmandPhilippot/coldark-prism
+ * @license MIT
+ */
+
+ [theme="dark"] code[class*="language-"],
+ [theme="dark"] pre[class*="language-"] {
+   color: #e3eaf2;
+   text-shadow: 0 1px black;
+ }
+
+ [theme="dark"] :is(pre[class*="language-"]::-moz-selection,
+   pre[class*="language-"] ::-moz-selection,
+   code[class*="language-"]::-moz-selection,
+   code[class*="language-"] ::-moz-selection) {
+   background: #3c526d;
+ }
+
+ [theme="dark"] :is(pre[class*="language-"]::selection,
+   pre[class*="language-"] ::selection,
+   code[class*="language-"]::selection,
+   code[class*="language-"] ::selection) {
+   background: #3c526d;
+ }
+
+ [theme="dark"] :not(pre)>code[class*="language-"],
+ [theme="dark"] pre[class*="language-"] {
+   /* background: #1e1e1e;
+      */
+   background: #161618;
+ }
+
+ [theme="dark"] :is(.token.comment,
+   .token.prolog,
+   .token.doctype,
+   .token.cdata) {
+   color: #8da1b9;
+ }
+
+ [theme="dark"] .token.punctuation {
+   color: #e3eaf2;
+ }
+
+ [theme="dark"] :is(.token.delimiter.important,
+   .token.selector .parent,
+   .token.tag,
+   .token.tag .token.punctuation) {
+   color: #66cccc;
+ }
+
+ [theme="dark"] :is(.token.attr-name,
+   .token.boolean,
+   .token.boolean.important,
+   .token.number,
+   .token.constant,
+   .token.selector .token.attribute) {
+   color: #e6d37a;
+ }
+
+ [theme="dark"] :is(.token.class-name,
+   .token.key,
+   .token.parameter,
+   .token.property,
+   .token.property-access,
+   .token.variable) {
+   color: #6cb8e6;
+ }
+
+ [theme="dark"] :is(.token.attr-value,
+   .token.inserted,
+   .token.color,
+   .token.selector .token.value,
+   .token.string,
+   .token.string .token.url-link) {
+   color: #91d076;
+ }
+
+ [theme="dark"] :is(.token.builtin,
+   .token.keyword-array,
+   .token.package,
+   .token.regex) {
+   color: #f4adf4;
+ }
+
+ [theme="dark"] :is(.token.function,
+   .token.selector .token.class,
+   .token.selector .token.id) {
+   color: #c699e3;
+ }
+
+ [theme="dark"] :is(.token.atrule .token.rule,
+   .token.combinator,
+   .token.keyword,
+   .token.operator,
+   .token.pseudo-class,
+   .token.pseudo-element,
+   .token.selector,
+   .token.unit) {
+   color: #e9ae7e;
+ }
+
+ [theme="dark"] :is(.token.deleted,
+   .token.important) {
+   color: #cd6660;
+ }
+
+ [theme="dark"] :is(.token.keyword-this,
+   .token.this) {
+   color: #6cb8e6;
+ }
+
+ [theme="dark"] :is(.token.important,
+   .token.keyword-this,
+   .token.this,
+   .token.bold) {
+   font-weight: bold;
+ }
+
+ [theme="dark"] .token.delimiter.important {
+   font-weight: inherit;
+ }
