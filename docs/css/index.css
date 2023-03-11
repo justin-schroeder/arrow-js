@@ -44,7 +44,7 @@
 
   --c-nav-link-text: var(--black);
   --c-nav-link-text-hover: var(--black);
-  --c-nav-background: var(--white);
+  --c-nav-bg: var(--white);
 
   --c-warning: var(--yellow);
   --c-tip: var(--green);
@@ -71,11 +71,11 @@
   --c-code-text: var(--dark-d);
 
   --color-selection-text: var(--black);
-  --color-selection-background: var(--yellow);
+  --color-selection-bg: var(--yellow);
 }
 
 ::selection {
-  background-color: var(--color-selection-background);
+  background-color: var(--color-selection-bg);
   color: var(--color-selection-text);
 }
 
@@ -435,7 +435,7 @@ aside[data-is-open]::after {
 .navigation {
   position: sticky;
   top: 0;
-  background-color: var(--c-nav-background);
+  background-color: var(--c-nav-bg);
   margin: 0 -1em 2em -1em;
   height: 3.25em;
   z-index: 50;
