@@ -1,4 +1,4 @@
-import { html, reactive, nextTick, ArrowTemplate } from '../src'
+import { html, reactive, nextTick, ArrowTemplate } from '..'
 import { click, setValue } from './utils/events'
 
 interface User {
@@ -62,16 +62,16 @@ describe('t', () => {
   it('can place expression nested inside some elements inside a string', async () => {
     const data = reactive({ name: 'Hello' })
     const parent = document.createElement('div')
-    html`This is cool <div>And here is more text <h2>Name: ${() =>
-      data.name} ok?</h2></div><span>${data.name}</span>`(parent)
-    expect(parent.innerHTML).toBe(
-      'This is cool <div>And here is more text <h2>Name: Hello ok?</h2></div><span>Hello</span>'
-    )
+    html`This is cool
+      <div>
+        And here is more text
+        <h2>Name: ${() => data.name} ok?</h2>
+      </div>
+      <span>${data.name}</span>`(parent)
+    expect(parent.innerHTML).toMatchSnapshot()
     data.name = 'Justin'
     await nextTick()
-    expect(parent.innerHTML).toBe(
-      'This is cool <div>And here is more text <h2>Name: Justin ok?</h2></div><span>Hello</span>'
-    )
+    expect(parent.innerHTML).toMatchSnapshot()
   })
 
   it('can sub-render templates without reactivity.', async () => {
@@ -87,44 +87,42 @@ describe('t', () => {
   it('can render a simple non-reactive list', async () => {
     const data = reactive({ list: ['a', 'b', 'c'] })
     const parent = document.createElement('div')
-    html`Hello <ul>${data.list.map((item: string) => html`<li>${item}</li>`)}</ul>`(
-      parent
-    )
-    expect(parent.innerHTML).toBe(
-      'Hello <ul><li>a</li><li>b</li><li>c</li></ul>'
-    )
+    html`Hello
+      <ul>
+        ${data.list.map((item: string) => html`<li>${item}</li>`)}
+      </ul>`(parent)
+    expect(parent.innerHTML).toMatchSnapshot()
     data.list[1] = 'Justin'
     await nextTick()
     // We shouldn't see any changes because that list was non-reactive.
-    expect(parent.innerHTML).toBe(
-      'Hello <ul><li>a</li><li>b</li><li>c</li></ul>'
-    )
+    expect(parent.innerHTML).toMatchSnapshot()
   })
 
   it('can render a simple reactive list', async () => {
     const data = reactive({ list: ['a', 'b', 'c'] })
     const parent = document.createElement('div')
-    html`Hello <ul>${() =>
-      data.list.map((item: string) => html`<li>${item}</li>`)}</ul>`(parent)
-    expect(parent.innerHTML).toBe(
-      'Hello <ul><li>a</li><li>b</li><li>c</li></ul>'
-    )
+    html`Hello
+      <ul>
+        ${() => data.list.map((item: string) => html`<li>${item}</li>`)}
+      </ul>`(parent)
+    expect(parent.innerHTML).toMatchSnapshot()
     data.list.push('next')
     await nextTick()
-    expect(parent.innerHTML).toBe(
-      'Hello <ul><li>a</li><li>b</li><li>c</li><li>next</li></ul>'
-    )
+    expect(parent.innerHTML).toMatchSnapshot()
   })
 
   it('can render a list with multiple repeated roots.', () => {
     const data = reactive({ list: ['a', 'b', 'c'] })
     const parent = document.createElement('div')
     html`<div>
-      ${() => data.list.map((item: string) => html`<h2>${item}</h2><p>foobar</p>`)}
+      ${() =>
+        data.list.map(
+          (item: string) =>
+            html`<h2>${item}</h2>
+              <p>foobar</p>`
+        )}
     </div>`(parent)
-    expect(parent.innerHTML).toBe(`<div>
-      <h2>a</h2><p>foobar</p><h2>b</h2><p>foobar</p><h2>c</h2><p>foobar</p>
-    </div>`)
+    expect(parent.innerHTML).toMatchSnapshot()
   })
 
   it('can render a list with new values un-shifted on', async () => {
@@ -284,7 +282,10 @@ describe('t', () => {
 
     parent.querySelector('li')?.setAttribute('data-is-justin', 'true')
     data.list.splice(0, 1)
-    data.list.push(reactive({ name: 'Justin', id: 3 }),reactive({ name: 'Fred', id: 0 }))
+    data.list.push(
+      reactive({ name: 'Justin', id: 3 }),
+      reactive({ name: 'Fred', id: 0 })
+    )
     await nextTick()
     expect(parent.innerHTML).toBe(`<ul>
       <li>Luan</li><li>Andrew</li><li data-is-justin="true">Justin</li><li>Fred</li>
@@ -365,7 +366,7 @@ describe('t', () => {
     })
     const parent = document.createElement('div')
     const componentA = html`Price: ${() => data.price}`
-    const componentB = html`Promo: <input type="text">`
+    const componentB = html`Promo: <input type="text" />`
     html`<div class="checkout">
       ${() => (data.showPromo ? componentB : componentA)}
     </div>`(parent)
@@ -386,35 +387,25 @@ describe('t', () => {
     const parent = document.createElement('div')
     // Note: this test seems obtuse but it isn't since it performing this toggle
     // action multiple times stress tests the underlying placeholder mechanism.
-    const promo = html`Promo: <input type="text">`
-    html`<div class="checkout">
-      ${() => data.showPromo && promo}
-    </div>`(parent)
-    expect(parent.innerHTML).toBe(`<div class="checkout">
-      <!---->
-    </div>`)
+    const promo = html`Promo: <input type="text" />`
+    html`<div class="checkout">${() => data.showPromo && promo}</div>`(parent)
+    expect(parent.innerHTML).toMatchSnapshot()
     data.showPromo = true
     await nextTick()
-    expect(parent.innerHTML).toBe(`<div class="checkout">
-      Promo: <input type="text">
-    </div>`)
+    expect(parent.innerHTML).toMatchSnapshot()
     data.showPromo = false
     await nextTick()
-    expect(parent.innerHTML).toBe(`<div class="checkout">
-      <!---->
-    </div>`)
+    expect(parent.innerHTML).toMatchSnapshot()
     data.showPromo = true
     await nextTick()
-    expect(parent.innerHTML).toBe(`<div class="checkout">
-      Promo: <input type="text">
-    </div>`)
+    expect(parent.innerHTML).toMatchSnapshot()
   })
 
   it('outputs the boolean true, but not the boolean false', () => {
     const parent = document.createElement('div')
-    expect((html`${() => true}${() => false}`(parent) as Element).innerHTML).toBe(
-      'true<!---->'
-    )
+    expect(
+      (html`${() => true}${() => false}`(parent) as Element).innerHTML
+    ).toBe('true<!---->')
   })
 
   it('can render an attribute', () => {
@@ -423,7 +414,8 @@ describe('t', () => {
       org: 'braid',
     })
     expect(
-      (html`<div data-org="${() => data.org}"></div>`(parent) as Element).innerHTML
+      (html`<div data-org="${() => data.org}"></div>`(parent) as Element)
+        .innerHTML
     ).toBe(`<div data-org="braid"></div>`)
   })
 
@@ -434,24 +426,21 @@ describe('t', () => {
       precinct: false as boolean | string,
       state: 'virginia',
     })
-    html`<div x-precinct="${() => data.precinct}" data-org="${() =>
-      data.org}">${() => data.state}</div>`(parent) as Element
+    html`<div x-precinct="${() => data.precinct}" data-org="${() => data.org}">
+      ${() => data.state}
+    </div>`(parent) as Element
     await nextTick()
-    expect(parent.innerHTML).toBe(`<div data-org="braid">virginia</div>`)
+    expect(parent.innerHTML).toMatchSnapshot()
     data.precinct = 'cville'
     await nextTick()
-    expect(parent.innerHTML).toBe(
-      '<div data-org="braid" x-precinct="cville">virginia</div>'
-    )
+    expect(parent.innerHTML).toMatchSnapshot()
     data.org = false
     await nextTick()
-    expect(parent.innerHTML).toBe('<div x-precinct="cville">virginia</div>')
+    expect(parent.innerHTML).toMatchSnapshot()
     data.org = 'other'
     data.state = 'california'
     await nextTick()
-    expect(parent.innerHTML).toBe(
-      '<div x-precinct="cville" data-org="other">california</div>'
-    )
+    expect(parent.innerHTML).toMatchSnapshot()
   })
 
   it('can render nested nodes with attribute expressions', async () => {
@@ -465,29 +454,21 @@ describe('t', () => {
       ],
     })
     html`<ul data-country="${data.country}">
-        ${() =>
-          data.states.map(
-            (state: any) =>
-              html`<li data-abbr="${() => state.abbr}">${() => state.name}</li>`
-          )}
-          <li data-first-abbr="${() => data.states[0].abbr}">${() =>
-      data.states[0].name}</li>
-      </ul>
-    `(parent)
-    expect(parent.innerHTML).toBe(`<ul data-country="usa">
-        <li data-abbr="va">virginia</li><li data-abbr="ne">nebraska</li><li data-abbr="ca">california</li>
-          <li data-first-abbr="va">virginia</li>
-      </ul>
-    `)
+      ${() =>
+        data.states.map(
+          (state: any) =>
+            html`<li data-abbr="${() => state.abbr}">${() => state.name}</li>`
+        )}
+      <li data-first-abbr="${() => data.states[0].abbr}">
+        ${() => data.states[0].name}
+      </li>
+    </ul> `(parent)
+    expect(parent.innerHTML).toMatchSnapshot()
     data.states.sort((a: any, b: any) => {
       return a.abbr > b.abbr ? 1 : -1
     })
     await nextTick()
-    expect(parent.innerHTML).toBe(`<ul data-country="usa">
-        <li data-abbr="ca">california</li><li data-abbr="ne">nebraska</li><li data-abbr="va">virginia</li>
-          <li data-first-abbr="ca">california</li>
-      </ul>
-    `)
+    expect(parent.innerHTML).toMatchSnapshot()
   })
 
   it('can render the number zero', async () => {
@@ -502,7 +483,7 @@ describe('t', () => {
     const update = (event: InputEvent) => {
       data.value = (event.target as HTMLInputElement).value
     }
-    html`<input type="text" @input="${update}">${() => data.value}`(parent)
+    html`<input type="text" @input="${update}" />${() => data.value}`(parent)
     setValue(parent.querySelector('input'), 'pizza')
     await nextTick()
     expect(parent.innerHTML).toBe('<input type="text">pizza')
@@ -514,8 +495,18 @@ describe('t', () => {
     const update = (event: InputEvent) => {
       data.value = (event.target as HTMLInputElement).value
     }
-    html`<input type="text" value="${() => data.value}" @input="${update}" id="a">
-      <input type="text" value="${() => data.value}" @input="${update}" id="b">${() => data.value}`(parent)
+    html`<input
+        type="text"
+        value="${() => data.value}"
+        @input="${update}"
+        id="a"
+      />
+      <input
+        type="text"
+        value="${() => data.value}"
+        @input="${update}"
+        id="b"
+      />${() => data.value}`(parent)
     const a = parent.querySelector('[id="a"]') as HTMLInputElement
     const b = parent.querySelector('[id="b"]') as HTMLInputElement
     setValue(a, 'pizza')
@@ -530,7 +521,9 @@ describe('t', () => {
   it('sets the IDL checked attribute on checkbox elements', async () => {
     const parent = document.createElement('div')
     const data = reactive({ checked: false })
-    html`<input type="checkbox" checked="${() => data.checked}" id="a">`(parent)
+    html`<input type="checkbox" checked="${() => data.checked}" id="a" />`(
+      parent
+    )
     const a = parent.querySelector('[id="a"]') as HTMLInputElement
     expect(a.checked).toBe(false)
     a.checked = true
@@ -550,9 +543,12 @@ describe('t', () => {
     const clickHandler = jest.fn()
     const parent = document.createElement('div')
     const data = reactive({
-      show: true
+      show: true,
     })
-    html`${() => data.show ? html`<button @click="${clickHandler}"></button>` : ''}`(parent);
+    html`${() =>
+      data.show ? html`<button @click="${clickHandler}"></button>` : ''}`(
+      parent
+    )
     let button = parent.querySelector('button') as HTMLButtonElement
     click(button)
     expect(clickHandler).toHaveBeenCalledTimes(1)
@@ -571,10 +567,10 @@ describe('t', () => {
     const parent = document.createElement('div')
     const data = reactive({ selected: 'b' })
     html`<select>
-        <option value="a" selected="${() => 'a' === data.selected}">A</option>
-        <option value="b" selected="${() => 'b' === data.selected}">B</option>
-        <option value="c" selected="${() => 'c' === data.selected}">C</option>
-      </select>`(parent)
+      <option value="a" selected="${() => 'a' === data.selected}">A</option>
+      <option value="b" selected="${() => 'b' === data.selected}">B</option>
+      <option value="c" selected="${() => 'c' === data.selected}">C</option>
+    </select>`(parent)
     expect(parent.querySelector('select')?.value).toBe('b')
   })
 
@@ -587,26 +583,25 @@ describe('t', () => {
     html`<table>
       <tbody>
         ${rows.map(
-          (row) => html`<tr>${row.map((column) => html`<td>${column}</td>`)}</tr>`
+          (row) =>
+            html`<tr>
+              ${row.map((column) => html`<td>${column}</td>`)}
+            </tr>`
         )}
       </tbody>
     </table>`(parent)
-    expect(parent.innerHTML).toBe(`<table>
-      <tbody>
-        <tr><td>Detroit</td><td>MI</td></tr><tr><td>Boston</td><td>MA</td></tr>
-      </tbody>
-    </table>`)
+    expect(parent.innerHTML).toMatchSnapshot()
   })
 
   it('renders sanitized HTML when reading from a variable.', () => {
     const data = reactive({
-      foo: '<h1>Hello world</h1>'
+      foo: '<h1>Hello world</h1>',
     })
     expect(html`<div>${() => data.foo}</div>`().querySelector('h1')).toBe(null)
   })
   it('renders sanitized HTML when updating from a variable.', async () => {
     const data = reactive({
-      html: 'foo'
+      html: 'foo',
     })
     const stage = document.createElement('div')
     html`<div>${() => data.html}</div>`(stage)
@@ -616,26 +611,33 @@ describe('t', () => {
   })
   it('renders keyed list and updates child value without removing/moving any nodes', async () => {
     const data = reactive({
-      list: [{
-        id: 1,
-        name: 'foo'
-      },
-      {
-        id: 2,
-        name: 'bar'
-      }]
+      list: [
+        {
+          id: 1,
+          name: 'foo',
+        },
+        {
+          id: 2,
+          name: 'bar',
+        },
+      ],
     })
     const stage = document.createElement('div')
     html`<ul>
-      ${() => data.list.map(item => html`
-        <li>
-          ${() => item.name}<input @input="${(e: InputEvent) => {item.name = (e.target as HTMLInputElement).value}}">
-        </li>`.key(item.id)
-      )}
+      ${() =>
+        data.list.map((item) =>
+          html` <li>
+            ${() => item.name}<input
+              @input="${(e: InputEvent) => {
+                item.name = (e.target as HTMLInputElement).value
+              }}"
+            />
+          </li>`.key(item.id)
+        )}
     </ul>`(stage)
     const callback = jest.fn()
     const observer = new MutationObserver(callback)
-    observer.observe(stage.querySelector('ul')!, { childList: true });
+    observer.observe(stage.querySelector('ul')!, { childList: true })
     const input = stage.querySelector('input') as HTMLInputElement
     setValue(input, 'foobar')
     await nextTick()
@@ -645,7 +647,9 @@ describe('t', () => {
   it('can render an empty template', async () => {
     const div = document.createElement('div')
     const store = reactive({ show: true })
-    expect(() => html`${() => store.show ? html`<br>` : html``}`(div)).not.toThrow()
+    expect(() =>
+      html`${() => (store.show ? html`<br />` : html``)}`(div)
+    ).not.toThrow()
     expect(div.innerHTML).toBe('<br>')
     store.show = false
     await nextTick()
@@ -654,11 +658,13 @@ describe('t', () => {
 
   it('can render an array of items and mutate an item in the array (#49)', async () => {
     const div = document.createElement('div')
-    const data = reactive({order: [1, 2, 3]});
-    html`<ul>${() => data.order.map(item => html`<li>${item}</li>`)}</ul>`(div);
+    const data = reactive({ order: [1, 2, 3] })
+    html`<ul>
+      ${() => data.order.map((item) => html`<li>${item}</li>`)}
+    </ul>`(div)
     data.order[1] += 10
     await nextTick()
-    expect(div.innerHTML).toBe('<ul><li>1</li><li>12</li><li>3</li></ul>')
+    expect(div.innerHTML).toMatchSnapshot()
   })
 
   it('can set any arbitrary IDL attribute', async () => {
@@ -666,11 +672,11 @@ describe('t', () => {
     class XFoo extends HTMLDivElement {
       foo: string
       constructor() {
-        super();
+        super()
         this.foo = 'bar'
       }
     }
-    customElements.define('x-foo', XFoo, { extends: 'div'})
+    customElements.define('x-foo', XFoo, { extends: 'div' })
     const data = reactive({ foo: 'bim' })
     html`<x-foo .foo="${() => data.foo}"></x-foo>`(div)
     const x = div.querySelector('x-foo') as XFoo

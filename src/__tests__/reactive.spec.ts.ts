@@ -1,4 +1,4 @@
-import { nextTick, reactive, watch, ReactiveProxy } from '../src'
+import { nextTick, reactive, watch, ReactiveProxy } from '..'
 
 describe('r', () => {
   it('allows simple property access', () => {
