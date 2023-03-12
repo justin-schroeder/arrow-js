@@ -1,29 +1,79 @@
 import { isR, queue, isReactiveFunction } from './common'
 
+/**
+ * Available types of keys for a reactive object.
+ */
 export type DataSourceKey = string | number | symbol | null
 
+/**
+ * Acceptable types of data targets for the reactive function.
+ * TODO: Add much more robust typing for this using generics.
+ */
 export interface DataSource {
   [index: string]: any
   [index: number]: any
 }
 
+/**
+ * An overly permissive array for data sources.
+ */
 export type DataSourceArray<T> = Array<unknown> & T
 
+/**
+ * A reactive proxy object.
+ */
 export type ProxyDataSource<T> = {
   [K in keyof T]: ReactiveProxy<T[K]> | T[K]
 }
 
+/**
+ * An callback for an observer.
+ */
 export interface ObserverCallback {
   (value?: any, oldValue?: any): void
 }
+/**
+ * A controller interface for a reactive proxy object’s dependencies.
+ */
 export interface DependencyProps {
+  /**
+   * Adds an observer to a given property.
+   * @param p - The property to watch.
+   * @param c - The callback to call when the property changes.
+   * @returns
+   */
   $on: (p: DataSourceKey, c: ObserverCallback) => void
+  /**
+   * Removes an observer from a given property.
+   * @param p - The property to stop watching.
+   * @param c - The callback to stop calling when the property changes.
+   * @returns
+   */
   $off: (p: DataSourceKey, c: ObserverCallback) => void
+  /**
+   * Emits an update "event" for the given property.
+   * @param p - Property to emit that an update has occurred.
+   * @param newValue - New value of the property.
+   * @param oldValue - Old value of the property.
+   * @returns
+   */
   _em: (p: DataSourceKey, newValue: any, oldValue?: any) => void
+  /**
+   * The internal state of the reactive proxy object.
+   * @returns
+   */
   _st: () => ReactiveProxyState
+  /**
+   * The parent proxy object.
+   * TODO: This concept should be removed in favor of a more robust dependency
+   * tracking system via weakmap reference.
+   */
   _p?: ReactiveProxyParent
 }
 
+/**
+ * A reactive proxy object.
+ */
 export type ReactiveProxy<T> = {
   [K in keyof T]: T[K] extends DataSource ? ReactiveProxy<T[K]> : T[K]
 } &

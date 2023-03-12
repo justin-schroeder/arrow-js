@@ -1,6 +1,16 @@
 import { w } from './reactive'
 import { isTpl, sanitize } from './common'
 
+/**
+ * An arrow template one of the three primary ArrowJS utilities. Specifically,
+ * templates are functions that return a function which mounts the template to
+ * a given parent node. However, the template also has some other properties on
+ * it like `.key` and `.isT`.
+ *
+ * The "magic" of an arrow template, is any expressions that are in the template
+ * literal are automatically observed for changes. When a change is detected,
+ * the bound attributes or textNodes are updated.
+ */
 export interface ArrowTemplate {
   (parent?: ParentNode): ParentNode
   isT: boolean
@@ -13,8 +23,16 @@ export interface ArrowTemplate {
   _k?: ArrowTemplateKey
 }
 
+/**
+ * The allowed values for arrow keys.
+ */
 type ArrowTemplateKey = string | number | undefined
 
+/**
+ * A reactive function is a function that is bound to a template. It is the
+ * higher order control around the expressions that are in the template literal.
+ * It is responsible for updating the template when the expression changes.
+ */
 export interface ReactiveFunction {
   (el?: Node): string | ArrowTemplate
   (ev: Event, listener: EventListenerOrEventListenerObject): void
@@ -23,15 +41,28 @@ export interface ReactiveFunction {
   e: CallableFunction
 }
 
-export type ReactiveExpressions = Array<ReactiveFunction>
+/**
+ * An array of reactive functions.
+ */
+export type ReactiveExpressions = ReactiveFunction[]
 
+/**
+ * An internal primitive that is used to create a dom elements.
+ */
 export type ArrowFragment = {
   <T extends ParentNode>(parent: T): T
   (): DocumentFragment
 }
 
+/**
+ * A parent node is either an element or a document fragment — something that
+ * can have elements appended to it.
+ */
 export type ParentNode = Element | DocumentFragment
 
+/**
+ * A classification of items that can be rendered within the template.
+ */
 export type RenderGroup =
   | ArrowTemplate
   | ArrowTemplate[]
@@ -48,6 +79,10 @@ const listeners = new WeakMap<
   Map<string, EventListenerOrEventListenerObject>
 >()
 
+/**
+ * An controller that is responsible for assembling the template HTML and
+ * performing updates to the pertinent DOM nodes contained within it.
+ */
 export interface TemplatePartial {
   (): DocumentFragment
   /**
@@ -71,6 +106,10 @@ export interface TemplatePartial {
   ch: () => PartialChunk[]
 }
 
+/**
+ * A chunk of HTML that is rendered by a template partial. It contains all the
+ * required expressions that are required for the given dom nodes (if needed).
+ */
 type PartialChunk = {
   html: string
   exp: ReactiveFunction[]
