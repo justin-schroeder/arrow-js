@@ -3,4 +3,5 @@ module.exports = {
   testEnvironment: 'jsdom',
   collectCoverage: false,
   collectCoverageFrom: ['src/*'],
+  testPathIgnorePatterns: ['/node_modules/', '/dist/', '/utils/'],
 }

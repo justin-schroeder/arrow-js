@@ -1,4 +1,4 @@
-import { html } from '/dev/index.js'
+import { html } from '@src/index'
 import dropdown from './dropdown'
 
 const planets = [

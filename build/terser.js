@@ -1,14 +1,14 @@
-import { fileURLToPath } from 'url';
-import fs from 'fs';
-import { minify } from 'terser';
+import { fileURLToPath } from 'url'
+import fs from 'fs'
+import { minify } from 'terser'
 
-const inputFile = fileURLToPath(new URL('../dist/index.js', import.meta.url));
+const inputFile = fileURLToPath(new URL('../dist/index.mjs', import.meta.url))
 const tsSourceMap = fileURLToPath(
-  new URL('../dist/index.js.map', import.meta.url)
-);
+  new URL('../dist/index.mjs.map', import.meta.url)
+)
 const outputFile = fileURLToPath(
   new URL('../dist/index.min.mjs', import.meta.url)
-);
+)
 
 let result = await minify(fs.readFileSync(inputFile, 'utf-8'), {
   mangle: {
@@ -44,8 +44,8 @@ let result = await minify(fs.readFileSync(inputFile, 'utf-8'), {
     content: fs.readFileSync(tsSourceMap, 'utf-8'),
     url: 'index.min.js.map',
   },
-});
+})
 
 // Output the minified file and the map.
-fs.writeFileSync(outputFile, result.code, 'utf8');
-fs.writeFileSync(outputFile + '.map', result.map, 'utf8');
+fs.writeFileSync(outputFile, result.code, 'utf8')
+fs.writeFileSync(outputFile + '.map', result.map, 'utf8')

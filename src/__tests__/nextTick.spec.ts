@@ -1,4 +1,4 @@
-import { reactive, nextTick, watch } from '../src'
+import { reactive, nextTick, watch } from '..'
 
 describe('nextTick', () => {
   it('executes callback tick when nothing needs to be done', () => {

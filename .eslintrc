@@ -10,12 +10,14 @@
     "@typescript-eslint/no-explicit-any": "off",
     "comma-dangle": "off",
     "@typescript-eslint/no-non-null-assertion": "off",
-    "@typescript-eslint/ban-ts-comment": "off"
+    "@typescript-eslint/ban-ts-comment": "off",
+    "@typescript-eslint/no-extra-semi": "off",
+    "node/no-unpublished-import": "off"
   },
   "ignorePatterns": ["dist/"],
   "settings": {
     "node": {
-        "tryExtensions": [".ts", ".d.ts"]
+        "tryExtensions": [".ts", ".d.ts", ".mjs"]
     }
   }
 }

@@ -1,4 +1,4 @@
-import { html, reactive } from '../dev/index.js'
+import { html, reactive } from '@src/index'
 
 export default function () {
   const token = () => Math.random().toString(36).substring(2, 5)

@@ -1,7 +1,8 @@
-import { html } from '/dev/index.js'
+import { html } from '@src/index'
 import example from './Example.js'
 import HelloWorld, { HelloWorldCode } from '../examples/HelloWorld'
 import ListExample, { ListExampleCode } from '../examples/ListExample'
+import mindBlownUrl from '../img/mind-blown.gif'
 
 export default function () {
   return html`
@@ -35,7 +36,7 @@ export default function () {
         <li>No build tools required (or even suggested).</li>
         <li>
           Less than <code>3KB</code> min+gzip. (22x smaller than this itty bitty gif →
-          <img src="/img/mind-blown.gif" alt="gif of mind blown individual">)
+          <img src="${mindBlownUrl}" alt="gif of mind blown individual">)
         </li>
       </ul>
       <p>Got time for a quick example? Great.</p>

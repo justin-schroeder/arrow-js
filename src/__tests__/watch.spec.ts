@@ -1,4 +1,4 @@
-import { nextTick, reactive, watch } from '../src'
+import { nextTick, reactive, watch } from '../'
 
 type Data = {
   value: number | null

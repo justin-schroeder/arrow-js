@@ -1,7 +1,8 @@
-import { html } from '/dev/index.js'
+import { html } from '@src/index'
 import example from '../Example.js'
 import HelloWorld, { HelloWorldCode } from '../../examples/HelloWorld'
 import ListExample, { ListExampleCode } from '../../examples/ListExample'
+import mindBLownUrl from '../../img/mind-blown.gif'
 
 export default function () {
   return html`
@@ -10,7 +11,7 @@ export default function () {
         ArrowJS is an experimental tool for programming reactive interfaces
         using native JavaScript. It’s not really a framework, but not less
         powerful than a framework either.<br><br>
-        
+
         At its core — ArrowJS is an admission
         that while we developers were busy falling in love with fancy UI frameworks,
         JavaScript itself got good — like <em>really</em> good.
@@ -37,7 +38,7 @@ export default function () {
         <li>No build tools required (or even suggested).</li>
         <li>
           Less than <code>3KB</code> min+gzip. (22x smaller than this itty bitty gif →
-          <img src="/img/mind-blown.gif" alt="gif of mind blown individual">)
+          <img src="${mindBLownUrl}" alt="gif of mind blown individual">)
         </li>
       </ul>
       <p>Got time for a quick example? Great.</p>
@@ -116,7 +117,7 @@ export default function () {
       </p>
 
       <br>
-      <p class="center"><a href="/docs.html" class="button">Get Started with ArrowJS</a></p>
+      <p class="center"><a href="/docs/" class="button">Get Started with ArrowJS</a></p>
     </section>
   `
 }

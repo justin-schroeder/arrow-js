@@ -1,4 +1,4 @@
-import { html } from '/dev/index.js'
+import { html } from '@src/index'
 
 const demos = [
   { href: '/demos/fast-text.html', label: 'DOM Patching' },

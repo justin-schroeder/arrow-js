@@ -1,4 +1,4 @@
-import { html } from '/dev/index.js'
+import { html } from '@src/index'
 
 export default function () {
   return html`<section>

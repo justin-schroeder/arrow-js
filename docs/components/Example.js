@@ -1,4 +1,6 @@
-import { html, reactive } from '/dev/index.js'
+import { html, reactive } from '@src/index'
+import stopUrl from '../img/stop.svg'
+import warningUrl from '../img/warning.svg'
 
 function htmlEntities(str) {
   return String(str)
@@ -18,7 +20,7 @@ export default function (example, component, language = 'javascript') {
       data.warning &&
       html`<div class="warning">
         <img
-          src="/img/warning.svg"
+          src="${warningUrl}"
           alt="warning"
           role="presentation"
         />${data.warning}
@@ -26,7 +28,7 @@ export default function (example, component, language = 'javascript') {
     ${() =>
       data.error &&
       html`<div class="error">
-        <img src="/img/stop.svg" alt="stop" role="presentation" />${data.error}
+        <img src="${stopUrl}" alt="stop" role="presentation" />${data.error}
       </div>`}
     <pre><code class="language-${language}">${htmlEntities(
       example
