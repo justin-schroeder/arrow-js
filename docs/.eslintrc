@@ -8,9 +8,11 @@
   "rules": {
     "import/no-absolute-path": "off",
     "prettier/prettier": "off",
+    "comma-dangle": "off",
     "@typescript-eslint/explicit-module-boundary-types": "off",
     "node/no-missing-import": "off",
-    "node/no-unpublished-import": "off"
+    "node/no-unpublished-import": "off",
+    "space-before-function-paren": "off"
   },
   "ignorePatterns": ["*.html"],
   "settings": {

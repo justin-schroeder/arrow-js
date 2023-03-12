@@ -1,4 +1,4 @@
-import { reactive, watch } from '../dev/index.js'
+import { reactive, watch } from '@src/index'
 
 const store = reactive({
   section: 'intro',

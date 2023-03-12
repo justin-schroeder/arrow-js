@@ -1,4 +1,4 @@
-import { html } from '/dev/index.js'
+import { html } from '@src/index'
 
 export default function () {
   return html`
@@ -12,7 +12,7 @@ export default function () {
       </div>
       <div class="actions">
         <a href="#why" class="button button--hollow">But why?</a>
-        <a href="/docs.html" class="button">Get Started</a>
+        <a href="/docs" class="button">Get Started</a>
       </div>
     </div>
   `

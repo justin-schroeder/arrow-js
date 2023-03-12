@@ -1,4 +1,4 @@
-import { html } from '/dev/index.js'
+import { html } from '@src/index'
 import example from './Example'
 import collapsable from './Collapsable'
 import * as TemplateExamples from '../examples/TemplateExamples'

@@ -64,14 +64,14 @@
     </div>
     <div id="app"></div>
     <script type="module">
-      import { t, r, w } from '/dev/index.js';
-      import store from './store';
-      import navigation from './components/Navigation';
-      import gettingStarted from './components/GettingStarted';
-      import changelog from './components/Changelog';
-      import footer from './components/Footer';
-      import events from './js/events'
-      import highlight from './js/highlight.js';
+      import { t, r, w } from '@src/index';
+      import store from '../store';
+      import navigation from '../components/Navigation';
+      import gettingStarted from '../components/GettingStarted';
+      import changelog from '../components/Changelog';
+      import footer from '../components/Footer';
+      import events from '../js/events'
+      import highlight from '../js/highlight.js';
       const el = document.getElementById('app');
 
       t`
@@ -93,6 +93,6 @@
     </script>
     <script src="https://cdn.jsdelivr.net/npm/shiki"></script>
     <script async defer src="https://buttons.github.io/buttons.js"></script>
-    <script src="./js/colorMode.js"></script>
+    <script type="module" src="../js/colorMode.js"></script>
   </body>
 </html>

@@ -66,7 +66,7 @@
     <div id="app"></div>
 
     <script type="module">
-      import { html, reactive, watch } from '/dev/index.js';
+      import { html, reactive, watch } from '@src/index';
       import store from './store';
       import homeHero from './components/home/hero.js';
       import whyArrow from './components/home/why.js';
@@ -87,6 +87,6 @@
     </script>
     <script src="https://cdn.jsdelivr.net/npm/shiki"></script>
     <script async defer src="https://buttons.github.io/buttons.js"></script>
-    <script src="./js/colorMode.js"></script>
+    <script type="module" src="./js/colorMode.js"></script>
   </body>
 </html>

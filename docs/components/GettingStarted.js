@@ -1,4 +1,4 @@
-import { html } from '/dev/index.js'
+import { html } from '@src/index'
 import example from './Example'
 import reactiveData from './ReactiveData'
 import watchingData from './WatchingData'

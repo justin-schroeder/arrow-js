@@ -1,4 +1,4 @@
-import { html, reactive } from '/dev/index.js'
+import { html, reactive } from '@src/index'
 
 export default function dropdown(items) {
   const state = reactive({

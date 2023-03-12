@@ -14,8 +14,10 @@ export const reactive = r
  */
 export const watch = w
 
+export { t, r, w }
+
 export { nextTick } from './common'
 
-export { ArrowTemplate } from './html'
+export type { ArrowTemplate } from './html'
 
-export { ReactiveProxy } from './reactive'
+export type { ReactiveProxy } from './reactive'
