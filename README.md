@@ -1,4 +1,4 @@
-# ![ArrowJS](/docs/img/logo.png "ArrowJS")
+# ![ArrowJS](/docs/img/logo.png#gh-light-mode-only "ArrowJS") ![ArrowJS](/docs/img/logo-invert.png#gh-dark-mode-only "ArrowJS")
 
 ![test badge](https://github.com/justin-schroeder/arrow-js/actions/workflows/tests.yml/badge.svg)
 ![size badge](https://img.badgesize.io/https://cdn.jsdelivr.net/npm/@arrow-js/core@latest/dist/index.min.mjs.svg?compression=brotli)
