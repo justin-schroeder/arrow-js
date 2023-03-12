@@ -12,7 +12,7 @@ export default function () {
       </div>
       <div class="actions">
         <a href="#why" class="button button--hollow">But why?</a>
-        <a href="/docs" class="button">Get Started</a>
+        <a href="/docs/" class="button">Get Started</a>
       </div>
     </div>
   `

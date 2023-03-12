@@ -117,7 +117,7 @@ export default function () {
       </p>
 
       <br>
-      <p class="center"><a href="/docs" class="button">Get Started with ArrowJS</a></p>
+      <p class="center"><a href="/docs/" class="button">Get Started with ArrowJS</a></p>
     </section>
   `
 }
