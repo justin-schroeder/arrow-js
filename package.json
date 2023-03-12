@@ -14,11 +14,14 @@
   },
   "type": "module",
   "devDependencies": {
-    "@size-limit/preset-small-lib": "^4.9.2",
+    "@rollup/plugin-typescript": "^11.0.0",
+    "@size-limit/preset-small-lib": "^8.2.4",
     "@snowpack/plugin-typescript": "^1.2.1",
     "@types/jest": "^26.0.20",
+    "@types/node": "^18.15.0",
     "@typescript-eslint/eslint-plugin": "^4.9.5",
     "@typescript-eslint/parser": "^4.9.5",
+    "chalk": "^5.2.0",
     "eslint": "^7.19.0",
     "eslint-config-standard": "^16.0.2",
     "eslint-plugin-import": "^2.22.1",
@@ -27,9 +30,12 @@
     "jest": "^26.6.3",
     "prettier": "^2.3.0",
     "rollup": "^3.19.1",
-    "size-limit": "^4.9.2",
+    "rollup-plugin-dts": "^5.2.0",
+    "shx": "^0.3.4",
+    "size-limit": "^8.2.4",
     "terser": "^5.5.1",
     "ts-jest": "^26.5.0",
+    "ts-node": "^10.9.1",
     "tslib": "^2.5.0",
     "typescript": "^4.9.5"
   },
@@ -38,17 +44,21 @@
   },
   "size-limit": [
     {
-      "path": "dist/index.min.mjs",
+      "path": "dist/index.mjs",
       "limit": "3 KB",
-      "brotli": true
+      "brotli": true,
+      "gzip": true
     }
   ],
   "scripts": {
     "dev": "snowpack dev",
     "build:docs": "snowpack build",
-    "build": "tsc -b -v && node .build/terser.js && size-limit",
+    "build": "npx ts-node ./build/pack.ts && pnpm minify",
     "test": "jest",
     "size": "size-limit",
     "minify": "node build/terser.js"
+  },
+  "dependencies": {
+    "execa": "^7.1.0"
   }
 }
