@@ -5,6 +5,7 @@ docs/
 coverage/
 build/
 coverage/
+src/
 .vscode
 .github
 .editorconfig
