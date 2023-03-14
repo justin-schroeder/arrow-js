@@ -2,6 +2,15 @@
 test/
 public/
 docs/
+coverage/
+build/
+coverage/
 .vscode
 .github
-.build
+.editorconfig
+.eslintrc
+.prettierignore
+.prettierrc.json
+jest.config.cjs
+tsconfig.json
+rollup.config.ts
