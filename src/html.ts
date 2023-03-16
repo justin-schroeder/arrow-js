@@ -32,7 +32,7 @@ export interface ArrowTemplate {
    */
   _h: () => [
     html: string,
-    expressions: ReactiveExpressions,
+    expressions: ReactiveFunction[],
     key: ArrowTemplateKey
   ]
   /**
@@ -62,7 +62,16 @@ export interface ReactiveFunction {
 /**
  * An array of reactive functions.
  */
-export type ReactiveExpressions = ReactiveFunction[]
+export type ReactiveExpressions = {
+  /**
+   * The index of the currently active expression.
+   */
+  i: number
+  /**
+   * An array of the actual expressions.
+   */
+  e: ReactiveFunction[]
+}
 
 /**
  * An internal primitive that is used to create a dom elements.
@@ -154,7 +163,7 @@ export function t(
   strings: TemplateStringsArray,
   ...expSlots: any[]
 ): ArrowTemplate {
-  const expressions: ReactiveExpressions = []
+  const expressions: ReactiveFunction[] = []
   let str = ''
   const addExpressions = (expression: any, html: string): string => {
     if (typeof expression === 'function') {
@@ -197,7 +206,7 @@ export function t(
   }
   const template: ArrowTemplate = (el?: ParentNode) => {
     const dom = createNodes(toString())
-    const frag = fragment(dom, expressions)
+    const frag = fragment(dom, { i: 0, e: expressions })
     return el ? frag(el) : frag()
   }
 
@@ -283,7 +292,7 @@ function attrs(node: Element, expressions: ReactiveExpressions): void {
               attrName = attr.name
             })
             measure('attrs, expression shift', () => {
-              expression = expressions.shift() as unknown
+              expression = expressions.e[expressions.i++]
             })
           })
           if (attrName.charAt(0) === '@') {
@@ -364,7 +373,7 @@ function comment(
   // At this point, we know we're dealing with some kind of reactive token fn
   let expression: any
   measure('comment, expression shift', () => {
-    expression = expressions.shift()
+    expression = expressions.e[expressions.i++]
   })
   if (expression && isTpl(expression.e)) {
     // If the expression is an html`` (ArrowTemplate), then call it with data
@@ -431,7 +440,7 @@ function createNodes(html: string): NodeList {
  */
 function createPartial(group = Symbol()): TemplatePartial {
   let html = ''
-  let expressions: ReactiveExpressions = []
+  let expressions: ReactiveExpressions = { i: 0, e: [] }
   let chunks: Array<PartialChunk> = []
   let previousChunks: Array<PartialChunk> = []
   const keyedChunks: Map<ArrowTemplateKey, PartialChunk> = new Map()
@@ -455,7 +464,7 @@ function createPartial(group = Symbol()): TemplatePartial {
   partial.add = (tpl: ArrowTemplate | number | string) => {
     if (!tpl && tpl !== 0) return
     let template = tpl
-    let localExpressions: ReactiveExpressions = []
+    let localExpressions: ReactiveFunction[] = []
     let key: ArrowTemplateKey
     isTpl(tpl)
       ? ([template, localExpressions, key] = tpl._h())
@@ -478,7 +487,7 @@ function createPartial(group = Symbol()): TemplatePartial {
         ? keyedChunk.exp.forEach((exp, i) => exp._up(localExpressions[i].e))
         : keyedChunks.set(key, chunk as PartialChunk)
     }
-    expressions.push(...localExpressions)
+    expressions.e.push(...localExpressions)
     partial.l++
   }
 
@@ -557,7 +566,7 @@ function createPartial(group = Symbol()): TemplatePartial {
     toRemove.length = 0
     html = ''
     partial.l = 0
-    expressions = []
+    expressions = { i: 0, e: [] }
     previousChunks = [...chunks]
     chunks = []
   }

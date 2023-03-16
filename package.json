@@ -46,14 +46,13 @@
     {
       "path": "dist/index.mjs",
       "limit": "3 KB",
-      "brotli": true,
       "gzip": true
     }
   ],
   "scripts": {
     "dev": "cd docs && vite --config=vite.config.ts",
     "build:docs": "cd docs && vite build --config=vite.config.ts",
-    "build": "npx ts-node ./build/pack.ts && pnpm minify",
+    "build": "npx ts-node ./build/pack.ts && pnpm minify && pnpm size",
     "test": "jest",
     "size": "size-limit",
     "minify": "node build/terser.js"
