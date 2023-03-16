@@ -91,3 +91,13 @@ export const sanitize = (str: string): string => {
     ? str
     : str.replace(/[<>]/g, (m) => (m === '>' ? '&gt;' : '&lt;'))
 }
+
+export const measurements: Record<string, number[]> = {}
+
+export function measure(label: string, fn: CallableFunction): void {
+  const start = performance.now()
+  fn()
+  const result = performance.now() - start
+  if (!measurements[label]) measurements[label] = [result]
+  else measurements[label].push(result)
+}

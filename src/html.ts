@@ -1,6 +1,5 @@
 import { w } from './reactive'
-import { isTpl, sanitize } from './common'
-
+import { isTpl, measure, sanitize } from './common'
 /**
  * An arrow template one of the three primary ArrowJS utilities. Specifically,
  * templates are functions that return a function which mounts the template to
@@ -12,14 +11,33 @@ import { isTpl, sanitize } from './common'
  * the bound attributes or textNodes are updated.
  */
 export interface ArrowTemplate {
+  /**
+   * Mounts the template to a given parent node.
+   */
   (parent?: ParentNode): ParentNode
+  /**
+   * A boolean flag that indicates this is indeed an ArrowTemplate.
+   */
   isT: boolean
+  /**
+   * Adds a key to this template to identify it as a unique instance.
+   * @param key - A unique key that identifies this template instance (not index).
+   * @returns
+   */
   key: (key: ArrowTemplateKey) => void
+  /**
+   * Returns internal properties of the template, specifically the HTML and
+   * expressions, as well as the key if applicable.
+   * @returns
+   */
   _h: () => [
     html: string,
     expressions: ReactiveExpressions,
     key: ArrowTemplateKey
   ]
+  /**
+   * The internal key property.
+   */
   _k?: ArrowTemplateKey
 }
 
@@ -210,11 +228,16 @@ function fragment(
     // Delimiters in the body are found inside comments.
     if (node.nodeType === 8 && node.nodeValue === delimiter) {
       // We are dealing with a reactive node.
-      frag.append(comment(node, expressions))
+      measure('textNodes', () => {
+        // TODO: remove this bang: node! when removing measurement fn
+        frag.append(comment(node!, expressions))
+      })
       continue
     }
     // Bind attributes, add events, and push onto the fragment.
-    if (node instanceof Element) attrs(node, expressions)
+    measure('attrs', () => {
+      if (node instanceof Element) attrs(node, expressions)
+    })
     if (node.hasChildNodes()) {
       fragment(node.childNodes, expressions)(node as ParentNode)
     }
@@ -245,44 +268,59 @@ function attrs(node: Element, expressions: ReactiveExpressions): void {
     node instanceof HTMLTextAreaElement
   const total = node.attributes.length
   const toRemove: string[] = []
-  const attrs = []
+  const attrs: any[] = []
   for (let i = 0; i < total; i++) {
     attrs.push(node.attributes[i])
   }
   attrs.forEach((attr) => {
-    let attrName = attr.name
-    if (attr.value.indexOf(delimiterComment) !== -1) {
-      const expression = expressions.shift() as unknown
-      if (attrName.charAt(0) === '@') {
-        const event = attrName.substring(1)
-        node.addEventListener(event, expression as EventListener)
-        if (!listeners.has(node)) listeners.set(node, new Map())
-        listeners.get(node)?.set(event, expression as EventListener)
-        toRemove.push(attrName)
-      } else {
-        // Logic to determine if this is an IDL attribute or a content attribute
-        const isIDL =
-          (hasValueIDL && attrName === 'value') ||
-          (attrName === 'checked' && node instanceof HTMLInputElement) ||
-          (attrName.startsWith('.') && (attrName = attrName.substring(1)))
-
-        w(expression as ReactiveFunction, (value: any) => {
-          if (isIDL) {
-            // Handle all IDL attributes, TS won’t like this since it is not
-            // fully are of the type we are operating on, but JavaScript is
-            // perfectly fine with it, so we’ll just ignore TS here.
-            // @ts-ignore:next-line
-            node[attrName as 'value'] = value
-            // Explicitly set the "value" to false remove the attribute.
-            value = false
+    measure('attrs inner', () => {
+      if (attr.value.indexOf(delimiterComment) !== -1) {
+        measure('attrs delimiter found', () => {
+          let attrName: any
+          let expression: any
+          measure('attrs, assignment', () => {
+            measure('attrs, name', () => {
+              attrName = attr.name
+            })
+            measure('attrs, expression shift', () => {
+              expression = expressions.shift() as unknown
+            })
+          })
+          if (attrName.charAt(0) === '@') {
+            measure('addListeners', () => {
+              const event = attrName.substring(1)
+              node.addEventListener(event, expression as EventListener)
+              if (!listeners.has(node)) listeners.set(node, new Map())
+              listeners.get(node)?.set(event, expression as EventListener)
+              toRemove.push(attrName)
+            })
+          } else {
+            measure('attrs w()', () => {
+              // Logic to determine if this is an IDL attribute or a content attribute
+              const isIDL =
+                (hasValueIDL && attrName === 'value') ||
+                (attrName === 'checked' && node instanceof HTMLInputElement) ||
+                (attrName.startsWith('.') && (attrName = attrName.substring(1)))
+              w(expression as ReactiveFunction, (value: any) => {
+                if (isIDL) {
+                  // Handle all IDL attributes, TS won’t like this since it is not
+                  // fully are of the type we are operating on, but JavaScript is
+                  // perfectly fine with it, so we’ll just ignore TS here.
+                  // @ts-ignore:next-line
+                  node[attrName as 'value'] = value
+                  // Explicitly set the "value" to false remove the attribute.
+                  value = false
+                }
+                // Set a standard content attribute.
+                value !== false
+                  ? node.setAttribute(attrName, value)
+                  : node.removeAttribute(attrName)
+              })
+            })
           }
-          // Set a standard content attribute.
-          value !== false
-            ? node.setAttribute(attrName, value)
-            : node.removeAttribute(attrName)
         })
       }
-    }
+    })
   })
   toRemove.forEach((attrName) => node.removeAttribute(attrName))
 }
@@ -324,7 +362,10 @@ function comment(
   ;(node as ChildNode).remove()
   const partial = createPartial()
   // At this point, we know we're dealing with some kind of reactive token fn
-  const expression = expressions.shift()
+  let expression: any
+  measure('comment, expression shift', () => {
+    expression = expressions.shift()
+  })
   if (expression && isTpl(expression.e)) {
     // If the expression is an html`` (ArrowTemplate), then call it with data
     // and then call the ArrowTemplate with no parent, so we get the nodes.
@@ -337,14 +378,17 @@ function comment(
     let n: Text | TemplatePartial = document.createTextNode('')
     // in this case we have an expression inline as a text node, so we
     // need to reactively bind it here.
-    n = w(expression!, (value: any) => setNode(n, value)) as
-      | Text
-      | TemplatePartial
-    frag.appendChild(n instanceof Node ? n : n())
+    measure('textNode w()', () => {
+      n = w(expression!, (value: any) => setNode(n, value)) as
+        | Text
+        | TemplatePartial
+      frag.appendChild(n instanceof Node ? n : n())
+    })
   }
   if (partial.l) {
     frag.appendChild(partial())
   }
+
   return frag
 }
 
@@ -365,7 +409,9 @@ function setNode(
   }
   const isUpdate = typeof n === 'function'
   const partial = (isUpdate ? n : createPartial()) as TemplatePartial
-  value.forEach((item: string | number | ArrowTemplate) => partial.add(item))
+  measure('setNode', () => {
+    value.forEach((item: string | number | ArrowTemplate) => partial.add(item))
+  })
   if (isUpdate) partial._up()
   return partial
 }
@@ -432,7 +478,7 @@ function createPartial(group = Symbol()): TemplatePartial {
         ? keyedChunk.exp.forEach((exp, i) => exp._up(localExpressions[i].e))
         : keyedChunks.set(key, chunk as PartialChunk)
     }
-    localExpressions.forEach((callback) => expressions.push(callback))
+    expressions.push(...localExpressions)
     partial.l++
   }
 

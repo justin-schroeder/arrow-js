@@ -76,8 +76,7 @@ export interface DependencyProps {
  */
 export type ReactiveProxy<T> = {
   [K in keyof T]: T[K] extends DataSource ? ReactiveProxy<T[K]> : T[K]
-} &
-  DataSource &
+} & DataSource &
   DependencyProps
 
 type ReactiveProxyParent = [
@@ -369,8 +368,10 @@ export function w(fn: CallableFunction, after?: CallableFunction): unknown {
   if (!dependencyCollector.has(trackingId)) {
     dependencyCollector.set(trackingId, new Map())
   }
-  let currentDeps: Map<ReactiveProxy<DataSource>, Set<DataSourceKey>> =
-    new Map()
+  let currentDeps: Map<
+    ReactiveProxy<DataSource>,
+    Set<DataSourceKey>
+  > = new Map()
   const queuedCallFn = queue(callFn)
   function callFn() {
     dependencyCollector.set(trackingId, new Map())
