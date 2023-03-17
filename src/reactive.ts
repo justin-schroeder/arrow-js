@@ -363,7 +363,10 @@ function reactiveMerge(
  * @param  {CallableFunction} after?
  * @returns unknown
  */
-export function w(fn: CallableFunction, after?: CallableFunction): unknown {
+export function w<
+  T extends (...args: any[]) => unknown,
+  F extends (...args: any[]) => any | undefined
+>(fn: T, after?: F): F extends undefined ? ReturnType<T> : ReturnType<F> {
   const trackingId = Symbol()
   if (!dependencyCollector.has(trackingId)) {
     dependencyCollector.set(trackingId, new Map())

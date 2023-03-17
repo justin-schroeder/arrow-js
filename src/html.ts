@@ -47,12 +47,21 @@ export interface ArrowTemplate {
 type ArrowTemplateKey = string | number | undefined
 
 /**
+ * Types of return values that can be rendered.
+ */
+type ArrowRenderable =
+  | string
+  | number
+  | ArrowTemplate
+  | Array<string | number | ArrowTemplate>
+
+/**
  * A reactive function is a function that is bound to a template. It is the
  * higher order control around the expressions that are in the template literal.
  * It is responsible for updating the template when the expression changes.
  */
 export interface ReactiveFunction {
-  (el?: Node): string | ArrowTemplate
+  (el?: Node): ArrowRenderable
   (ev: Event, listener: EventListenerOrEventListenerObject): void
   $on: (observer: CallableFunction) => void
   _up: (newExpression: CallableFunction) => void
@@ -237,10 +246,7 @@ function fragment(
     // Delimiters in the body are found inside comments.
     if (node.nodeType === 8 && node.nodeValue === delimiter) {
       // We are dealing with a reactive node.
-      measure('textNodes', () => {
-        // TODO: remove this bang: node! when removing measurement fn
-        frag.append(comment(node!, expressions))
-      })
+      frag.append(comment(node, expressions))
       continue
     }
     // Bind attributes, add events, and push onto the fragment.
@@ -371,10 +377,7 @@ function comment(
   ;(node as ChildNode).remove()
   const partial = createPartial()
   // At this point, we know we're dealing with some kind of reactive token fn
-  let expression: any
-  measure('comment, expression shift', () => {
-    expression = expressions.e[expressions.i++]
-  })
+  const expression = expressions.e[expressions.i++]
   if (expression && isTpl(expression.e)) {
     // If the expression is an html`` (ArrowTemplate), then call it with data
     // and then call the ArrowTemplate with no parent, so we get the nodes.
@@ -384,14 +387,14 @@ function comment(
       frag.appendChild(partial())
     }
 
-    let n: Text | TemplatePartial = document.createTextNode('')
-    // in this case we have an expression inline as a text node, so we
-    // need to reactively bind it here.
+    let partialMemo: TemplatePartial
     measure('textNode w()', () => {
-      n = w(expression!, (value: any) => setNode(n, value)) as
-        | Text
-        | TemplatePartial
-      frag.appendChild(n instanceof Node ? n : n())
+      partialMemo = w(expression, (value: ArrowRenderable) =>
+        setNode(value, partialMemo)
+      )
+      frag.appendChild(
+        measure<DocumentFragment>('partialMemo()', () => partialMemo())
+      )
     })
   }
   if (partial.l) {
@@ -409,28 +412,46 @@ function comment(
  * @returns Node
  */
 function setNode(
-  n: Text | TemplatePartial,
-  value: unknown
-): Node | TemplatePartial {
-  // If we need to render a template partial, or we need to render a render group (no partial yet)
-  if (!Array.isArray(value)) {
-    return setNode(n, [value] as RenderGroup)
-  }
-  const isUpdate = typeof n === 'function'
-  const partial = (isUpdate ? n : createPartial()) as TemplatePartial
-  measure('setNode', () => {
-    value.forEach((item: string | number | ArrowTemplate) => partial.add(item))
+  value: ArrowRenderable,
+  p: TemplatePartial | null
+): TemplatePartial {
+  const isUpdate = typeof p === 'function'
+  const partial = isUpdate ? p : createPartial()
+  measure('partial.add', () => {
+    Array.isArray(value)
+      ? value.forEach((item) => partial.add(item))
+      : partial.add(value)
   })
   if (isUpdate) partial._up()
   return partial
 }
 
+const tpls: { [key: string]: HTMLTemplateElement } = {}
+let cacheMiss = 0
 function createNodes(html: string): NodeList {
-  const tpl: HTMLTemplateElement = document.createElement('template')
-  tpl.innerHTML = html
-  const dom = tpl.content.cloneNode(true)
-  dom.normalize() // textNodes are automatically split somewhere around 65kb, so join them back together.
-  return dom.childNodes
+  const tpl: HTMLTemplateElement = measure<HTMLTemplateElement>(
+    'innerHTML',
+    () => {
+      if (tpls[html]) {
+        measure('cacheHit', 1)
+        return tpls[html]
+      }
+      measure('cacheMiss', 1)
+      cacheMiss++
+      if (cacheMiss < 100) {
+        console.log(html)
+      }
+      const tpl = document.createElement('template')
+      tpl.innerHTML = html
+      tpls[html] = tpl
+      return tpl
+    }
+  )
+  return measure('cloneNode', () => {
+    const dom = tpl.content.cloneNode(true)
+    dom.normalize() // textNodes are automatically split somewhere around 65kb, so join them back together.
+    return dom.childNodes
+  })
 }
 /**
  * Template partials are stateful functions that perform a fragment render when
@@ -454,7 +475,10 @@ function createPartial(group = Symbol()): TemplatePartial {
       addPlaceholderChunk()
     }
     const dom = assignDomChunks(
-      fragment(createNodes(html), expressions)() as DocumentFragment
+      fragment(
+        measure('createNodes in partial', () => createNodes(html)),
+        expressions
+      )() as DocumentFragment
     )
     reset()
     return dom
@@ -463,6 +487,20 @@ function createPartial(group = Symbol()): TemplatePartial {
   partial.l = 0
   partial.add = (tpl: ArrowTemplate | number | string) => {
     if (!tpl && tpl !== 0) return
+    // TODO
+    // TODO
+    // TODO
+    // The issue here is that the `tpl` here could be a pure string, in which
+    // case we dont really want to do the whole rigamarole and "sanatize" it
+    // and all that. We should probably just do a simple string check and if it
+    // is a string somehow create a textNode and add it as a chunk with some
+    // form of identifier to know that it is a textNode when it gets to
+    // assignDomChunks, and the _up function. Ideally, there should be zero
+    // overhead for textNodes, in the sense that they should not be actually
+    // added to the HTML itself when createNodes() is called, maybe just the
+    // bookendComment should be there, and we take the "empty" area before it
+    // and the fact that tpl is a string and create a text node for the chunk.
+    // But this needs further testing.
     let template = tpl
     let localExpressions: ReactiveFunction[] = []
     let key: ArrowTemplateKey
@@ -582,6 +620,12 @@ function createPartial(group = Symbol()): TemplatePartial {
     })
   }
 
+  /**
+   * Walks through the document fragment and assigns the nodes to the correct
+   * DOM chunk. Chunks of DOM are divided by the bookend comment.
+   * @param frag - A document fragment that has been created from a partial
+   * @returns
+   */
   const assignDomChunks = (frag: DocumentFragment): DocumentFragment => {
     let chunkIndex = 0
     const toRemove: ChildNode[] = []

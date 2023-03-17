@@ -47,7 +47,7 @@
         results.innerText = `${end - start}ms`
         let measurementHtml = ''
         for (const measurement in measurements) {
-          measurementHtml += '<div class="results">' + measurement + ': ' + `${measurements[measurement].reduce((sum, t) => sum += t, 0)}ms` + '</div>'
+          measurementHtml += '<div class="results">' + measurement + ': ' + `${measurements[measurement].reduce((sum, t) => sum += t, 0)}` + '</div>'
         }
         window.measurements = measurements
         internal.innerHTML = measurementHtml

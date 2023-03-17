@@ -94,10 +94,16 @@ export const sanitize = (str: string): string => {
 
 export const measurements: Record<string, number[]> = {}
 
-export function measure(label: string, fn: CallableFunction): void {
+export function measure<T = unknown>(
+  label: string,
+  fn: CallableFunction | number
+): T {
   const start = performance.now()
-  fn()
-  const result = performance.now() - start
+  const isFn = typeof fn === 'function'
+  label = isFn ? `${label} (ms)` : `${label} (calls)`
+  const x = isFn ? fn() : fn
+  const result = isFn ? performance.now() - start : fn
   if (!measurements[label]) measurements[label] = [result]
   else measurements[label].push(result)
+  return x
 }
