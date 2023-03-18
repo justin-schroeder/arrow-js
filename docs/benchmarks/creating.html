@@ -41,7 +41,7 @@
 
       document.getElementById('run').addEventListener('click', async () => {
         const start = performance.now()
-        data.rows = buildData(10000)
+        data.rows = buildData(2)
         await nextTick()
         const end = performance.now()
         results.innerText = `${end - start}ms`
@@ -75,7 +75,7 @@
                   </a>
                 </td>
                 <td class="col-md-6"></td>
-            <tr>`)}
+            </tr>`)}
         </tbody>
       `(document.getElementById('arrow'))
     </script>
@@ -101,7 +101,7 @@
                   </a>
                 </td>
                 <td class="col-md-6"></td>
-            <tr>`
+            </tr>`
         }, '<tbody>') + '</tbody>'
         await new Promise(r => setTimeout(r, 0))
         const end = performance.now()

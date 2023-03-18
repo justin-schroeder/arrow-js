@@ -81,19 +81,14 @@ export function queue(fn: ObserverCallback): ObserverCallback {
   }
 }
 
-/**
- * Given a string, sanitize for inclusion in html.
- * @param str - A string to sanitize.
- * @returns
- */
-export const sanitize = (str: string): string => {
-  return str === '<!---->'
-    ? str
-    : str.replace(/[<>]/g, (m) => (m === '>' ? '&gt;' : '&lt;'))
-}
-
 export const measurements: Record<string, number[]> = {}
 
+/**
+ * A simple benchmarking function.
+ * @param label - A label for the measurement
+ * @param fn - A function to measure or a number to record
+ * @returns
+ */
 export function measure<T = unknown>(
   label: string,
   fn: CallableFunction | number
