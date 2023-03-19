@@ -307,8 +307,12 @@ function attrs(node: Element, expressions: ReactiveExpressions): void {
           // perfectly fine with it, so we need to ignore TS here.
           // @ts-ignore:next-line
           node[attrName as 'value'] = value
-          // Explicitly set the "value" to false remove the attribute.
-          value = false
+          // Explicitly set the "value" to false remove the attribute. However
+          // we need to be sure this is not a "Reflected" attribute, so we check
+          // the current value of the attribute to make sure it is not the same
+          // as the value we just set. If it is the same, it must be reflected.
+          // so removing the attribute would remove the idl we just set.
+          if (node.getAttribute(attrName) != value) value = false
         }
         // Set a standard content attribute.
         value !== false

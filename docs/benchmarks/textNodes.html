@@ -11,6 +11,7 @@
   </head>
   <body>
     <table id="arrow"></table>
+    <table id="progress"></table>
 
     <!-- ARROW TEST -->
     <script type="module">
@@ -18,12 +19,17 @@
 
       const data = reactive({
         name: 'Justin',
+        progress: 1
       })
 
       html`
         <input @input="${(e) => (data.name = e.target.value)}">
         <div>${() => data.name}</div>
       `(document.getElementById('arrow'))
+
+      html`
+        <progress max="100" value="${() => data.progress}"></progress>
+      `(document.getElementById('progress'))
     </script>
   </body>
 </html>

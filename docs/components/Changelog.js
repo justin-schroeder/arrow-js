@@ -3,6 +3,22 @@ import { html } from '@src/index'
 export default function () {
   return html`
     <h1 id="changelog">Changelog</h1>
+    <h2>Alpha 9</h2>
+    <ul>
+      <li>
+        Significant performance improvements when creating new
+        <code>html</code> blocks with multiple expressions.
+      </li>
+      <li>
+        Improves DOM patching algorithm to explicitly operate on
+        <code>Text</code> nodes for faster update performance and improved
+        sanitation.
+      </li>
+      <li>
+        Fixes a bug with in <code>reactive</code> that caused wholesale
+        replacement of child objects to remove parent property updates.
+      </li>
+    </ul>
     <h2>Alpha 8</h2>
     <ul>
       <li>
