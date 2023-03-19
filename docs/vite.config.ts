@@ -22,7 +22,7 @@ export default defineConfig({
         demos_calculator: resolve(__dirname, 'demos/calculator.html'),
         demos_carousel: resolve(__dirname, 'demos/carousel.html'),
         demos_dropdowns: resolve(__dirname, 'demos/dropdowns.html'),
-        demos_fast_text: resolve(__dirname, 'demos/fast_text.html'),
+        demos_fast_text: resolve(__dirname, 'demos/fast-text.html'),
         demos_tabs: resolve(__dirname, 'demos/tabs.html'),
       },
       output: {
