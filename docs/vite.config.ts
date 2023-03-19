@@ -15,7 +15,7 @@ export default defineConfig({
     emptyOutDir: true,
     rollupOptions: {
       input: {
-        main: resolve(__dirname, 'index.html'),
+        docs: resolve(__dirname, 'docs/index.html'),
         benchmarks: resolve(__dirname, 'benchmarks/index.html'),
         benchmarks_creating: resolve(__dirname, 'benchmarks/creating.html'),
         benchmarks_textNodes: resolve(__dirname, 'benchmarks/textNodes.html'),
