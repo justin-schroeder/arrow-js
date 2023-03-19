@@ -13,18 +13,13 @@ describe('w', () => {
     })
 
     watch(callback)
-
     await nextTick()
     expect(callback).toHaveBeenCalledTimes(1)
-
     d.value = 10
     await nextTick()
-
     expect(callback).toHaveBeenCalledTimes(2)
-
     d.value = 20
     await nextTick()
-
     expect(callback).toHaveBeenCalledTimes(3)
   })
 
@@ -114,5 +109,29 @@ describe('w', () => {
     await nextTick()
     expect(cb1).toHaveBeenCalledTimes(1)
     expect(d.value).toStrictEqual(2)
+  })
+
+  it('will call a watcher when a dependant array is changed to empty', async () => {
+    const data = reactive({ list: ['A', 'B', 'C'] })
+    const callback = jest.fn()
+    watch(() => data.list, callback)
+    expect(callback).toHaveBeenCalledTimes(1)
+    data.list.length = 0
+    await nextTick()
+    expect(callback).toHaveBeenCalledTimes(2)
+  })
+
+  it('will call a watcher when a dependant array is spliced to empty', async () => {
+    const data = reactive({ list: ['A', 'B'] })
+    const callback = jest.fn()
+    watch(() => data.list, callback)
+    expect(callback).toHaveBeenCalledTimes(1)
+    data.list.splice(0, 1)
+    await nextTick()
+    expect(callback).toHaveBeenCalledTimes(2)
+    data.list.splice(0, 1)
+    await nextTick()
+    expect(callback).toHaveBeenCalledTimes(3)
+    expect(data.list).toEqual([])
   })
 })

@@ -269,6 +269,7 @@ export function r<T extends DataSource>(
     },
   }) as ReactiveProxy<T>
 
+  if (state.p) proxy._p = state.p
   // Before we return the proxy object, quickly map through the children
   // and set the parents (this is only run on the initial setup).
   children.map((c) => {
@@ -384,7 +385,6 @@ export function w<
       Set<DataSourceKey>
     >
     dependencyCollector.delete(trackingId)
-
     // Disable existing properties
     currentDeps.forEach((propertiesToUnobserve, proxy) => {
       const newProperties = newDeps.get(proxy)

@@ -483,7 +483,6 @@ function createPartial(group = Symbol()): TemplatePartial {
     const subPartial = createPartial(group)
     let startChunking = 0
     let lastNode: ChildNode = previousChunks[0].dom[0]
-    console.log(chunks.length)
     // If this is an empty update, we need to "placehold" its spot in the dom
     // with an empty placeholder chunk.
     if (!chunks.length) addPlaceholderChunk(document.createComment(''))

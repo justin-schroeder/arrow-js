@@ -26,6 +26,7 @@
       </div>
     </div>
     <table id="arrow"></table>
+    <div id="data"></div>
 
     <!-- ARROW TEST -->
     <script type="module">
@@ -60,21 +61,26 @@
         )
       }
 
+      html`
+      <ul>
+        ${() => data.rows.map((row) => html`<li>${() => row.label}</li>`)}
+      </ul>
+      `(document.getElementById('data'))
 
       html`
         <tbody>
           ${() => data.rows.map(row => html`
             <tr class="${() => row.id === data.selected ? 'danger' : false}">
               <td class="col-md-1">${() => row.id }</td>
-                <td class="col-md-4">
-                  <a @click="${() => {data.selected = row.id}}">${() => row.label }</a>
-                </td>
-                <td class="col-md-1">
-                  <a @click="${() => remove(row.id)}">
-                    Remove me
-                  </a>
-                </td>
-                <td class="col-md-6"></td>
+              <td class="col-md-4">
+                <a @click="${() => {data.selected = row.id}}">${() => row.label }</a>
+              </td>
+              <td class="col-md-1">
+                <a @click="${() => remove(row.id)}">
+                  Remove me
+                </a>
+              </td>
+              <td class="col-md-6"></td>
             </tr>`)}
         </tbody>
       `(document.getElementById('arrow'))

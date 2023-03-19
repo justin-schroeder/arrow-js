@@ -233,6 +233,7 @@ describe('html', () => {
     expect(parent.innerHTML).toBe(`<ul>
       <li>c</li>
     </ul>`)
+    data.list.splice(0, 1)
     await nextTick()
     expect(parent.innerHTML).toBe(`<ul>
       <!---->
