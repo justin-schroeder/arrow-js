@@ -1,13 +1,20 @@
 {
   "name": "@arrow-js/core",
   "private": true,
-  "version": "1.0.0-alpha.8",
+  "version": "1.0.0-alpha.9",
   "description": "Reactivity without the framework.",
   "author": "Justin Schroeder <justin@wearebraid.com>",
   "license": "MIT",
   "main": "dist/index.min.mjs",
   "module": "dist/index.min.mjs",
   "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs"
+    },
+    "./package.json": "./package.json"
+  },
   "directories": {
     "doc": "docs",
     "test": "test"

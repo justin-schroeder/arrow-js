@@ -15,8 +15,16 @@ export default defineConfig({
     emptyOutDir: true,
     rollupOptions: {
       input: {
-        main: resolve(__dirname, 'index.html'),
+        home: resolve(__dirname, 'index.html'),
         docs: resolve(__dirname, 'docs/index.html'),
+        benchmarks: resolve(__dirname, 'benchmarks/index.html'),
+        benchmarks_creating: resolve(__dirname, 'benchmarks/creating.html'),
+        benchmarks_textNodes: resolve(__dirname, 'benchmarks/textNodes.html'),
+        demos_calculator: resolve(__dirname, 'demos/calculator.html'),
+        demos_carousel: resolve(__dirname, 'demos/carousel.html'),
+        demos_dropdowns: resolve(__dirname, 'demos/dropdowns.html'),
+        demos_fast_text: resolve(__dirname, 'demos/fast-text.html'),
+        demos_tabs: resolve(__dirname, 'demos/tabs.html'),
       },
       output: {
         dir: resolve(__dirname, '../public'),
