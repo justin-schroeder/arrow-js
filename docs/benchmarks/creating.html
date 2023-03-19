@@ -42,7 +42,7 @@
 
       document.getElementById('run').addEventListener('click', async () => {
         const start = performance.now()
-        data.rows = buildData(2)
+        data.rows = buildData(10000)
         await nextTick()
         const end = performance.now()
         results.innerText = `${end - start}ms`
