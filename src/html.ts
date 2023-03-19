@@ -1,6 +1,5 @@
 import { w } from './reactive'
-import { isTpl, sanitize } from './common'
-
+import { isTpl } from './common'
 /**
  * An arrow template one of the three primary ArrowJS utilities. Specifically,
  * templates are functions that return a function which mounts the template to
@@ -12,14 +11,33 @@ import { isTpl, sanitize } from './common'
  * the bound attributes or textNodes are updated.
  */
 export interface ArrowTemplate {
+  /**
+   * Mounts the template to a given parent node.
+   */
   (parent?: ParentNode): ParentNode
+  /**
+   * A boolean flag that indicates this is indeed an ArrowTemplate.
+   */
   isT: boolean
+  /**
+   * Adds a key to this template to identify it as a unique instance.
+   * @param key - A unique key that identifies this template instance (not index).
+   * @returns
+   */
   key: (key: ArrowTemplateKey) => void
+  /**
+   * Returns internal properties of the template, specifically the HTML and
+   * expressions, as well as the key if applicable.
+   * @returns
+   */
   _h: () => [
     html: string,
-    expressions: ReactiveExpressions,
+    expressions: ReactiveFunction[],
     key: ArrowTemplateKey
   ]
+  /**
+   * The internal key property.
+   */
   _k?: ArrowTemplateKey
 }
 
@@ -29,12 +47,21 @@ export interface ArrowTemplate {
 type ArrowTemplateKey = string | number | undefined
 
 /**
+ * Types of return values that can be rendered.
+ */
+type ArrowRenderable =
+  | string
+  | number
+  | ArrowTemplate
+  | Array<string | number | ArrowTemplate>
+
+/**
  * A reactive function is a function that is bound to a template. It is the
  * higher order control around the expressions that are in the template literal.
  * It is responsible for updating the template when the expression changes.
  */
 export interface ReactiveFunction {
-  (el?: Node): string | ArrowTemplate
+  (el?: Node): ArrowRenderable
   (ev: Event, listener: EventListenerOrEventListenerObject): void
   $on: (observer: CallableFunction) => void
   _up: (newExpression: CallableFunction) => void
@@ -44,7 +71,16 @@ export interface ReactiveFunction {
 /**
  * An array of reactive functions.
  */
-export type ReactiveExpressions = ReactiveFunction[]
+export type ReactiveExpressions = {
+  /**
+   * The index of the currently active expression.
+   */
+  i: number
+  /**
+   * An array of the actual expressions.
+   */
+  e: ReactiveFunction[]
+}
 
 /**
  * An internal primitive that is used to create a dom elements.
@@ -80,17 +116,23 @@ const listeners = new WeakMap<
 >()
 
 /**
+ * A list of HTML templates to a HTMLTemplate element that contains instances
+ * of each. This acts as a cache.
+ */
+const templateMemo: { [key: string]: HTMLTemplateElement } = {}
+
+/**
  * An controller that is responsible for assembling the template HTML and
  * performing updates to the pertinent DOM nodes contained within it.
  */
 export interface TemplatePartial {
-  (): DocumentFragment
+  (): DocumentFragment | Text
   /**
    * Adds a template or string to the partials chunks.
    * @param tpl - A template or string to render.
    * @returns
    */
-  add: (tpl: ArrowTemplate | number | string) => void
+  add: (tpl: ArrowTemplate | number | string) => TemplatePartial
   /**
    * Update the partial.
    */
@@ -113,7 +155,7 @@ export interface TemplatePartial {
 type PartialChunk = {
   html: string
   exp: ReactiveFunction[]
-  dom: ChildNode[]
+  dom: Array<ChildNode | Text>
   tpl: ArrowTemplate | string
   key: ArrowTemplateKey
 }
@@ -136,7 +178,7 @@ export function t(
   strings: TemplateStringsArray,
   ...expSlots: any[]
 ): ArrowTemplate {
-  const expressions: ReactiveExpressions = []
+  const expressions: ReactiveFunction[] = []
   let str = ''
   const addExpressions = (expression: any, html: string): string => {
     if (typeof expression === 'function') {
@@ -179,7 +221,7 @@ export function t(
   }
   const template: ArrowTemplate = (el?: ParentNode) => {
     const dom = createNodes(toString())
-    const frag = fragment(dom, expressions)
+    const frag = fragment(dom, { i: 0, e: expressions })
     return el ? frag(el) : frag()
   }
 
@@ -238,52 +280,43 @@ function fragment(
  * @returns void
  */
 function attrs(node: Element, expressions: ReactiveExpressions): void {
-  if (!node.hasAttributes()) return
-  const hasValueIDL =
-    node instanceof HTMLInputElement ||
-    node instanceof HTMLSelectElement ||
-    node instanceof HTMLTextAreaElement
-  const total = node.attributes.length
   const toRemove: string[] = []
-  const attrs = []
-  for (let i = 0; i < total; i++) {
-    attrs.push(node.attributes[i])
-  }
-  attrs.forEach((attr) => {
+  let i = 0
+  let attr: Attr
+  while ((attr = node.attributes[i++])) {
+    if (expressions.i >= expressions.e.length) return
+    if (attr.value !== delimiterComment) continue
     let attrName = attr.name
-    if (attr.value.indexOf(delimiterComment) !== -1) {
-      const expression = expressions.shift() as unknown
-      if (attrName.charAt(0) === '@') {
-        const event = attrName.substring(1)
-        node.addEventListener(event, expression as EventListener)
-        if (!listeners.has(node)) listeners.set(node, new Map())
-        listeners.get(node)?.set(event, expression as EventListener)
-        toRemove.push(attrName)
-      } else {
-        // Logic to determine if this is an IDL attribute or a content attribute
-        const isIDL =
-          (hasValueIDL && attrName === 'value') ||
-          (attrName === 'checked' && node instanceof HTMLInputElement) ||
-          (attrName.startsWith('.') && (attrName = attrName.substring(1)))
-
-        w(expression as ReactiveFunction, (value: any) => {
-          if (isIDL) {
-            // Handle all IDL attributes, TS won’t like this since it is not
-            // fully are of the type we are operating on, but JavaScript is
-            // perfectly fine with it, so we’ll just ignore TS here.
-            // @ts-ignore:next-line
-            node[attrName as 'value'] = value
-            // Explicitly set the "value" to false remove the attribute.
-            value = false
-          }
-          // Set a standard content attribute.
-          value !== false
-            ? node.setAttribute(attrName, value)
-            : node.removeAttribute(attrName)
-        })
-      }
+    const expression = expressions.e[expressions.i++]
+    if (attrName.charAt(0) === '@') {
+      const event = attrName.substring(1)
+      node.addEventListener(event, expression as unknown as EventListener)
+      if (!listeners.has(node)) listeners.set(node, new Map())
+      listeners.get(node)?.set(event, expression as unknown as EventListener)
+      toRemove.push(attrName)
+    } else {
+      // Logic to determine if this is an IDL attribute or a content attribute
+      const isIDL =
+        (attrName === 'value' && 'value' in node) ||
+        attrName === 'checked' ||
+        (attrName.startsWith('.') && (attrName = attrName.substring(1)))
+      w(expression as ReactiveFunction, (value: any) => {
+        if (isIDL) {
+          // Handle all IDL attributes, TS won’t like this since it is not
+          // fully aware of the type we are operating on, but JavaScript is
+          // perfectly fine with it, so we need to ignore TS here.
+          // @ts-ignore:next-line
+          node[attrName as 'value'] = value
+          // Explicitly set the "value" to false remove the attribute.
+          value = false
+        }
+        // Set a standard content attribute.
+        value !== false
+          ? node.setAttribute(attrName, value)
+          : (node.removeAttribute(attrName), i--)
+      })
     }
-  })
+  }
   toRemove.forEach((attrName) => node.removeAttribute(attrName))
 }
 
@@ -322,28 +355,18 @@ function comment(
   // in this case, we're going to throw the value away because we are creating
   // new nodes, so we remove it from any parent tree.
   ;(node as ChildNode).remove()
-  const partial = createPartial()
   // At this point, we know we're dealing with some kind of reactive token fn
-  const expression = expressions.shift()
+  const expression = expressions.e[expressions.i++]
   if (expression && isTpl(expression.e)) {
     // If the expression is an html`` (ArrowTemplate), then call it with data
     // and then call the ArrowTemplate with no parent, so we get the nodes.
-    partial.add(expression.e)
+    frag.appendChild(createPartial().add(expression.e)())
   } else {
-    if (partial.l) {
-      frag.appendChild(partial())
-    }
-
-    let n: Text | TemplatePartial = document.createTextNode('')
-    // in this case we have an expression inline as a text node, so we
-    // need to reactively bind it here.
-    n = w(expression!, (value: any) => setNode(n, value)) as
-      | Text
-      | TemplatePartial
-    frag.appendChild(n instanceof Node ? n : n())
-  }
-  if (partial.l) {
-    frag.appendChild(partial())
+    // This is where the *actual* reactivity takes place:
+    let partialMemo: TemplatePartial
+    frag.appendChild(
+      (partialMemo = w(expression, (value) => setNode(value, partialMemo)))()
+    )
   }
   return frag
 }
@@ -356,27 +379,36 @@ function comment(
  * @returns Node
  */
 function setNode(
-  n: Text | TemplatePartial,
-  value: unknown
-): Node | TemplatePartial {
-  // If we need to render a template partial, or we need to render a render group (no partial yet)
-  if (!Array.isArray(value)) {
-    return setNode(n, [value] as RenderGroup)
-  }
-  const isUpdate = typeof n === 'function'
-  const partial = (isUpdate ? n : createPartial()) as TemplatePartial
-  value.forEach((item: string | number | ArrowTemplate) => partial.add(item))
+  value: ArrowRenderable,
+  p: TemplatePartial | null
+): TemplatePartial {
+  const isUpdate = typeof p === 'function'
+  const partial = isUpdate ? p : createPartial()
+  Array.isArray(value)
+    ? value.forEach((item) => partial.add(item))
+    : partial.add(value)
   if (isUpdate) partial._up()
   return partial
 }
 
+/**
+ * Given an HTML string, produce actual DOM elements.
+ * @param html - a string of html
+ * @returns
+ */
 function createNodes(html: string): NodeList {
-  const tpl: HTMLTemplateElement = document.createElement('template')
-  tpl.innerHTML = html
+  const tpl =
+    templateMemo[html] ??
+    (() => {
+      const tpl = document.createElement('template')
+      tpl.innerHTML = html
+      return (templateMemo[html] = tpl)
+    })()
   const dom = tpl.content.cloneNode(true)
-  dom.normalize() // textNodes are automatically split somewhere around 65kb, so join them back together.
+  dom.normalize() // textNodes are automatically split somewhere around 65kb, this joins them back together.
   return dom.childNodes
 }
+
 /**
  * Template partials are stateful functions that perform a fragment render when
  * called, but also have function properties like ._up() which attempts to only
@@ -385,7 +417,7 @@ function createNodes(html: string): NodeList {
  */
 function createPartial(group = Symbol()): TemplatePartial {
   let html = ''
-  let expressions: ReactiveExpressions = []
+  let expressions: ReactiveExpressions = { i: 0, e: [] }
   let chunks: Array<PartialChunk> = []
   let previousChunks: Array<PartialChunk> = []
   const keyedChunks: Map<ArrowTemplateKey, PartialChunk> = new Map()
@@ -394,31 +426,41 @@ function createPartial(group = Symbol()): TemplatePartial {
   /**
    * This is the actual document partial function.
    */
-  const partial = () => {
-    if (!chunks.length) {
-      addPlaceholderChunk()
+  const partial: TemplatePartial = () => {
+    let dom: DocumentFragment | Text
+    if (!chunks.length) addPlaceholderChunk()
+    if (chunks.length === 1 && !isTpl(chunks[0].tpl)) {
+      // In this case we have only a textNode to render, so we can just return
+      // the text node with the proper value applied.
+      const chunk = chunks[0] as PartialChunk & { tpl: string }
+      chunk.dom.length
+        ? (chunk.dom[0].nodeValue = chunk.tpl)
+        : chunk.dom.push(document.createTextNode(chunk.tpl))
+      dom = chunk.dom[0] as Text
+    } else {
+      dom = assignDomChunks(fragment(createNodes(html), expressions)())
     }
-    const dom = assignDomChunks(
-      fragment(createNodes(html), expressions)() as DocumentFragment
-    )
     reset()
     return dom
   }
   partial.ch = () => previousChunks
   partial.l = 0
-  partial.add = (tpl: ArrowTemplate | number | string) => {
-    if (!tpl && tpl !== 0) return
-    let template = tpl
-    let localExpressions: ReactiveExpressions = []
+  partial.add = (tpl: ArrowTemplate | number | string): TemplatePartial => {
+    if (!tpl && tpl !== 0) return partial
+    // If the tpl is a string or a number it means the result should be a
+    // textNode — in that case we do *not* want to generate any DOM nodes for it
+    // so here we want to ensure that `html` is just ''.
+    let localExpressions: ReactiveFunction[] = []
     let key: ArrowTemplateKey
-    isTpl(tpl)
-      ? ([template, localExpressions, key] = tpl._h())
-      : (template = sanitize(String(tpl)))
+    let template = ''
+    if (isTpl(tpl)) {
+      ;[template, localExpressions, key] = tpl._h()
+    }
     html += template
     html += bookendComment
     const keyedChunk = key && keyedChunks.get(key)
     const chunk = keyedChunk || {
-      html: template as string,
+      html: template,
       exp: localExpressions,
       dom: [],
       tpl,
@@ -432,15 +474,15 @@ function createPartial(group = Symbol()): TemplatePartial {
         ? keyedChunk.exp.forEach((exp, i) => exp._up(localExpressions[i].e))
         : keyedChunks.set(key, chunk as PartialChunk)
     }
-    localExpressions.forEach((callback) => expressions.push(callback))
+    expressions.e.push(...localExpressions)
     partial.l++
+    return partial
   }
 
   partial._up = () => {
     const subPartial = createPartial(group)
     let startChunking = 0
     let lastNode: ChildNode = previousChunks[0].dom[0]
-
     // If this is an empty update, we need to "placehold" its spot in the dom
     // with an empty placeholder chunk.
     if (!chunks.length) addPlaceholderChunk(document.createComment(''))
@@ -482,6 +524,9 @@ function createPartial(group = Symbol()): TemplatePartial {
         chunk.exp = prev.exp
         chunk.dom = prev.dom
         lastNode = chunk.dom[chunk.dom.length - 1]
+        if (isTextNodeChunk(chunk) && lastNode instanceof Text) {
+          lastNode.nodeValue = chunk.tpl
+        }
       } else {
         if (prev && chunk.html !== prev.html && !prev.key) {
           // The previous chunk in this position has changed its underlying html
@@ -496,7 +541,7 @@ function createPartial(group = Symbol()): TemplatePartial {
     })
 
     closeSubPartial()
-    let node = lastNode.nextSibling
+    let node = lastNode?.nextSibling
     while (node && group in node) {
       toRemove.push(node)
       const next = node.nextSibling
@@ -511,7 +556,7 @@ function createPartial(group = Symbol()): TemplatePartial {
     toRemove.length = 0
     html = ''
     partial.l = 0
-    expressions = []
+    expressions = { i: 0, e: [] }
     previousChunks = [...chunks]
     chunks = []
   }
@@ -522,11 +567,17 @@ function createPartial(group = Symbol()): TemplatePartial {
       html,
       exp: [],
       dom: node ? [node] : [],
-      tpl: html,
+      tpl: t`${html}`,
       key: 0,
     })
   }
 
+  /**
+   * Walks through the document fragment and assigns the nodes to the correct
+   * DOM chunk. Chunks of DOM are divided by the bookend comment.
+   * @param frag - A document fragment that has been created from a partial
+   * @returns
+   */
   const assignDomChunks = (frag: DocumentFragment): DocumentFragment => {
     let chunkIndex = 0
     const toRemove: ChildNode[] = []
@@ -554,4 +605,15 @@ function createPartial(group = Symbol()): TemplatePartial {
     })
   }
   return partial
+}
+
+/**
+ * Checks if a given chunk is a textNode chunk.
+ * @param chunk - A partial chunk
+ * @returns
+ */
+function isTextNodeChunk(
+  chunk: PartialChunk
+): chunk is PartialChunk & { tpl: string } {
+  return chunk.dom.length === 1 && !isTpl(chunk.tpl)
 }

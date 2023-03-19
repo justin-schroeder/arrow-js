@@ -6,7 +6,7 @@ interface User {
   id: number
 }
 
-describe('t', () => {
+describe('html', () => {
   it('can render simple strings', () => {
     const nodes = html`foo bar`().childNodes
     expect(nodes.length).toBe(1)
@@ -209,6 +209,34 @@ describe('t', () => {
     await nextTick()
     expect(parent.innerHTML).toBe(`<ul>
       <li>a</li><li>b</li><li>c</li><li>item</li>
+    </ul>`)
+  })
+
+  it('can remove items from a mapped list by splicing', async () => {
+    const data = reactive({
+      list: [{ name: 'a' }, { name: 'b' }, { name: 'c' }],
+    })
+    const parent = document.createElement('div')
+    html`<ul>
+      ${() => data.list.map((item) => html`<li>${() => item.name}</li>`)}
+    </ul>`(parent)
+    expect(parent.innerHTML).toBe(`<ul>
+      <li>a</li><li>b</li><li>c</li>
+    </ul>`)
+    data.list.splice(0, 1)
+    await nextTick()
+    expect(parent.innerHTML).toBe(`<ul>
+      <li>b</li><li>c</li>
+    </ul>`)
+    data.list.splice(0, 1)
+    await nextTick()
+    expect(parent.innerHTML).toBe(`<ul>
+      <li>c</li>
+    </ul>`)
+    data.list.splice(0, 1)
+    await nextTick()
+    expect(parent.innerHTML).toBe(`<ul>
+      <!---->
     </ul>`)
   })
 
@@ -685,5 +713,21 @@ describe('t', () => {
     await nextTick()
     expect(x.foo).toBe('baz')
     expect(x.getAttribute('foo')).toBe(null)
+  })
+})
+
+describe('html text nodes', () => {
+  it('updates the the text node itself rather than creating new ones', async () => {
+    const parent = document.createElement('div')
+    const data = reactive({ text: 'foo' })
+    html`<span>${() => data.text}</span>`(parent)
+    const initialNode = parent.children[0].childNodes[0]
+    expect(initialNode).toBeInstanceOf(Text)
+    expect(initialNode.nodeValue).toBe('foo')
+    data.text = 'bar'
+    await nextTick()
+    const postNode = parent.children[0].childNodes[0]
+    expect(postNode.nodeValue).toBe('bar')
+    expect(initialNode === postNode).toBe(true)
   })
 })

@@ -1,14 +1,14 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`t can conditionally show/remove nodes 1`] = `"<div class=\\"checkout\\"><!----></div>"`;
+exports[`html can conditionally show/remove nodes 1`] = `"<div class=\\"checkout\\"><!----></div>"`;
 
-exports[`t can conditionally show/remove nodes 2`] = `"<div class=\\"checkout\\">Promo: <input type=\\"text\\"></div>"`;
+exports[`html can conditionally show/remove nodes 2`] = `"<div class=\\"checkout\\">Promo: <input type=\\"text\\"></div>"`;
 
-exports[`t can conditionally show/remove nodes 3`] = `"<div class=\\"checkout\\"><!----></div>"`;
+exports[`html can conditionally show/remove nodes 3`] = `"<div class=\\"checkout\\"><!----></div>"`;
 
-exports[`t can conditionally show/remove nodes 4`] = `"<div class=\\"checkout\\">Promo: <input type=\\"text\\"></div>"`;
+exports[`html can conditionally show/remove nodes 4`] = `"<div class=\\"checkout\\">Promo: <input type=\\"text\\"></div>"`;
 
-exports[`t can create a table with dynamic columns and rows 1`] = `
+exports[`html can create a table with dynamic columns and rows 1`] = `
 "<table>
       <tbody>
         <tr>
@@ -20,7 +20,7 @@ exports[`t can create a table with dynamic columns and rows 1`] = `
     </table>"
 `;
 
-exports[`t can place expression nested inside some elements inside a string 1`] = `
+exports[`html can place expression nested inside some elements inside a string 1`] = `
 "This is cool
       <div>
         And here is more text
@@ -29,7 +29,7 @@ exports[`t can place expression nested inside some elements inside a string 1`] 
       <span>Hello</span>"
 `;
 
-exports[`t can place expression nested inside some elements inside a string 2`] = `
+exports[`html can place expression nested inside some elements inside a string 2`] = `
 "This is cool
       <div>
         And here is more text
@@ -38,31 +38,31 @@ exports[`t can place expression nested inside some elements inside a string 2`] 
       <span>Hello</span>"
 `;
 
-exports[`t can remove and re-add multiple attributes 1`] = `
+exports[`html can remove and re-add multiple attributes 1`] = `
 "<div data-org=\\"braid\\">
       virginia
     </div>"
 `;
 
-exports[`t can remove and re-add multiple attributes 2`] = `
+exports[`html can remove and re-add multiple attributes 2`] = `
 "<div data-org=\\"braid\\" x-precinct=\\"cville\\">
       virginia
     </div>"
 `;
 
-exports[`t can remove and re-add multiple attributes 3`] = `
+exports[`html can remove and re-add multiple attributes 3`] = `
 "<div x-precinct=\\"cville\\">
       virginia
     </div>"
 `;
 
-exports[`t can remove and re-add multiple attributes 4`] = `
+exports[`html can remove and re-add multiple attributes 4`] = `
 "<div x-precinct=\\"cville\\" data-org=\\"other\\">
       california
     </div>"
 `;
 
-exports[`t can render a list with multiple repeated roots. 1`] = `
+exports[`html can render a list with multiple repeated roots. 1`] = `
 "<div>
       <h2>a</h2>
               <p>foobar</p><h2>b</h2>
@@ -71,41 +71,41 @@ exports[`t can render a list with multiple repeated roots. 1`] = `
     </div>"
 `;
 
-exports[`t can render a simple non-reactive list 1`] = `
+exports[`html can render a simple non-reactive list 1`] = `
 "Hello
       <ul>
         <li>a</li><li>b</li><li>c</li>
       </ul>"
 `;
 
-exports[`t can render a simple non-reactive list 2`] = `
+exports[`html can render a simple non-reactive list 2`] = `
 "Hello
       <ul>
         <li>a</li><li>b</li><li>c</li>
       </ul>"
 `;
 
-exports[`t can render a simple reactive list 1`] = `
+exports[`html can render a simple reactive list 1`] = `
 "Hello
       <ul>
         <li>a</li><li>b</li><li>c</li>
       </ul>"
 `;
 
-exports[`t can render a simple reactive list 2`] = `
+exports[`html can render a simple reactive list 2`] = `
 "Hello
       <ul>
         <li>a</li><li>b</li><li>c</li><li>next</li>
       </ul>"
 `;
 
-exports[`t can render an array of items and mutate an item in the array (#49) 1`] = `
+exports[`html can render an array of items and mutate an item in the array (#49) 1`] = `
 "<ul>
       <li>1</li><li>12</li><li>3</li>
     </ul>"
 `;
 
-exports[`t can render nested nodes with attribute expressions 1`] = `
+exports[`html can render nested nodes with attribute expressions 1`] = `
 "<ul data-country=\\"usa\\">
       <li data-abbr=\\"va\\">virginia</li><li data-abbr=\\"ne\\">nebraska</li><li data-abbr=\\"ca\\">california</li>
       <li data-first-abbr=\\"va\\">
@@ -114,7 +114,7 @@ exports[`t can render nested nodes with attribute expressions 1`] = `
     </ul> "
 `;
 
-exports[`t can render nested nodes with attribute expressions 2`] = `
+exports[`html can render nested nodes with attribute expressions 2`] = `
 "<ul data-country=\\"usa\\">
       <li data-abbr=\\"ca\\">california</li><li data-abbr=\\"ne\\">nebraska</li><li data-abbr=\\"va\\">virginia</li>
       <li data-first-abbr=\\"ca\\">

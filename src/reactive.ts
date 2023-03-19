@@ -76,8 +76,7 @@ export interface DependencyProps {
  */
 export type ReactiveProxy<T> = {
   [K in keyof T]: T[K] extends DataSource ? ReactiveProxy<T[K]> : T[K]
-} &
-  DataSource &
+} & DataSource &
   DependencyProps
 
 type ReactiveProxyParent = [
@@ -270,6 +269,7 @@ export function r<T extends DataSource>(
     },
   }) as ReactiveProxy<T>
 
+  if (state.p) proxy._p = state.p
   // Before we return the proxy object, quickly map through the children
   // and set the parents (this is only run on the initial setup).
   children.map((c) => {
@@ -364,13 +364,18 @@ function reactiveMerge(
  * @param  {CallableFunction} after?
  * @returns unknown
  */
-export function w(fn: CallableFunction, after?: CallableFunction): unknown {
+export function w<
+  T extends (...args: any[]) => unknown,
+  F extends (...args: any[]) => any | undefined
+>(fn: T, after?: F): F extends undefined ? ReturnType<T> : ReturnType<F> {
   const trackingId = Symbol()
   if (!dependencyCollector.has(trackingId)) {
     dependencyCollector.set(trackingId, new Map())
   }
-  let currentDeps: Map<ReactiveProxy<DataSource>, Set<DataSourceKey>> =
-    new Map()
+  let currentDeps: Map<
+    ReactiveProxy<DataSource>,
+    Set<DataSourceKey>
+  > = new Map()
   const queuedCallFn = queue(callFn)
   function callFn() {
     dependencyCollector.set(trackingId, new Map())
@@ -380,7 +385,6 @@ export function w(fn: CallableFunction, after?: CallableFunction): unknown {
       Set<DataSourceKey>
     >
     dependencyCollector.delete(trackingId)
-
     // Disable existing properties
     currentDeps.forEach((propertiesToUnobserve, proxy) => {
       const newProperties = newDeps.get(proxy)
