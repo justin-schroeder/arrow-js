@@ -1,7 +1,12 @@
 .build/
 test/
 public/
-docs/
+docs/*
+docs/.*
+docs/img/*
+docs/img/logo.png
+!docs/img/logo.png
+!docs/img/logo-invert.png
 coverage/
 build/
 coverage/
