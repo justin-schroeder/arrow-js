@@ -27,6 +27,20 @@ async function baseBuild() {
   ])
 }
 
+async function iifeBuild() {
+  info('Rolling up IIFE')
+  await execa('npx', [
+    'rollup',
+    '-c',
+    'rollup.config.ts',
+    '--configPlugin',
+    'typescript',
+    '--environment',
+    'BUILD:iife'
+  ])
+}
+
+
 async function typesBuild() {
   info('Rolling up types')
   await execa('npx', [
@@ -51,6 +65,7 @@ async function removeArtifacts() {
   try {
     await clean()
     await baseBuild()
+    await iifeBuild()
     await typesBuild()
     await removeArtifacts()
     success('Build complete')
