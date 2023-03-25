@@ -731,3 +731,24 @@ describe('html text nodes', () => {
     expect(initialNode === postNode).toBe(true)
   })
 })
+
+// describe('clean up and memory release', () => {
+//   it('allows root dom nodes to be garbage collected', () => {
+//     const parent = document.createElement('div')
+//     new FinalizationRegistry((name) => {
+
+//     }).register(parent, parent)
+//     new MutationObserver((mutationList) => {
+//       for (const mutation of mutationList) {
+//         mutation.addedNodes.forEach((node) => {
+//           if (node instanceof HTMLButtonElement) {
+
+//           }
+//         })
+//       }
+//     }).observe(parent, { childList: true })
+//     const data = reactive({ show: true })
+//     html`${() => (data.show ? html`<button></button>` : '')}`(parent)
+//     data.show = false
+//   })
+// })
