@@ -1,5 +1,5 @@
 import { nextTick, reactive, watch } from '../'
-
+import { describe, it, expect, vi } from 'vitest'
 type Data = {
   value: number | null
 }
@@ -8,7 +8,7 @@ describe('w', () => {
   it('should call when depencency changes', async () => {
     const d = reactive({ value: 0 })
 
-    const callback = jest.fn(() => {
+    const callback = vi.fn(() => {
       d.value
     })
 
@@ -26,7 +26,7 @@ describe('w', () => {
   it('should handle null values', async () => {
     const d = reactive<Data>({ value: null })
 
-    const inner = jest.fn()
+    const inner = vi.fn()
 
     function callback() {
       if (d.value !== null) {
@@ -52,8 +52,8 @@ describe('w', () => {
     const d1 = reactive<Data>({ value: 0 })
     const d2 = reactive<Data>({ value: 1 })
 
-    const cb1 = jest.fn()
-    const cb2 = jest.fn()
+    const cb1 = vi.fn()
+    const cb2 = vi.fn()
 
     function callback() {
       if (d1.value === 1) {
@@ -90,7 +90,7 @@ describe('w', () => {
   it('should handle own changes inside a watcher on initial call', async () => {
     const d = reactive<Data>({ value: 1 })
 
-    const cb1 = jest.fn()
+    const cb1 = vi.fn()
 
     function callback() {
       if (d.value === 1) {
@@ -113,7 +113,7 @@ describe('w', () => {
 
   it('will call a watcher when a dependant array is changed to empty', async () => {
     const data = reactive({ list: ['A', 'B', 'C'] })
-    const callback = jest.fn()
+    const callback = vi.fn()
     watch(() => data.list, callback)
     expect(callback).toHaveBeenCalledTimes(1)
     data.list.length = 0
@@ -123,7 +123,7 @@ describe('w', () => {
 
   it('will call a watcher when a dependant array is spliced to empty', async () => {
     const data = reactive({ list: ['A', 'B'] })
-    const callback = jest.fn()
+    const callback = vi.fn()
     watch(() => data.list, callback)
     expect(callback).toHaveBeenCalledTimes(1)
     data.list.splice(0, 1)

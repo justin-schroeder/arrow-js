@@ -1,7 +1,7 @@
 name: Github Tests
 on: [push, workflow_dispatch]
 jobs:
-  jest-run:
+  vitest-run:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3

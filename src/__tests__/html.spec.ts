@@ -1,6 +1,6 @@
 import { html, reactive, nextTick, ArrowTemplate } from '..'
 import { click, setValue } from './utils/events'
-
+import { describe, it, expect, vi } from 'vitest'
 interface User {
   name: string
   id: number
@@ -568,7 +568,7 @@ describe('html', () => {
   })
 
   it('cleans up event listeners when a node has been removed', async () => {
-    const clickHandler = jest.fn()
+    const clickHandler = vi.fn()
     const parent = document.createElement('div')
     const data = reactive({
       show: true,
@@ -663,7 +663,7 @@ describe('html', () => {
           </li>`.key(item.id)
         )}
     </ul>`(stage)
-    const callback = jest.fn()
+    const callback = vi.fn()
     const observer = new MutationObserver(callback)
     observer.observe(stage.querySelector('ul')!, { childList: true })
     const input = stage.querySelector('input') as HTMLInputElement

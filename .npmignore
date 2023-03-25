@@ -17,6 +17,6 @@ src/
 .eslintrc
 .prettierignore
 .prettierrc.json
-jest.config.cjs
 tsconfig.json
 rollup.config.ts
+vitest.config.ts
