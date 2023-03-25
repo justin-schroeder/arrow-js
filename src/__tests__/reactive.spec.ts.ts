@@ -1,5 +1,5 @@
 import { nextTick, reactive, watch, ReactiveProxy } from '..'
-
+import { describe, it, expect, vi } from 'vitest'
 describe('reactive', () => {
   it('allows simple property access', () => {
     const data = reactive({ x: 123, y: 'abc' })
@@ -23,7 +23,7 @@ describe('reactive', () => {
         baz: 'caz',
       },
     })
-    const x = jest.fn(() => data.a + data.c)
+    const x = vi.fn(() => data.a + data.c)
     watch(x)
     data.foo = 'bar' // should not trigger since it wasnt recorded.
     data.a = 'hello'
@@ -37,7 +37,7 @@ describe('reactive', () => {
       foo: 'bar',
       bar: 'foo',
     })
-    const listener = jest.fn()
+    const listener = vi.fn()
     data.$on('bar', listener)
     data.foo = 'hello'
     await nextTick()
@@ -53,7 +53,7 @@ describe('reactive', () => {
       foo: 'bar',
       bar: 'foo',
     })
-    const listener = jest.fn()
+    const listener = vi.fn()
     data.$on('bar', listener)
     data.bar = 'baz'
     await nextTick()
@@ -70,7 +70,7 @@ describe('reactive', () => {
       name: 'Bob',
     })
     const hasName = () => (data.value > 0.5 ? data.name : 'nothing')
-    const setValue = jest.fn()
+    const setValue = vi.fn()
     watch(hasName, setValue)
     expect(setValue).toHaveBeenCalledTimes(1)
     data.name = 'Jonny'
@@ -88,7 +88,7 @@ describe('reactive', () => {
     const data = reactive({
       list: ['a', 'b', 'c'],
     })
-    const callback = jest.fn()
+    const callback = vi.fn()
     watch(() => data.list.map((item: string) => item), callback)
     expect(callback).toHaveBeenCalledTimes(1)
     data.list.unshift('first')
@@ -102,7 +102,7 @@ describe('reactive', () => {
       name: 'Bob',
     })
     const hasName = () => (data.value > 0.5 ? data.name : 'nothing')
-    const setValue = jest.fn()
+    const setValue = vi.fn()
     watch(hasName, setValue)
     expect(setValue).toHaveBeenCalledTimes(1)
     data.value = 1
@@ -123,8 +123,8 @@ describe('reactive', () => {
       name: 'Bob',
       location: 'Big City',
     })
-    const hasNameCb = jest.fn()
-    const printNameCb = jest.fn()
+    const hasNameCb = vi.fn()
+    const printNameCb = vi.fn()
 
     function printName() {
       return data.name
@@ -151,7 +151,7 @@ describe('reactive', () => {
       first: 'Justin',
       user: { last: 'Schroeder', username: 'bob1999' },
     })
-    const callback = jest.fn()
+    const callback = vi.fn()
     watch(() => data.user.last, callback)
     expect(callback).toHaveBeenCalledTimes(1)
     data.user.last = 'Poppies'
@@ -164,7 +164,7 @@ describe('reactive', () => {
     const data = reactive({
       list: [{ name: 'fred' }],
     })
-    const callback = jest.fn()
+    const callback = vi.fn()
     data.list[0].$on('name', callback)
     data.list[0] = { name: 'fred' }
     expect(callback).toHaveBeenCalledTimes(0)
@@ -175,8 +175,8 @@ describe('reactive', () => {
     const data = reactive({
       users: [{ name: 'ted' }],
     })
-    const listObserver = jest.fn()
-    const userObserver = jest.fn()
+    const listObserver = vi.fn()
+    const userObserver = vi.fn()
     data.users[0].$on('name', listObserver)
     user.$on('name', userObserver)
     data.users[0] = user
@@ -189,7 +189,7 @@ describe('reactive', () => {
       first: 'Bob',
       user: { last: 'Schroeder', username: 'bob1999' },
     })
-    const callback = jest.fn()
+    const callback = vi.fn()
     watch(
       () => (data.first === 'Justin' ? '@jpschroeder' : data.user.username),
       callback
@@ -211,7 +211,7 @@ describe('reactive', () => {
     const data = reactive({
       list: ['a', 'b'],
     })
-    const callback = jest.fn()
+    const callback = vi.fn()
     data.$on('list', callback)
     data.list.push('c')
     expect(callback).toHaveBeenCalledTimes(1)
@@ -221,7 +221,7 @@ describe('reactive', () => {
     const data = reactive({
       list: ['a', 'b'],
     })
-    const callback = jest.fn()
+    const callback = vi.fn()
     data.$on('list', callback)
     data.list.length = 0
     expect(callback).toHaveBeenCalledTimes(1)
@@ -231,7 +231,7 @@ describe('reactive', () => {
     const data = reactive({
       list: [] as { name: string; id: number }[],
     })
-    const callback = jest.fn()
+    const callback = vi.fn()
     data.$on('list', callback)
     data.list = [
       { name: 'a', id: 145 },
@@ -250,7 +250,7 @@ describe('reactive', () => {
     const data = reactive({
       list: [] as string[],
     })
-    const callback = jest.fn()
+    const callback = vi.fn()
     data.$on('list', callback)
     data.list.push('c')
     expect(callback).toHaveBeenCalledTimes(1)
@@ -267,7 +267,7 @@ describe('reactive', () => {
       } as { [index: string]: string },
     }
     const data = reactive(initData)
-    const callback = jest.fn()
+    const callback = vi.fn()
     data.$on('food', callback)
     data.food.breakfast = 'eggs'
     expect(callback).toHaveBeenCalledTimes(1)
@@ -279,7 +279,7 @@ describe('reactive', () => {
         name: 'Justin',
       },
     })
-    const callback = jest.fn()
+    const callback = vi.fn()
     data.user.$on('name', callback)
     expect(callback).toHaveBeenCalledTimes(0)
     data.user.name = 'Dustin'
@@ -291,7 +291,7 @@ describe('reactive', () => {
   it('can observe multiple data objects in watcher', async () => {
     const a = reactive({ price: 45 })
     const b = reactive({ quantity: 25 })
-    const callback = jest.fn()
+    const callback = vi.fn()
     watch(() => a.price * b.quantity, callback)
     expect(callback.mock.calls[0][0]).toBe(1125)
     a.price = 100

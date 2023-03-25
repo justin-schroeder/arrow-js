@@ -23,7 +23,6 @@
   "devDependencies": {
     "@rollup/plugin-typescript": "^11.0.0",
     "@size-limit/preset-small-lib": "^8.2.4",
-    "@types/jest": "^26.0.20",
     "@types/node": "^18.15.0",
     "@typescript-eslint/eslint-plugin": "^4.9.5",
     "@typescript-eslint/parser": "^4.9.5",
@@ -34,18 +33,18 @@
     "eslint-plugin-node": "^11.1.0",
     "eslint-plugin-promise": "^4.3.1",
     "execa": "^7.1.1",
-    "jest": "^26.6.3",
+    "jsdom": "^21.1.1",
     "prettier": "^2.3.0",
     "rollup": "^3.19.1",
     "rollup-plugin-dts": "^5.2.0",
     "shx": "^0.3.4",
     "size-limit": "^8.2.4",
     "terser": "^5.5.1",
-    "ts-jest": "^26.5.0",
     "ts-node": "^10.9.1",
     "tslib": "^2.5.0",
     "typescript": "^4.9.5",
-    "vite": "^4.1.4"
+    "vite": "^4.1.4",
+    "vitest": "^0.29.7"
   },
   "engines": {
     "node": ">=14.0.0"
@@ -61,7 +60,7 @@
     "dev": "cd docs && vite --config=vite.config.ts",
     "build:docs": "cd docs && vite build --config=vite.config.ts",
     "build": "npx ts-node ./build/pack.ts && pnpm minify && pnpm size",
-    "test": "jest",
+    "test": "vitest",
     "size": "size-limit",
     "minify": "node build/terser.js"
   }

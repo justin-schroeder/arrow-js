@@ -94,7 +94,7 @@ export type ArrowFragment = {
  * A parent node is either an element or a document fragment — something that
  * can have elements appended to it.
  */
-export type ParentNode = Element | DocumentFragment
+export type ParentNode = Node | DocumentFragment
 
 /**
  * A classification of items that can be rendered within the template.
@@ -243,34 +243,34 @@ export function t(
  * @param  {ReactiveProxy} data?
  */
 function fragment(
-  dom: NodeList,
+  dom: DocumentFragment | Node,
   expressions: ReactiveExpressions
 ): ArrowFragment {
-  const frag = document.createDocumentFragment()
   let node: Node | undefined | null
-  while ((node = dom.item(0))) {
+  let i = 0
+  const children = dom.childNodes
+  while ((node = children.item(i++))) {
     // Delimiters in the body are found inside comments.
     if (node.nodeType === 8 && node.nodeValue === delimiter) {
       // We are dealing with a reactive node.
-      frag.append(comment(node, expressions))
+      comment(node, expressions)
       continue
     }
     // Bind attributes, add events, and push onto the fragment.
     if (node instanceof Element) attrs(node, expressions)
     if (node.hasChildNodes()) {
-      fragment(node.childNodes, expressions)(node as ParentNode)
+      fragment(node, expressions)
     }
-    frag.append(node)
     // Select lists "default" selections get out of wack when being moved around
     // inside fragments, this resets them.
     if (node instanceof HTMLOptionElement) node.selected = node.defaultSelected
   }
   return ((parent?: ParentNode): ParentNode => {
     if (parent) {
-      parent.appendChild(frag)
+      parent.appendChild(dom)
       return parent
     }
-    return frag
+    return dom
   }) as ArrowFragment
 }
 
@@ -350,29 +350,22 @@ function removeNode(node: ChildNode) {
  * @param  {ReactiveExpressions} tokens
  * @returns DocumentFragment
  */
-function comment(
-  node: Node,
-  expressions: ReactiveExpressions
-): DocumentFragment {
-  const frag = document.createDocumentFragment()
-  // const segments = node.nodeValue!.split(delimiterCapture).filter(Boolean)
-  // in this case, we're going to throw the value away because we are creating
-  // new nodes, so we remove it from any parent tree.
-  ;(node as ChildNode).remove()
+function comment(node: Node, expressions: ReactiveExpressions): void {
   // At this point, we know we're dealing with some kind of reactive token fn
   const expression = expressions.e[expressions.i++]
+  let boundNode: Node
   if (expression && isTpl(expression.e)) {
     // If the expression is an html`` (ArrowTemplate), then call it with data
     // and then call the ArrowTemplate with no parent, so we get the nodes.
-    frag.appendChild(createPartial().add(expression.e)())
+    boundNode = createPartial().add(expression.e)()
   } else {
     // This is where the *actual* reactivity takes place:
     let partialMemo: TemplatePartial
-    frag.appendChild(
-      (partialMemo = w(expression, (value) => setNode(value, partialMemo)))()
-    )
+    boundNode = (partialMemo = w(expression, (value) =>
+      setNode(value, partialMemo)
+    ))()
   }
-  return frag
+  node.parentNode?.replaceChild(boundNode, node)
 }
 
 /**
@@ -400,7 +393,7 @@ function setNode(
  * @param html - a string of html
  * @returns
  */
-function createNodes(html: string): NodeList {
+function createNodes(html: string): DocumentFragment {
   const tpl =
     templateMemo[html] ??
     (() => {
@@ -408,9 +401,9 @@ function createNodes(html: string): NodeList {
       tpl.innerHTML = html
       return (templateMemo[html] = tpl)
     })()
-  const dom = tpl.content.cloneNode(true)
+  const dom = tpl.content.cloneNode(true) as DocumentFragment
   dom.normalize() // textNodes are automatically split somewhere around 65kb, this joins them back together.
-  return dom.childNodes
+  return dom
 }
 
 /**
