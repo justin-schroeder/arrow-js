@@ -1,5 +1,5 @@
 import { w } from './reactive'
-import { isTpl } from './common'
+import { isTpl, measure } from './common'
 /**
  * An arrow template one of the three primary ArrowJS utilities. Specifically,
  * templates are functions that return a function which mounts the template to
@@ -382,7 +382,7 @@ function setNode(
   const isUpdate = typeof p === 'function'
   const partial = isUpdate ? p : createPartial()
   Array.isArray(value)
-    ? value.forEach((item) => partial.add(item))
+    ? value.forEach((item) => measure('partialAdd', () => partial.add(item)))
     : partial.add(value)
   if (isUpdate) partial._up()
   return partial

@@ -77,8 +77,8 @@ describe('w', () => {
 
     d1.value = 1
     await nextTick()
-    expect(cb1).toHaveBeenCalledTimes(0)
-    expect(cb2).toHaveBeenCalledTimes(0)
+    expect(cb1).toHaveBeenCalledTimes(1)
+    expect(cb2).toHaveBeenCalledTimes(1)
 
     await nextTick()
     expect(cb1).toHaveBeenCalledTimes(1)

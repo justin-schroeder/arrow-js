@@ -94,7 +94,7 @@
       const results2 = document.getElementById('result-native')
       document.getElementById('run-native').addEventListener('click', async () => {
         const start = performance.now()
-        table.innerHTML = buildData(10000).reduce((html, row) => {
+        table.innerHTML = buildData(1000).reduce((html, row) => {
           return html += `
             <tr class="foo">
               <td class="col-md-1">${row.id }</td>

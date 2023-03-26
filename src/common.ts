@@ -71,11 +71,11 @@ export function queue(fn: ObserverCallback): ObserverCallback {
       if (queueStack.size) {
         // we received new items while executing the queue, so we need to
         // execute the queue again.
-        setTimeout(executeQueue)
+        queueMicrotask(executeQueue)
       }
     }
     if (!queueStack.size) {
-      setTimeout(executeQueue)
+      queueMicrotask(executeQueue)
     }
     queueStack.add(fn)
   }
