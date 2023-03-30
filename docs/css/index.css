@@ -492,6 +492,10 @@ p.key-concept::before {
   color: var(--c-list-item-inner-marker);
 }
 
+.examples h3 {
+  margin-top: 2.5em;
+  margin-bottom: -0.75em;
+}
 
 aside {
   padding: 1em;

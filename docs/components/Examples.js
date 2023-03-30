@@ -1,7 +1,7 @@
 import { html } from '@src/index'
 
 export default function () {
-  return html`<section>
+  return html`<section class="examples">
     <h1 id="examples">Examples</h1>
     <p>
       To spice up your imagination of what Arrow can do, check out the following
@@ -72,6 +72,18 @@ export default function () {
           href="https://github.com/justin-schroeder/arrow-js/blob/master/docs/demos/components/tabs.js"
           >Source code</a
         >
+      </li>
+    </ul>
+
+    <h3>min-gzip</h3>
+    <p>
+      Quickly check how your code compresses with gzip, brotli, and
+      minification.
+    </p>
+    <ul>
+      <li><a href="https://min-gzip.com" target="_blank">min-gzip.com</a></li>
+      <li>
+        <a href="https://github.com/arrow-js/min-gzip">Source code</a>
       </li>
     </ul>
   </section>`
