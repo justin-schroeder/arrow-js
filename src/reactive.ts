@@ -1,4 +1,4 @@
-import { isR, queue, isReactiveFunction } from './common'
+import { isR, queue, isReactiveFunction, measure } from './common'
 
 /**
  * Available types of keys for a reactive object.
@@ -284,13 +284,15 @@ export function r<T extends DataSource>(
  * @param  {DataSourceKey} property
  */
 function addDep(proxy: ReactiveProxy<DataSource>, property: DataSourceKey) {
-  dependencyCollector.forEach((tracker) => {
-    let properties = tracker.get(proxy)
-    if (!properties) {
-      properties = new Set()
-      tracker.set(proxy, properties)
-    }
-    properties.add(property)
+  measure('addDep', () => {
+    dependencyCollector.forEach((tracker) => {
+      let properties = tracker.get(proxy)
+      if (!properties) {
+        properties = new Set()
+        tracker.set(proxy, properties)
+      }
+      properties.add(property)
+    })
   })
 }
 

@@ -42,7 +42,7 @@
 
       document.getElementById('run').addEventListener('click', async () => {
         const start = performance.now()
-        data.rows = buildData(10000)
+        data.rows = buildData(1000)
         await nextTick()
         const end = performance.now()
         results.innerText = `${end - start}ms`
@@ -61,11 +61,6 @@
         )
       }
 
-      html`
-      <ul>
-        ${() => data.rows.map((row) => html`<li>${() => row.label}</li>`)}
-      </ul>
-      `(document.getElementById('data'))
 
       html`
         <tbody>
@@ -84,6 +79,23 @@
             </tr>`)}
         </tbody>
       `(document.getElementById('arrow'))
+    //   html`
+    //     <tbody>
+    //       ${() => data.rows.map(row => html`
+    //         <tr class="${() => row.id === data.selected ? 'danger' : false}">
+    //           <td class="col-md-1">${() => row.id }</td>
+    //           <td class="col-md-4">
+    //             <a @click="${() => {data.selected = row.id}}">${() => row.label }</a>
+    //           </td>
+    //           <td class="col-md-1">
+    //             <a @click="${() => remove(row.id)}">
+    //               Remove me
+    //             </a>
+    //           </td>
+    //           <td class="col-md-6"></td>
+    //         </tr>`)}
+    //     </tbody>
+    //   `(document.getElementById('arrow'))
     </script>
 
 

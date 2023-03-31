@@ -122,3 +122,15 @@ exports[`html > can render nested nodes with attribute expressions 2`] = `
       </li>
     </ul> "
 `;
+
+exports[`html > can render static expression in an attribute 1`] = `
+"<div data-foo=\\"true\\">
+      <h1>Hello world</h1>
+    </div>"
+`;
+
+exports[`html > can render static expression in an attribute 2`] = `
+"<div data-foo=\\"true\\">
+      <h1>Hello world</h1>
+    </div>"
+`;
