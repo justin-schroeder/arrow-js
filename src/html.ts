@@ -177,6 +177,7 @@ interface Chunk {
   readonly paths: Array<string | number>[]
   readonly $: symbol
   dom: DocumentFragment
+  ref: ChildNode[]
   k?: ArrowTemplateKey
 }
 
@@ -301,13 +302,13 @@ function createNodeBinding(
   let fragment: DocumentFragment | Text
   if (isTpl(expression) || Array.isArray(expression)) {
     // We are dealing with a template that is not reactive. Render it.
-    fragment = createRenderFn(parentChunk)(expression)
+    fragment = createRenderFn(parentChunk)(expression)!
   } else if (typeof expression === 'function') {
     // We are dealing with a reactive expression so perform watch binding.
     const render = createRenderFn(parentChunk)
     fragment = w(expression, (renderable: ArrowRenderable) =>
       render(renderable)
-    )
+    )!
   } else {
     fragment = document.createTextNode(expression as string)
   }
@@ -381,32 +382,158 @@ function setAttr(
  */
 function createRenderFn(
   parentChunk: Chunk
-): (renderable: ArrowRenderable) => DocumentFragment | Text {
-  let previous: Chunk | Text | Array<Chunk | Text> | null = null
+): (renderable: ArrowRenderable) => DocumentFragment | Text | Comment | void {
+  let previous: Chunk | Text | Comment | Array<Chunk | Text | Comment>
+  let keyedChunks: { [index: ArrowTemplateKey]: Chunk } = {}
 
-  return function render(renderable: ArrowRenderable): DocumentFragment | Text {
+  return function render(
+    renderable: ArrowRenderable
+  ): DocumentFragment | Text | Comment | void {
     if (!previous) {
+      // This is the initial render:
       if (isTpl(renderable)) {
         // do things
         const fragment = renderable()
         previous = renderable._c()
         return fragment
       } else if (Array.isArray(renderable)) {
-        const fragment = document.createDocumentFragment()
-        previous = renderable.map((item) => {
-          if (isTpl(item)) {
-            fragment.appendChild(item())
-            return item._c()
-          }
-          const text = document.createTextNode(item as string)
-          return fragment.appendChild(text)
-        })
+        let fragment: DocumentFragment
+        ;[fragment, previous] = renderList(renderable)
         return fragment
+      } else if (isEmpty(renderable)) {
+        return (previous = document.createComment(''))
       } else {
         return (previous = document.createTextNode(renderable as string))
       }
+    } else {
+      if (Array.isArray(renderable)) {
+        if (Array.isArray(previous)) {
+          let i = 0
+          const l = renderable.length
+          for (; i < l; i++) {
+            const item = renderable[i]
+            if (isTpl(item)) {
+              let key = item._c().k
+              if (key in keyedChunks && keyedChunks[key].$ === item._c().$) {
+                // update expressions? append it to something?
+              } else {
+                // append to something?
+              }
+            }
+          }
+        }
+
+        // Rendering a list where previously there was not a list.
+        const [fragment, newList] = renderList(renderable)
+        getLastNode(previous).after(fragment)
+        unmount(previous)
+        previous = newList
+      } else {
+        previous = patch(renderable, previous)
+      }
     }
   }
+
+  function renderList(
+    renderable: Array<string | number | boolean | ArrowTemplate>
+  ): [DocumentFragment, Array<Chunk | Text | Comment>] {
+    const fragment = document.createDocumentFragment()
+    const previous = renderable.map((item): Chunk | Comment | Text => {
+      if (isTpl(item)) {
+        fragment.appendChild(item())
+        const chunk = item._c()
+        if (chunk.k) keyedChunks[chunk.k] = chunk
+        return chunk
+      }
+      const text = (
+        isEmpty(item)
+          ? document.createComment('')
+          : document.createTextNode(item as string)
+      ) as Text | Comment
+      return fragment.appendChild(text)
+    })
+    return [fragment, previous]
+  }
+
+  function patch(
+    renderable: ArrowRenderable,
+    previous: Chunk | Text | Comment | Array<Chunk | Text | Comment>
+  ): Chunk | Text | Comment | Array<Chunk | Text | Comment> {
+    // This is an update:
+    if (!isEmpty(renderable) && previous instanceof Text) {
+      // The previous value was a text node and the new value is not empty
+      // so we can just update the text node.
+      previous.nodeValue = renderable as string
+    } else if (isTpl(renderable)) {
+      // Do nothing if this is the same chunk
+      if (isChunk(previous) && previous.$ === renderable._c().$) {
+        // TODO: Update the expression
+        return previous
+      }
+
+      // This is a new template
+      const newFragment = renderable()
+      getLastNode(previous).after(newFragment)
+      unmount(previous)
+      previous = renderable._c()
+      if (previous.k) keyedChunks[previous.k] = previous
+    } else if (isEmpty(renderable) && !(previous instanceof Comment)) {
+      // This is an empty value and the previous value was not a comment
+      // so we need to remove the previous value and replace it with a comment.
+      const comment = document.createComment('')
+      getLastNode(previous).after(comment)
+      unmount(previous)
+      previous = comment
+    }
+    return previous
+  }
+}
+
+/**
+ * Unmounts a chunk from the DOM or a Text node from the DOM
+ */
+function unmount(
+  chunk: Chunk | Text | ChildNode | Array<Chunk | Text | ChildNode>
+) {
+  if (isChunk(chunk)) {
+    // TODO: call the abort signal to cancel all event listeners.
+    unmount(chunk.ref)
+  } else if (Array.isArray(chunk)) {
+    chunk.forEach(unmount)
+  } else {
+    chunk.remove()
+  }
+}
+
+/**
+ * Determines if a value is considered empty in the context of rendering a
+ * Text node vs a comment placeholder.
+ * @param value - Any value that can be considered empty.
+ * @returns
+ */
+function isEmpty(value: unknown): value is null | undefined | '' | false {
+  return !value && value !== 0
+}
+
+/**
+ * Determines what the last node from the last render is so we can append items
+ * after it.
+ * @param chunk - The previous chunk or Text node that was rendered.
+ * @returns
+ */
+function getLastNode(
+  chunk: Chunk | Text | Comment | Array<Chunk | Text | Comment>
+): ChildNode {
+  if (isChunk(chunk)) {
+    return chunk.dom.lastChild!
+  } else if (Array.isArray(chunk)) {
+    return getLastNode(chunk[chunk.length - 1])
+  }
+  return chunk
+}
+
+function isChunk(chunk: unknown): chunk is Chunk {
+  return typeof chunk === 'object' && chunk !== null && '$' in chunk
 }
 
 // /**
@@ -607,7 +734,7 @@ export function createChunk(rawStrings: string[]): Chunk {
   const dom = isNew
     ? chunk.dom
     : (chunk.dom.cloneNode(true) as DocumentFragment)
-  return { ...chunk, dom }
+  return { ...chunk, dom, ref: [...dom.childNodes] }
 }
 
 /**
