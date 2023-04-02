@@ -1,20 +1,7 @@
-import { t } from './html'
-import { r, w } from './reactive'
+import { html } from './html'
+import { reactive, watch } from './reactive'
 
-/**
- * html is an alias for t
- */
-export const html = t
-/**
- * reactive is an alias for r
- */
-export const reactive = r
-/**
- * watch is an alias for w
- */
-export const watch = w
-
-export { t, r, w }
+export { html, html as t, reactive, reactive as r, watch, watch as w }
 
 export { nextTick } from './common'
 

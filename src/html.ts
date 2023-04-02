@@ -1,6 +1,5 @@
-import { ArrowExpression } from './html'
-import { w } from './reactive'
-import { isTpl, measure } from './common'
+import { watch } from './reactive'
+import { isTpl } from './common'
 /**
  * An arrow template one of the three primary ArrowJS utilities. Specifically,
  * templates are functions that return a function which mounts the template to
@@ -28,16 +27,26 @@ export interface ArrowTemplate {
    */
   key: (key: ArrowTemplateKey) => void
   /**
-   * Returns internal properties of the template, specifically the HTML and
-   * expressions, as well as the key if applicable.
+   * Yields the underlying chunk object that is used to render this template.
    * @returns
+   * @internal
    */
-  // _h: () => [
-  //   chunk: Chunk,
-  //   expressions: Array<ReactiveFunction | ArrowRenderable>,
-  //   key: ArrowTemplateKey
-  // ]
   _c: () => Chunk
+  /**
+   * Update the reactive expressions that are contained within this template.
+   * This function *must* be passed a matching quantity of reactive expressions.
+   * @param newExpressions - ArrowFunctions to reassign to the expressions.
+   * @returns
+   * @internal
+   */
+  _u: (newExpressions: ArrowFunction[]) => void
+  /**
+   * Yield the reactive expressions that are contained within this template.
+   * Does not contain the expressions that are are not "reactive".
+   * @returns
+   * @internal
+   */
+  _e: () => ArrowFunction[]
 }
 
 /**
@@ -106,7 +115,7 @@ export type RenderGroup =
   | string[]
 
 /**
- * A function that can be used as an arrow expression — always returns a
+ * A function that can be used as an arrow expression — always returns a
  * renderable.
  */
 export type ArrowFunction = (...args: unknown[]) => ArrowRenderable
@@ -114,7 +123,7 @@ export type ArrowFunction = (...args: unknown[]) => ArrowRenderable
 /**
  * The possible value of an arrow expression.
  */
-export type ArrowExpression = ArrowRenderable | ArrowFunction
+export type ArrowExpression = ArrowRenderable | ArrowFunction | EventListener
 
 /**
  * Event listeners that were bound by arrow and should be cleaned up should the
@@ -124,60 +133,38 @@ const listeners = new WeakMap<
   ChildNode,
   Map<string, EventListenerOrEventListenerObject>
 >()
-
-/**
- * A list of HTML templates to a HTMLTemplate element that contains instances
- * of each. This acts as a cache.
- */
-const templateMemo: { [key: string]: HTMLTemplateElement } = {}
-
-/**
- * An controller that is responsible for assembling the template HTML and
- * performing updates to the pertinent DOM nodes contained within it.
- */
-export interface TemplatePartial {
-  (): DocumentFragment | Text
-  /**
-   * Adds a template or string to the partials chunks.
-   * @param tpl - A template or string to render.
-   * @returns
-   */
-  add: (tpl: ArrowTemplate | number | string) => TemplatePartial
-  /**
-   * Update the partial.
-   */
-  _up: () => void
-  /**
-   * Length — the number of html elements.
-   */
-  l: number
-  /**
-   * Returns partial chunks of a render group.
-   * @returns
-   */
-  ch: () => PartialChunk[]
-}
-
-/**
- * A chunk of HTML that is rendered by a template partial. It contains all the
- * required expressions that are required for the given dom nodes (if needed).
- */
-type PartialChunk = {
-  html: string
-  exp: ReactiveFunction[]
-  dom: Array<ChildNode | Text>
-  tpl: ArrowTemplate | string
-  key: ArrowTemplateKey
-}
-
 /**
  * A chunk of HTML with paths to the expressions that are contained within it.
  */
 interface Chunk {
+  /**
+   * An array of array paths pointing to the expressions that are contained
+   * within the HTML of this chunk.
+   */
   readonly paths: Array<string | number>[]
+  /**
+   * A unique symbol that is used to identify this chunk, symbols are equal if
+   * the HTML used to produce the chunk is equal.
+   */
   readonly $: symbol
+  /**
+   * A document fragment that contains the HTML of this chunk. Note: this is
+   * only populated with nodes until those nodes are mounted.
+   */
   dom: DocumentFragment
+  /**
+   * An array of child nodes that are contained within this chunk. These
+   * references stay active even after the nodes are mounted.
+   */
   ref: ChildNode[]
+  /**
+   * A reference to the template that created this chunk.
+   */
+  _t: ArrowTemplate
+  /**
+   * A unique key that identifies this template instance, generally used in
+   * list rendering.
+   */
   k?: ArrowTemplateKey
 }
 
@@ -186,15 +173,13 @@ interface Chunk {
  */
 const delimiter = '➳❍'
 const attrDelimiter = '❲❍❳'
-const bookend = '❍⇚'
 const delimiterComment = `<!--${delimiter}-->`
 const attrComment = `<!--${attrDelimiter}-->`
-const bookendComment = `<!--${bookend}-->`
 
 /**
  * A memo of pathed chunks that have been created.
  */
-const chunkMemo: Record<string, Chunk> = {}
+const chunkMemo: Record<string, Omit<Chunk, '_t' | 'ref'>> = {}
 
 /**
  * The template tagging function, used like: html`<div></div>`(mountEl)
@@ -202,25 +187,28 @@ const chunkMemo: Record<string, Chunk> = {}
  * @param  {any[]} ...expressions
  * @returns ArrowTemplate
  */
-export function t(
+export function html(
   strings: TemplateStringsArray,
   ...expSlots: ArrowExpression[]
 ): ArrowTemplate {
   let expressions: Array<ReactiveFunction | ArrowRenderable> | null = null
   let chunk: Chunk
-
+  const expressionIndexes: number[] = []
   function getExpressions(exprs: ArrowExpression[]) {
     if (!expressions) {
-      expressions = exprs.map((expr) => {
+      expressions = exprs.map((expr, i) => {
         return typeof expr === 'function' && !isTpl(expr)
-          ? createExpression(expr)
+          ? (expressionIndexes.push(i), createExpression(expr as ArrowFunction))
           : expr
       })
     }
     return expressions
   }
   function getChunk() {
-    return chunk ?? (chunk = createChunk([...strings]))
+    return (
+      chunk ??
+      (chunk = Object.assign(createChunk([...strings]), { _t: template }))
+    )
   }
   const template = ((el?: ParentNode) => {
     return createBindings(getChunk(), { i: 0, e: getExpressions(expSlots) })(el)
@@ -230,7 +218,14 @@ export function t(
   // its own content
   template.isT = true
   template._c = getChunk
-  // template._h = () => [getChunk(), getExpressions(expSlots), template._k]
+  template._u = (exprs: ArrowFunction[]) =>
+    expressionIndexes.forEach((i, n) => {
+      ;(expressions![i] as ReactiveFunction)._up(exprs[n])
+    })
+  template._e = () =>
+    getExpressions(expSlots).filter((_, i) =>
+      expressionIndexes.includes(i)
+    ) as ArrowFunction[]
   template.key = (key: ArrowTemplateKey): ArrowTemplate => {
     getChunk().k = key
     return template
@@ -299,14 +294,14 @@ function createNodeBinding(
   expression: ReactiveFunction | ArrowRenderable,
   parentChunk: Chunk
 ) {
-  let fragment: DocumentFragment | Text
+  let fragment: DocumentFragment | Text | Comment
   if (isTpl(expression) || Array.isArray(expression)) {
     // We are dealing with a template that is not reactive. Render it.
     fragment = createRenderFn(parentChunk)(expression)!
   } else if (typeof expression === 'function') {
     // We are dealing with a reactive expression so perform watch binding.
     const render = createRenderFn(parentChunk)
-    fragment = w(expression, (renderable: ArrowRenderable) =>
+    fragment = watch(expression, (renderable: ArrowRenderable) =>
       render(renderable)
     )!
   } else {
@@ -335,7 +330,7 @@ function createAttrBinding(
     node.removeAttribute(attrName)
   } else if (typeof expression === 'function' && !isTpl(expression)) {
     // We are dealing with a reactive expression so perform watch binding.
-    w(expression, (value) => setAttr(node, attrName, value))
+    watch(expression, (value) => setAttr(node, attrName, value))
   } else {
     setAttr(node, attrName, expression as string | number | boolean | null)
   }
@@ -384,13 +379,15 @@ function createRenderFn(
   parentChunk: Chunk
 ): (renderable: ArrowRenderable) => DocumentFragment | Text | Comment | void {
   let previous: Chunk | Text | Comment | Array<Chunk | Text | Comment>
-  let keyedChunks: { [index: ArrowTemplateKey]: Chunk } = {}
+  const keyedChunks: Record<Exclude<ArrowTemplateKey, undefined>, Chunk> = {}
 
   return function render(
     renderable: ArrowRenderable
   ): DocumentFragment | Text | Comment | void {
     if (!previous) {
-      // This is the initial render:
+      /**
+       * Initial render:
+       */
       if (isTpl(renderable)) {
         // do things
         const fragment = renderable()
@@ -406,39 +403,62 @@ function createRenderFn(
         return (previous = document.createTextNode(renderable as string))
       }
     } else {
+      /**
+       * Patching:
+       */
       if (Array.isArray(renderable)) {
         if (Array.isArray(previous)) {
+          // // Rendering a list where previously there was a list.
           let i = 0
           const l = renderable.length
-          for (; i < l; i++) {
-            const item = renderable[i]
-            if (isTpl(item)) {
-              let key = item._c().k
-              if (key in keyedChunks && keyedChunks[key].$ === item._c().$) {
-                // update expressions? append it to something?
-              } else {
-                // append to something?
-              }
-            }
-          }
-        }
+          let anchor: ChildNode | undefined
+          const renderedList: Array<Chunk | Text | Comment> = []
 
-        // Rendering a list where previously there was not a list.
-        const [fragment, newList] = renderList(renderable)
-        getLastNode(previous).after(fragment)
-        unmount(previous)
-        previous = newList
+          // We need to re-render a list, to do this we loop over every item in
+          // our *updated* list and patch those items against what previously
+          // was at that index - with 3 exceptions:
+          //   1. This is a keyed item, in which case we need use the memoized
+          //      keyed chunks to find the previous item.
+          //   2. This is a new item, in which case we need to create a new one.
+          //   3. This is an item that as a memo key, if that memo key matches
+          //      the previous item, we perform no operation at all.
+          for (; i < l; i++) {
+            let item: string | number | boolean | ArrowTemplate = renderable[i]
+            const prev: Chunk | Text | Comment | undefined = previous[i]
+            let key: ArrowTemplateKey
+            if (isTpl(item) && (key = item._c().k) && key in keyedChunks) {
+              // This is a keyed item, so used the keyed chunk instead.
+              item = keyedChunks[key]._t
+            }
+            const used = patch(item, prev, anchor) as Chunk | Text | Comment
+            anchor = getLastNode(used)
+            renderedList[i] = used
+            if (used !== prev) unmount(prev)
+          }
+          previous = renderedList
+        } else {
+          // Rendering a list where previously there was not a list.
+          const [fragment, newList] = renderList(renderable)
+          getLastNode(previous).after(fragment)
+          unmount(previous)
+          previous = newList
+        }
       } else {
         previous = patch(renderable, previous)
       }
     }
   }
 
+  /**
+   * A utility function that renders an array of items for the first time.
+   * @param renderable - A renderable that is an array of items.
+   * @returns
+   */
   function renderList(
     renderable: Array<string | number | boolean | ArrowTemplate>
   ): [DocumentFragment, Array<Chunk | Text | Comment>] {
     const fragment = document.createDocumentFragment()
-    const previous = renderable.map((item): Chunk | Comment | Text => {
+    const renderedItems = renderable.map((item): Chunk | Comment | Text => {
       if (isTpl(item)) {
         fragment.appendChild(item())
         const chunk = item._c()
@@ -452,40 +472,57 @@ function createRenderFn(
       ) as Text | Comment
       return fragment.appendChild(text)
     })
-    return [fragment, previous]
+    return [fragment, renderedItems]
   }
 
+  /**
+   * Updates, replaces, or initially renders a node or chunk.
+   * @param renderable - The new renderable value.
+   * @param prev - The previous node or chunk in this position.
+   * @returns
+   */
   function patch(
-    renderable: ArrowRenderable,
-    previous: Chunk | Text | Comment | Array<Chunk | Text | Comment>
+    renderable: Exclude<
+      ArrowRenderable,
+      Array<string | number | ArrowTemplate>
+    >,
+    prev: Chunk | Text | Comment | Array<Chunk | Text | Comment>,
+    anchor?: ChildNode
   ): Chunk | Text | Comment | Array<Chunk | Text | Comment> {
     // This is an update:
-    if (!isEmpty(renderable) && previous instanceof Text) {
-      // The previous value was a text node and the new value is not empty
+    if (!isEmpty(renderable) && prev instanceof Text) {
+      // The prev value was a text node and the new value is not empty
       // so we can just update the text node.
-      previous.nodeValue = renderable as string
+      if (prev.nodeValue != renderable) prev.nodeValue = renderable as string
+      return prev
     } else if (isTpl(renderable)) {
-      // Do nothing if this is the same chunk
-      if (isChunk(previous) && previous.$ === renderable._c().$) {
-        // TODO: Update the expression
-        return previous
+      // TODO: if the prev is a chunk, and that chunk’s symbol is the same
+      // only update the expressions (unless the memo key matches).
+      const chunk = renderable._c()
+
+      if (isChunk(prev) && prev.$ === chunk.$) {
+        // This is a template that has already been rendered, so we only need to
+        // update the expressions
+        prev._t._u(chunk._t._e())
+        return prev
       }
 
       // This is a new template
       const newFragment = renderable()
-      getLastNode(previous).after(newFragment)
-      unmount(previous)
-      previous = renderable._c()
-      if (previous.k) keyedChunks[previous.k] = previous
-    } else if (isEmpty(renderable) && !(previous instanceof Comment)) {
-      // This is an empty value and the previous value was not a comment
-      // so we need to remove the previous value and replace it with a comment.
+      getLastNode(prev, anchor).after(newFragment)
+      unmount(prev)
+      // If this chunk had a key, set it in our keyed chunks.
+      if (chunk.k) keyedChunks[chunk.k] = chunk
+      return chunk
+    } else if (isEmpty(renderable) && !(prev instanceof Comment)) {
+      // This is an empty value and the prev value was not a comment
+      // so we need to remove the prev value and replace it with a comment.
       const comment = document.createComment('')
-      getLastNode(previous).after(comment)
-      unmount(previous)
-      previous = comment
+      getLastNode(prev, anchor).after(comment)
+      unmount(prev)
+      return comment
     }
-    return previous
+    return prev!
   }
 }
 
@@ -493,8 +530,9 @@ function createRenderFn(
  * Unmounts a chunk from the DOM or a Text node from the DOM
  */
 function unmount(
-  chunk: Chunk | Text | ChildNode | Array<Chunk | Text | ChildNode>
+  chunk: Chunk | Text | ChildNode | Array<Chunk | Text | ChildNode> | undefined
 ) {
+  if (!chunk) return
   if (isChunk(chunk)) {
     // TODO: call the abort signal to cancel all event listeners.
     unmount(chunk.ref)
@@ -522,190 +560,21 @@ function isEmpty(value: unknown): value is null | undefined | '' | false {
  * @returns
  */
 function getLastNode(
-  chunk: Chunk | Text | Comment | Array<Chunk | Text | Comment>
+  chunk: Chunk | Text | Comment | Array<Chunk | Text | Comment> | undefined,
+  anchor?: ChildNode
 ): ChildNode {
+  if (!chunk && anchor) return anchor
   if (isChunk(chunk)) {
-    return chunk.dom.lastChild!
+    return chunk.ref[chunk.ref.length - 1]
   } else if (Array.isArray(chunk)) {
     return getLastNode(chunk[chunk.length - 1])
   }
-  return chunk
+  return chunk!
 }
 
 function isChunk(chunk: unknown): chunk is Chunk {
   return typeof chunk === 'object' && chunk !== null && '$' in chunk
 }
-
-// /**
-//  * @param  {NodeList} dom
-//  * @param  {ReactiveExpressions} tokens
-//  * @param  {ReactiveProxy} data?
-//  */
-// function fragment(
-//   dom: DocumentFragment | Node,
-//   expressions: ReactiveExpressions
-// ): ArrowFragment {
-//   let node: Node | undefined | null
-//   let i = 0
-//   const children = dom.childNodes
-//   while ((node = children.item(i++))) {
-//     // Delimiters in the body are found inside comments.
-//     if (node.nodeType === 8 && node.nodeValue === delimiter) {
-//       // We are dealing with a reactive node.
-//       comment(node, expressions)
-//       continue
-//     }
-//     // Bind attributes, add events, and push onto the fragment.
-//     if (node instanceof Element) attrs(node, expressions)
-//     if (node.hasChildNodes()) {
-//       fragment(node, expressions)
-//     }
-//     // Select lists "default" selections get out of wack when being moved around
-//     // inside fragments, this resets them.
-//     if (node instanceof HTMLOptionElement) node.selected = node.defaultSelected
-//   }
-//   return ((parent?: ParentNode): ParentNode => {
-//     if (parent) {
-//       parent.appendChild(dom)
-//       return parent
-//     }
-//     return dom
-//   }) as ArrowFragment
-// }
-
-// /**
-//  * Given a node, parse for meaningful expressions.
-//  * @param  {Element} node
-//  * @returns void
-//  */
-// function attrs(node: Element, expressions: ReactiveExpressions): void {
-//   const toRemove: string[] = []
-//   let i = 0
-//   let attr: Attr
-//   while ((attr = node.attributes[i++])) {
-//     if (expressions.i >= expressions.e.length) return
-//     if (attr.value !== delimiterComment) continue
-//     let attrName = attr.name
-//     const expression = expressions.e[expressions.i++]
-//     if (attrName.charAt(0) === '@') {
-//       const event = attrName.substring(1)
-//       node.addEventListener(event, expression as unknown as EventListener)
-//       if (!listeners.has(node)) listeners.set(node, new Map())
-//       listeners.get(node)?.set(event, expression as unknown as EventListener)
-//       toRemove.push(attrName)
-//     } else {
-//       // Logic to determine if this is an IDL attribute or a content attribute
-//       const isIDL =
-//         (attrName === 'value' && 'value' in node) ||
-//         attrName === 'checked' ||
-//         (attrName.startsWith('.') && (attrName = attrName.substring(1)))
-//       w(expression as ReactiveFunction, (value: any) => {
-//         if (isIDL) {
-//           // Handle all IDL attributes, TS won’t like this since it is not
-//           // fully aware of the type we are operating on, but JavaScript is
-//           // perfectly fine with it, so we need to ignore TS here.
-//           // @ts-ignore:next-line
-//           node[attrName as 'value'] = value
-//           // Explicitly set the "value" to false remove the attribute. However
-//           // we need to be sure this is not a "Reflected" attribute, so we check
-//           // the current value of the attribute to make sure it is not the same
-//           // as the value we just set. If it is the same, it must be reflected.
-//           // so removing the attribute would remove the idl we just set.
-//           if (node.getAttribute(attrName) != value) value = false
-//         }
-//         // Set a standard content attribute.
-//         value !== false
-//           ? node.setAttribute(attrName, value)
-//           : (node.removeAttribute(attrName), i--)
-//       })
-//     }
-//   }
-//   toRemove.forEach((attrName) => node.removeAttribute(attrName))
-// }
-
-/**
- * Removes DOM nodes from the dom and cleans up any attached listeners.
- * @param node - A DOM element to remove
- */
-function removeNodes(node: ChildNode[]) {
-  node.forEach(removeNode)
-}
-
-/**
- * Removes the node from the dom and cleans up any attached listeners.
- * @param node - A DOM element to remove
- */
-function removeNode(node: ChildNode) {
-  node.remove()
-  listeners
-    .get(node)
-    ?.forEach((listener, event) => node.removeEventListener(event, listener))
-}
-
-// /**
-//  * Given a textNode, parse the node for expressions and return a fragment.
-//  * @param  {Node} node
-//  * @param  {ReactiveProxy} data
-//  * @param  {ReactiveExpressions} tokens
-//  * @returns DocumentFragment
-//  */
-// function comment(node: Node, expressions: ReactiveExpressions): void {
-//   // At this point, we know we're dealing with some kind of reactive token fn
-//   const expression = expressions.e[expressions.i++]
-//   let boundNode: Node
-//   if (expression && isTpl(expression.e)) {
-//     // If the expression is an html`` (ArrowTemplate), then call it with data
-//     // and then call the ArrowTemplate with no parent, so we get the nodes.
-//     boundNode = createPartial().add(expression.e)()
-//   } else {
-//     // This is where the *actual* reactivity takes place:
-//     let partialMemo: TemplatePartial
-//     measure('w', () => {
-//       boundNode = (partialMemo = w(expression, (value) =>
-//         setNode(value, partialMemo)
-//       ))()
-//     })
-//   }
-//   node.parentNode?.replaceChild(boundNode, node)
-// }
-
-// /**
-//  * Set the value of a given node.
-//  * @param  {Node} n
-//  * @param  {any} value
-//  * @param  {ReactiveProxy} data
-//  * @returns Node
-//  */
-// function setNode(
-//   value: ArrowRenderable,
-//   p: TemplatePartial | null
-// ): TemplatePartial {
-//   const isUpdate = typeof p === 'function'
-//   const partial: TemplatePartial = isUpdate ? p : createPartial()
-//   Array.isArray(value)
-//     ? value.forEach((item) => partial.add(item))
-//     : partial.add(value)
-//   if (isUpdate) partial._up()
-//   return partial
-// }
-
-/**
- * Given an HTML string, produce actual DOM elements.
- * @param html - a string of html
- * @returns
- */
-// function createNodes(html: string): DocumentFragment {
-//   const tpl =
-//     templateMemo[html] ??
-//     (() => {
-//       const tpl = document.createElement('template')
-//       tpl.innerHTML = html
-//       return (templateMemo[html] = tpl)
-//     })()
-//   const dom = tpl.content.cloneNode(true) as DocumentFragment
-//   dom.normalize() // textNodes are automatically split somewhere around 65kb, this joins them back together.
-//   return dom
-// }
 
 /**
  * Given a string of raw interlaced HTML (the arrow comments are already in the
@@ -713,10 +582,10 @@ function removeNode(node: ChildNode) {
  * @param html - A raw string of HTML
  * @returns
  */
-export function createChunk(rawStrings: string[]): Chunk {
+export function createChunk(rawStrings: string[]): Omit<Chunk, '_t'> {
   let isNew = false
   const memoKey = rawStrings.join(delimiterComment)
-  const chunk: Chunk =
+  const chunk: Omit<Chunk, '_t' | 'ref'> =
     chunkMemo[memoKey] ??
     (() => {
       isNew = true
@@ -734,7 +603,11 @@ export function createChunk(rawStrings: string[]): Chunk {
   const dom = isNew
     ? chunk.dom
     : (chunk.dom.cloneNode(true) as DocumentFragment)
-  return { ...chunk, dom, ref: [...dom.childNodes] }
+  return {
+    ...chunk,
+    dom,
+    ref: [...(dom.childNodes as unknown as Array<ChildNode>)],
+  }
 }
 
 /**
@@ -936,6 +809,177 @@ export function attrCommentPos(
     ? [rightStackIndex, rightPos]
     : [null, null]
 }
+
+// /**
+//  * @param  {NodeList} dom
+//  * @param  {ReactiveExpressions} tokens
+//  * @param  {ReactiveProxy} data?
+//  */
+// function fragment(
+//   dom: DocumentFragment | Node,
+//   expressions: ReactiveExpressions
+// ): ArrowFragment {
+//   let node: Node | undefined | null
+//   let i = 0
+//   const children = dom.childNodes
+//   while ((node = children.item(i++))) {
+//     // Delimiters in the body are found inside comments.
+//     if (node.nodeType === 8 && node.nodeValue === delimiter) {
+//       // We are dealing with a reactive node.
+//       comment(node, expressions)
+//       continue
+//     }
+//     // Bind attributes, add events, and push onto the fragment.
+//     if (node instanceof Element) attrs(node, expressions)
+//     if (node.hasChildNodes()) {
+//       fragment(node, expressions)
+//     }
+//     // Select lists "default" selections get out of wack when being moved around
+//     // inside fragments, this resets them.
+//     if (node instanceof HTMLOptionElement) node.selected = node.defaultSelected
+//   }
+//   return ((parent?: ParentNode): ParentNode => {
+//     if (parent) {
+//       parent.appendChild(dom)
+//       return parent
+//     }
+//     return dom
+//   }) as ArrowFragment
+// }
+
+// /**
+//  * Given a node, parse for meaningful expressions.
+//  * @param  {Element} node
+//  * @returns void
+//  */
+// function attrs(node: Element, expressions: ReactiveExpressions): void {
+//   const toRemove: string[] = []
+//   let i = 0
+//   let attr: Attr
+//   while ((attr = node.attributes[i++])) {
+//     if (expressions.i >= expressions.e.length) return
+//     if (attr.value !== delimiterComment) continue
+//     let attrName = attr.name
+//     const expression = expressions.e[expressions.i++]
+//     if (attrName.charAt(0) === '@') {
+//       const event = attrName.substring(1)
+//       node.addEventListener(event, expression as unknown as EventListener)
+//       if (!listeners.has(node)) listeners.set(node, new Map())
+//       listeners.get(node)?.set(event, expression as unknown as EventListener)
+//       toRemove.push(attrName)
+//     } else {
+//       // Logic to determine if this is an IDL attribute or a content attribute
+//       const isIDL =
+//         (attrName === 'value' && 'value' in node) ||
+//         attrName === 'checked' ||
+//         (attrName.startsWith('.') && (attrName = attrName.substring(1)))
+//       w(expression as ReactiveFunction, (value: any) => {
+//         if (isIDL) {
+//           // Handle all IDL attributes, TS won’t like this since it is not
+//           // fully aware of the type we are operating on, but JavaScript is
+//           // perfectly fine with it, so we need to ignore TS here.
+//           // @ts-ignore:next-line
+//           node[attrName as 'value'] = value
+//           // Explicitly set the "value" to false remove the attribute. However
+//           // we need to be sure this is not a "Reflected" attribute, so we check
+//           // the current value of the attribute to make sure it is not the same
+//           // as the value we just set. If it is the same, it must be reflected.
+//           // so removing the attribute would remove the idl we just set.
+//           if (node.getAttribute(attrName) != value) value = false
+//         }
+//         // Set a standard content attribute.
+//         value !== false
+//           ? node.setAttribute(attrName, value)
+//           : (node.removeAttribute(attrName), i--)
+//       })
+//     }
+//   }
+//   toRemove.forEach((attrName) => node.removeAttribute(attrName))
+// }
+
+/**
+ * Removes DOM nodes from the dom and cleans up any attached listeners.
+ * @param node - A DOM element to remove
+ */
+// function removeNodes(node: ChildNode[]) {
+//   node.forEach(removeNode)
+// }
+
+/**
+ * Removes the node from the dom and cleans up any attached listeners.
+ * @param node - A DOM element to remove
+ */
+// function removeNode(node: ChildNode) {
+//   node.remove()
+//   listeners
+//     .get(node)
+//     ?.forEach((listener, event) => node.removeEventListener(event, listener))
+// }
+
+// /**
+//  * Given a textNode, parse the node for expressions and return a fragment.
+//  * @param  {Node} node
+//  * @param  {ReactiveProxy} data
+//  * @param  {ReactiveExpressions} tokens
+//  * @returns DocumentFragment
+//  */
+// function comment(node: Node, expressions: ReactiveExpressions): void {
+//   // At this point, we know we're dealing with some kind of reactive token fn
+//   const expression = expressions.e[expressions.i++]
+//   let boundNode: Node
+//   if (expression && isTpl(expression.e)) {
+//     // If the expression is an html`` (ArrowTemplate), then call it with data
+//     // and then call the ArrowTemplate with no parent, so we get the nodes.
+//     boundNode = createPartial().add(expression.e)()
+//   } else {
+//     // This is where the *actual* reactivity takes place:
+//     let partialMemo: TemplatePartial
+//     measure('w', () => {
+//       boundNode = (partialMemo = w(expression, (value) =>
+//         setNode(value, partialMemo)
+//       ))()
+//     })
+//   }
+//   node.parentNode?.replaceChild(boundNode, node)
+// }
+
+// /**
+//  * Set the value of a given node.
+//  * @param  {Node} n
+//  * @param  {any} value
+//  * @param  {ReactiveProxy} data
+//  * @returns Node
+//  */
+// function setNode(
+//   value: ArrowRenderable,
+//   p: TemplatePartial | null
+// ): TemplatePartial {
+//   const isUpdate = typeof p === 'function'
+//   const partial: TemplatePartial = isUpdate ? p : createPartial()
+//   Array.isArray(value)
+//     ? value.forEach((item) => partial.add(item))
+//     : partial.add(value)
+//   if (isUpdate) partial._up()
+//   return partial
+// }
+
+/**
+ * Given an HTML string, produce actual DOM elements.
+ * @param html - a string of html
+ * @returns
+ */
+// function createNodes(html: string): DocumentFragment {
+//   const tpl =
+//     templateMemo[html] ??
+//     (() => {
+//       const tpl = document.createElement('template')
+//       tpl.innerHTML = html
+//       return (templateMemo[html] = tpl)
+//     })()
+//   const dom = tpl.content.cloneNode(true) as DocumentFragment
+//   dom.normalize() // textNodes are automatically split somewhere around 65kb, this joins them back together.
+//   return dom
+// }
 
 /**
  * Template partials are stateful functions that perform a fragment render when
@@ -1142,8 +1186,8 @@ export function attrCommentPos(
  * @param chunk - A partial chunk
  * @returns
  */
-function isTextNodeChunk(
-  chunk: PartialChunk
-): chunk is PartialChunk & { tpl: string } {
-  return chunk.dom.length === 1 && !isTpl(chunk.tpl)
-}
+// function isTextNodeChunk(
+//   chunk: PartialChunk
+// ): chunk is PartialChunk & { tpl: string } {
+//   return chunk.dom.length === 1 && !isTpl(chunk.tpl)
+// }

@@ -116,7 +116,7 @@ const dependencyCollector: ReactiveProxyDependencyCollector = new Map()
  * @param  {DataSource} data
  * @returns ReactiveProxy
  */
-export function r<T extends DataSource>(
+export function reactive<T extends DataSource>(
   data: T,
   state: ReactiveProxyState = {}
 ): ReactiveProxy<T> {
@@ -136,7 +136,7 @@ export function r<T extends DataSource>(
     const entry = data[property]
 
     if (typeof entry === 'object' && entry !== null) {
-      proxySource[property] = !isR(entry) ? r(entry) : entry
+      proxySource[property] = !isR(entry) ? reactive(entry) : entry
       children.push(property)
     } else {
       proxySource[property] = entry
@@ -234,7 +234,9 @@ export function r<T extends DataSource>(
         // reactive, but if we already have a reactive object in this
         // property, then we need to replace it and transfer the state of deps.
         const oldState = o._st()
-        const newR = isR(value) ? reactiveMerge(value, o) : r(value, oldState)
+        const newR = isR(value)
+          ? reactiveMerge(value, o)
+          : reactive(value, oldState)
         Reflect.set(
           target,
           property,
@@ -325,10 +327,10 @@ function arrayOperation(
     case 'unshift':
     case 'push':
     case 'fill':
-      return (...args: any[]) => synthetic(...args.map((arg) => r(arg)))
+      return (...args: any[]) => synthetic(...args.map((arg) => reactive(arg)))
     case 'splice':
       return (start: number, remove?: number, ...inserts: any[]) =>
-        synthetic(start, remove, ...inserts.map((arg) => r(arg)))
+        synthetic(start, remove, ...inserts.map((arg) => reactive(arg)))
     default:
       return native
   }
@@ -366,7 +368,7 @@ function reactiveMerge(
  * @param  {CallableFunction} after?
  * @returns unknown
  */
-export function w<
+export function watch<
   T extends (...args: any[]) => unknown,
   F extends (...args: any[]) => any | undefined
 >(fn: T, after?: F): F extends undefined ? ReturnType<T> : ReturnType<F> {
