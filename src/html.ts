@@ -222,6 +222,7 @@ export function html(
     expressionIndexes.forEach((i, n) => {
       ;(expressions![i] as ReactiveFunction)._up(exprs[n])
     })
+  // TODO: optimize this:
   template._e = () =>
     getExpressions(expSlots).filter((_, i) =>
       expressionIndexes.includes(i)
@@ -413,6 +414,7 @@ function createRenderFn(
           const l = renderable.length
           let anchor: ChildNode | undefined
           const renderedList: Array<Chunk | Text | Comment> = []
+          const previousToRemove = new Set(previous)
 
           // We need to re-render a list, to do this we loop over every item in
           // our *updated* list and patch those items against what previously
@@ -433,8 +435,9 @@ function createRenderFn(
             const used = patch(item, prev, anchor) as Chunk | Text | Comment
             anchor = getLastNode(used)
             renderedList[i] = used
-            if (used !== prev) unmount(prev)
+            previousToRemove.delete(used)
           }
+          unmount(previousToRemove)
           previous = renderedList
         } else {
           // Rendering a list where previously there was not a list.
@@ -499,8 +502,10 @@ function createRenderFn(
       // TODO: if the prev is a chunk, and that chunk’s symbol is the same
       // only update the expressions (unless the memo key matches).
       const chunk = renderable._c()
-
-      if (isChunk(prev) && prev.$ === chunk.$) {
+      if (chunk.k && chunk.k in keyedChunks) {
+        getLastNode(prev, anchor).after(...chunk.ref)
+        return chunk
+      } else if (isChunk(prev) && prev.$ === chunk.$) {
         // This is a template that has already been rendered, so we only need to
         // update the expressions
         prev._t._u(chunk._t._e())
@@ -530,13 +535,19 @@ function createRenderFn(
  * Unmounts a chunk from the DOM or a Text node from the DOM
  */
 function unmount(
-  chunk: Chunk | Text | ChildNode | Array<Chunk | Text | ChildNode> | undefined
+  chunk:
+    | Chunk
+    | Text
+    | ChildNode
+    | Array<Chunk | Text | ChildNode>
+    | Set<Chunk | Text | ChildNode>
+    | undefined
 ) {
   if (!chunk) return
   if (isChunk(chunk)) {
     // TODO: call the abort signal to cancel all event listeners.
     unmount(chunk.ref)
-  } else if (Array.isArray(chunk)) {
+  } else if (Array.isArray(chunk) || chunk instanceof Set) {
     chunk.forEach(unmount)
   } else {
     chunk.remove()
@@ -583,26 +594,21 @@ function isChunk(chunk: unknown): chunk is Chunk {
  * @returns
  */
 export function createChunk(rawStrings: string[]): Omit<Chunk, '_t'> {
-  let isNew = false
   const memoKey = rawStrings.join(delimiterComment)
   const chunk: Omit<Chunk, '_t' | 'ref'> =
     chunkMemo[memoKey] ??
     (() => {
-      isNew = true
       const tpl = document.createElement('template')
       const html = createHTML(rawStrings)
       tpl.innerHTML = html
-      const dom = tpl.content.cloneNode(true) as DocumentFragment
-      dom.normalize()
+      tpl.content.normalize()
       return (chunkMemo[memoKey] = {
-        dom,
-        paths: createPaths(dom),
+        dom: tpl.content,
+        paths: createPaths(tpl.content),
         $: Symbol(),
       })
     })()
-  const dom = isNew
-    ? chunk.dom
-    : (chunk.dom.cloneNode(true) as DocumentFragment)
+  const dom = chunk.dom.cloneNode(true) as DocumentFragment
   return {
     ...chunk,
     dom,

@@ -99,6 +99,34 @@ exports[`html > can render a simple reactive list 2`] = `
       </ul>"
 `;
 
+exports[`html > can render a simple reactive list that pushes a new reactive value on 1`] = `
+"Hello
+      <ul>
+        <li>a</li><li>b</li><li>c</li>
+      </ul>"
+`;
+
+exports[`html > can render a simple reactive list that pushes a new reactive value on 2`] = `
+"Hello
+      <ul>
+        <li>a</li><li>b</li><li>c</li><li>next</li>
+      </ul>"
+`;
+
+exports[`html > can render a simple reactive list that pushes a new value on 1`] = `
+"Hello
+      <ul>
+        <li>a</li><li>b</li><li>c</li>
+      </ul>"
+`;
+
+exports[`html > can render a simple reactive list that pushes a new value on 2`] = `
+"Hello
+      <ul>
+        <li>a</li><li>b</li><li>c</li><li>next</li>
+      </ul>"
+`;
+
 exports[`html > can render an array of items and mutate an item in the array (#49) 1`] = `
 "<ul>
       <li>1</li><li>12</li><li>3</li>

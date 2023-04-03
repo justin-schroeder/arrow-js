@@ -10,4 +10,4 @@ export type { ArrowTemplate } from './html'
 export type { ReactiveProxy } from './reactive'
 
 // TODO: REMOVE THIS
-export { measurements } from './common'
+// export { measurements } from './common'
