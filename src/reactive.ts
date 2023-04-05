@@ -263,6 +263,10 @@ export function reactive<T extends DataSource>(
           _em(property, value, old)
         }
         if (proxy._p) {
+          console.log(
+            `notify parent that ${property as string} changed`,
+            proxy._p
+          )
           // Notify parent observers of a change.
           proxy._p[1]._em(...proxy._p)
         }
