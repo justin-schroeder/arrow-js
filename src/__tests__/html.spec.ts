@@ -335,6 +335,7 @@ describe('html', () => {
     expect(parent.innerHTML).toMatchSnapshot()
     data.list[1] = 'Justin'
     await nextTick()
+    console.log(parent.innerHTML)
     // We shouldn't see any changes because that list was non-reactive.
     expect(parent.innerHTML).toMatchSnapshot()
   })
@@ -388,7 +389,25 @@ describe('html', () => {
     expect(listValues).toEqual(['a', 'b', 'c'])
   })
 
-  it.only('can render a simple reactive list that shifts a static value off', async () => {
+  it('can render an empty list, render some items, remove the items, and render some again', async () => {
+    const data = reactive<{ list: string[] }>({ list: [] })
+    const parent = document.createElement('div')
+    html`<ul>
+      ${() => data.list.map((item: string) => html`<li>${() => item}</li>`)}
+    </ul>`(parent)
+    expect(parent.querySelector('ul')?.innerHTML).toMatchSnapshot()
+    data.list.push('a')
+    await nextTick()
+    expect(parent.querySelector('ul')?.innerHTML).toMatchSnapshot()
+    data.list.shift()
+    await nextTick()
+    expect(parent.querySelector('ul')?.innerHTML).toMatchSnapshot()
+    data.list.push('c')
+    await nextTick()
+    expect(parent.querySelector('ul')?.innerHTML).toMatchSnapshot()
+  })
+
+  it('can render a simple reactive list that shifts a static value off', async () => {
     const data = reactive({ list: ['a', 'b', 'c'] })
     const parent = document.createElement('div')
     html`Hello
@@ -405,6 +424,22 @@ describe('html', () => {
       .querySelectorAll('li')
       .forEach((el) => listValues.push(el.textContent!))
     expect(listValues).toEqual(['b', 'c'])
+  })
+
+  it('can render a list with different templates', async () => {
+    const data = reactive({ list: ['a', 'b', 'c'] })
+    const parent = document.createElement('div')
+    html`${() =>
+      data.list.map((item: string) => {
+        if (item === 'a') return html`<h1>${item}</h1>`
+        if (item === 'b') return html`<h2>${item}</h2>`
+        if (item === 'c') return html`<h3>${item}</h3>`
+        return html`<h4>${item}</h4>`
+      })}`(parent)
+    expect(parent.innerHTML).toBe('<h1>a</h1><h2>b</h2><h3>c</h3>')
+    data.list.shift()
+    await nextTick()
+    expect(parent.innerHTML).toBe('<h2>b</h2><h3>c</h3>')
   })
 
   it('can render a list with multiple repeated roots.', () => {

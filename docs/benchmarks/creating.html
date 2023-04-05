@@ -30,10 +30,10 @@
 
     <!-- ARROW TEST -->
     <script type="module">
-      import { reactive, html, nextTick, measurements } from '@src/index'
+      import { reactive, html, nextTick } from '@src/index'
       import { buildData } from './utils'
       const results = document.getElementById('result')
-      const internal = document.getElementById('measurements')
+      // const internal = document.getElementById('measurements')
 
       const data = reactive({
         selected: null,
@@ -46,12 +46,12 @@
         await nextTick()
         const end = performance.now()
         results.innerText = `${end - start}ms`
-        let measurementHtml = ''
-        for (const measurement in measurements) {
-          measurementHtml += '<div class="results">' + measurement + ': ' + `${measurements[measurement].reduce((sum, t) => sum += t, 0)}` + '</div>'
-        }
-        window.measurements = measurements
-        internal.innerHTML = measurementHtml
+        // let measurementHtml = ''
+        // for (const measurement in measurements) {
+        //   measurementHtml += '<div class="results">' + measurement + ': ' + `${measurements[measurement].reduce((sum, t) => sum += t, 0)}` + '</div>'
+        // }
+        // window.measurements = measurements
+        // internal.innerHTML = measurementHtml
       })
 
       function remove (id) {

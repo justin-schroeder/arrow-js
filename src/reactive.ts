@@ -1,4 +1,4 @@
-import { isR, queue, isReactiveFunction, measure } from './common'
+import { isR, queue, isReactiveFunction } from './common'
 
 /**
  * Available types of keys for a reactive object.
@@ -286,15 +286,13 @@ export function reactive<T extends DataSource>(
  * @param  {DataSourceKey} property
  */
 function addDep(proxy: ReactiveProxy<DataSource>, property: DataSourceKey) {
-  measure('addDep', () => {
-    dependencyCollector.forEach((tracker) => {
-      let properties = tracker.get(proxy)
-      if (!properties) {
-        properties = new Set()
-        tracker.set(proxy, properties)
-      }
-      properties.add(property)
-    })
+  dependencyCollector.forEach((tracker) => {
+    let properties = tracker.get(proxy)
+    if (!properties) {
+      properties = new Set()
+      tracker.set(proxy, properties)
+    }
+    properties.add(property)
   })
 }
 
@@ -384,10 +382,7 @@ export function watch<
   function callFn() {
     dependencyCollector.set(trackingId, new Map())
     const value: unknown = fn()
-    const newDeps = dependencyCollector.get(trackingId) as Map<
-      ReactiveProxy<DataSource>,
-      Set<DataSourceKey>
-    >
+    const newDeps = dependencyCollector.get(trackingId)!
     dependencyCollector.delete(trackingId)
     // Disable existing properties
     currentDeps.forEach((propertiesToUnobserve, proxy) => {

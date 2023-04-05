@@ -62,9 +62,9 @@ export function queue(fn: ObserverCallback): ObserverCallback {
     function executeQueue() {
       // copy the current queues and clear it to allow new items to be added
       // during the execution of the current queue.
-      const queue = Array.from(queueStack)
+      const queue = [...queueStack]
       queueStack.clear()
-      const ticks = Array.from(nextTicks)
+      const ticks = [...nextTicks]
       nextTicks.clear()
       queue.forEach((fn) => fn(newValue, oldValue))
       ticks.forEach((fn) => fn())
@@ -89,16 +89,16 @@ export const measurements: Record<string, number[]> = {}
  * @param fn - A function to measure or a number to record
  * @returns
  */
-export function measure<T = unknown>(
-  label: string,
-  fn: CallableFunction | number
-): T {
-  const start = performance.now()
-  const isFn = typeof fn === 'function'
-  label = isFn ? `${label} (ms)` : `${label} (calls)`
-  const x = isFn ? fn() : fn
-  const result = isFn ? performance.now() - start : fn
-  if (!measurements[label]) measurements[label] = [result]
-  else measurements[label].push(result)
-  return x
-}
+// export function measure<T = unknown>(
+//   label: string,
+//   fn: CallableFunction | number
+// ): T {
+//   const start = performance.now()
+//   const isFn = typeof fn === 'function'
+//   label = isFn ? `${label} (ms)` : `${label} (calls)`
+//   const x = isFn ? fn() : fn
+//   const result = isFn ? performance.now() - start : fn
+//   if (!measurements[label]) measurements[label] = [result]
+//   else measurements[label].push(result)
+//   return x
+// }

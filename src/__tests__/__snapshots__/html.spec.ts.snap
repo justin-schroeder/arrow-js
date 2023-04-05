@@ -133,6 +133,30 @@ exports[`html > can render an array of items and mutate an item in the array (#4
     </ul>"
 `;
 
+exports[`html > can render an empty list, render some items, remove the items, and render some again 1`] = `
+"
+      <!---->
+    "
+`;
+
+exports[`html > can render an empty list, render some items, remove the items, and render some again 2`] = `
+"
+      <li>a</li>
+    "
+`;
+
+exports[`html > can render an empty list, render some items, remove the items, and render some again 3`] = `
+"
+      <!---->
+    "
+`;
+
+exports[`html > can render an empty list, render some items, remove the items, and render some again 4`] = `
+"
+      <li>c</li>
+    "
+`;
+
 exports[`html > can render nested nodes with attribute expressions 1`] = `
 "<ul data-country=\\"usa\\">
       <li data-abbr=\\"va\\">virginia</li><li data-abbr=\\"ne\\">nebraska</li><li data-abbr=\\"ca\\">california</li>

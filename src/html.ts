@@ -39,14 +39,14 @@ export interface ArrowTemplate {
    * @returns
    * @internal
    */
-  _u: (newExpressions: ArrowFunction[]) => void
+  _u: (newExpressions: ReactiveFunction[]) => void
   /**
    * Yield the reactive expressions that are contained within this template.
    * Does not contain the expressions that are are not "reactive".
    * @returns
    * @internal
    */
-  _e: () => ArrowFunction[]
+  _e: () => ReactiveFunction[]
 }
 
 /**
@@ -73,8 +73,9 @@ export interface ReactiveFunction {
   (el?: Node): ArrowRenderable
   (ev: Event, listener: EventListenerOrEventListenerObject): void
   $on: (observer: ArrowFunction | null) => ArrowFunction | null
-  _up: (newExpression: ArrowFunction) => void
-  e: CallableFunction
+  _up: (newExpression: ReactiveFunction) => void
+  e: Exclude<ArrowRenderable, ArrowTemplate> | ArrowFunction
+  s: boolean
 }
 
 /**
@@ -88,7 +89,7 @@ export type ReactiveExpressions = {
   /**
    * An array of the actual expressions.
    */
-  e: Array<ReactiveFunction | ArrowRenderable>
+  e: ReactiveFunction[]
 }
 
 /**
@@ -191,16 +192,11 @@ export function html(
   strings: TemplateStringsArray,
   ...expSlots: ArrowExpression[]
 ): ArrowTemplate {
-  let expressions: Array<ReactiveFunction | ArrowRenderable> | null = null
+  let expressions: ReactiveFunction[] | null = null
   let chunk: Chunk
-  const expressionIndexes: number[] = []
-  function getExpressions(exprs: ArrowExpression[]) {
+  function getExpressions(exprs: ArrowExpression[]): ReactiveFunction[] {
     if (!expressions) {
-      expressions = exprs.map((expr, i) => {
-        return typeof expr === 'function' && !isTpl(expr)
-          ? (expressionIndexes.push(i), createExpression(expr as ArrowFunction))
-          : expr
-      })
+      expressions = exprs.map((expr) => createExpression(expr as ArrowFunction))
     }
     return expressions
   }
@@ -218,15 +214,9 @@ export function html(
   // its own content
   template.isT = true
   template._c = getChunk
-  template._u = (exprs: ArrowFunction[]) =>
-    expressionIndexes.forEach((i, n) => {
-      ;(expressions![i] as ReactiveFunction)._up(exprs[n])
-    })
-  // TODO: optimize this:
-  template._e = () =>
-    getExpressions(expSlots).filter((_, i) =>
-      expressionIndexes.includes(i)
-    ) as ArrowFunction[]
+  template._u = (exprs: ReactiveFunction[]) =>
+    expressions?.forEach((e, i) => e._up(exprs[i]))
+  template._e = () => getExpressions(expSlots)
   template.key = (key: ArrowTemplateKey): ArrowTemplate => {
     getChunk().k = key
     return template
@@ -240,14 +230,19 @@ export function html(
  * @returns
  */
 export function createExpression(
-  literalExpression: ArrowFunction
+  literalExpression: Exclude<ArrowRenderable, ArrowTemplate> | ArrowFunction
 ): ReactiveFunction {
   let observer: ArrowFunction | null
   const expression = (...args: unknown[]): ArrowRenderable =>
-    expression.e(...args)
+    expression.s
+      ? (expression.e as ArrowRenderable)
+      : (expression.e as unknown as ArrowFunction)(...args)
   expression.e = literalExpression
+  expression.s = typeof literalExpression !== 'function'
   expression.$on = (obs: ArrowFunction | null) => (observer = obs)
-  expression._up = (exp: ArrowFunction) => ((expression.e = exp), observer?.())
+  expression._up = (exp: ReactiveFunction) => {
+    ;(expression.e = exp.e), observer?.()
+  }
   return expression
 }
 
@@ -292,21 +287,23 @@ function createBindings(
  */
 function createNodeBinding(
   node: Node,
-  expression: ReactiveFunction | ArrowRenderable,
+  expression: ReactiveFunction,
   parentChunk: Chunk
 ) {
   let fragment: DocumentFragment | Text | Comment
-  if (isTpl(expression) || Array.isArray(expression)) {
+  const expressionValue = expression.e
+  if (isTpl(expressionValue) || Array.isArray(expressionValue)) {
     // We are dealing with a template that is not reactive. Render it.
-    fragment = createRenderFn(parentChunk)(expression)!
-  } else if (typeof expression === 'function') {
+    fragment = createRenderFn(parentChunk)(expressionValue)!
+  } else if (typeof expression === 'function' && expression.s !== true) {
     // We are dealing with a reactive expression so perform watch binding.
     const render = createRenderFn(parentChunk)
     fragment = watch(expression, (renderable: ArrowRenderable) =>
       render(renderable)
     )!
   } else {
-    fragment = document.createTextNode(expression as string)
+    fragment = document.createTextNode(expression.e as string)
+    expression.$on(() => (fragment.nodeValue = expression.e as string))
   }
   node.parentNode?.replaceChild(fragment, node)
 }
@@ -381,6 +378,7 @@ function createRenderFn(
 ): (renderable: ArrowRenderable) => DocumentFragment | Text | Comment | void {
   let previous: Chunk | Text | Comment | Array<Chunk | Text | Comment>
   const keyedChunks: Record<Exclude<ArrowTemplateKey, undefined>, Chunk> = {}
+  let updaterFrag: DocumentFragment
 
   return function render(
     renderable: ArrowRenderable
@@ -411,11 +409,14 @@ function createRenderFn(
         if (Array.isArray(previous)) {
           // // Rendering a list where previously there was a list.
           let i = 0
-          const l = renderable.length
+          const renderableLength = renderable.length
+          const previousLength = previous.length
           let anchor: ChildNode | undefined
           const renderedList: Array<Chunk | Text | Comment> = []
           const previousToRemove = new Set(previous)
-
+          if (renderableLength > previousLength && !updaterFrag) {
+            updaterFrag = document.createDocumentFragment()
+          }
           // We need to re-render a list, to do this we loop over every item in
           // our *updated* list and patch those items against what previously
           // was at that index - with 3 exceptions:
@@ -424,18 +425,32 @@ function createRenderFn(
           //   2. This is a new item, in which case we need to create a new one.
           //   3. This is an item that as a memo key, if that memo key matches
           //      the previous item, we perform no operation at all.
-          for (; i < l; i++) {
-            let item: string | number | boolean | ArrowTemplate = renderable[i]
+          for (; i < renderableLength; i++) {
+            let item: string | number | boolean | ArrowTemplate = renderable[
+              i
+            ] as ArrowTemplate
             const prev: Chunk | Text | Comment | undefined = previous[i]
             let key: ArrowTemplateKey
             if (isTpl(item) && (key = item._c().k) && key in keyedChunks) {
               // This is a keyed item, so used the keyed chunk instead.
               item = keyedChunks[key]._t
             }
+            if (i > previousLength - 1) {
+              updaterFrag.appendChild(isTpl(item) ? item() : item)
+              renderedList[i] = isTpl(item) ? item._c() : item
+              continue
+            }
             const used = patch(item, prev, anchor) as Chunk | Text | Comment
             anchor = getLastNode(used)
             renderedList[i] = used
             previousToRemove.delete(used)
+          }
+          if (!renderableLength) {
+            getLastNode(previous[0]).after(
+              (renderedList[0] = document.createComment(''))
+            )
+          } else if (renderableLength > previousLength) {
+            anchor?.after(updaterFrag)
           }
           unmount(previousToRemove)
           previous = renderedList
@@ -461,6 +476,11 @@ function createRenderFn(
     renderable: Array<string | number | boolean | ArrowTemplate>
   ): [DocumentFragment, Array<Chunk | Text | Comment>] {
     const fragment = document.createDocumentFragment()
+    if (renderable.length === 0) {
+      const placeholder = document.createComment('')
+      fragment.appendChild(placeholder)
+      return [fragment, [placeholder]]
+    }
     const renderedItems = renderable.map((item): Chunk | Comment | Text => {
       if (isTpl(item)) {
         fragment.appendChild(item())
@@ -496,7 +516,7 @@ function createRenderFn(
     if (!isEmpty(renderable) && prev instanceof Text) {
       // The prev value was a text node and the new value is not empty
       // so we can just update the text node.
-      if (prev.nodeValue != renderable) prev.nodeValue = renderable as string
+      if (prev.data != renderable) prev.data = renderable as string
       return prev
     } else if (isTpl(renderable)) {
       // TODO: if the prev is a chunk, and that chunk’s symbol is the same
