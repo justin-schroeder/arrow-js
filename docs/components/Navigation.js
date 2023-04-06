@@ -16,7 +16,7 @@ export default function () {
     return html`<ul>
       ${items.map(
         (item) => html` <li data-selected="${() => store.section === item.id}">
-          <a href="#${item.id}">${item.title}</a>
+          <a href="${`#${item.id}`}">${() => item.title}</a>
           ${item.children && item.children.length && makeList(item.children)}
         </li>`
       )}

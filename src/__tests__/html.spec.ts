@@ -238,6 +238,19 @@ describe('html', () => {
     expect(nodes[0].nodeValue).toBe('100')
   })
 
+  it('does not render falsy expressions', () => {
+    const parent = document.createElement('div')
+    html`${false}-${null}-${undefined}-${0}-${NaN}`(parent)
+    expect(parent.innerHTML).toBe('<!---->-<!---->-<!---->-0-<!---->')
+  })
+
+  it('does not render falsy expression returns', () => {
+    const parent = document.createElement('div')
+    html`${() => false}-${() => null}-${() => undefined}-${() => 0}-${() =>
+      NaN}`(parent)
+    expect(parent.innerHTML).toBe('<!---->-<!---->-<!---->-0-<!---->')
+  })
+
   it('can render simple text with expressions', async () => {
     const world = 'World'
     const fragment = html`Hello ${world}`()
@@ -372,18 +385,14 @@ describe('html', () => {
     // expect(parent.innerHTML).toMatchSnapshot()
   })
 
-  it.only('does not re-render a simple list that changes a static value', async () => {
+  it('re-renders a simple list that changes a static value', async () => {
     const data = reactive({
       list: [{ value: 'a' }, { value: 'b' }, { value: 'c' }],
     })
     const parent = document.createElement('div')
     html`Hello
       <ul>
-        ${() =>
-          data.list.map((item) => {
-            console.log('rendering')
-            return html`<li>${() => item.value}</li>`
-          })}
+        ${() => data.list.map((item) => html`<li>${item.value}</li>`)}
       </ul>`(parent)
     data.list[1].value = 'foo'
     await nextTick()
@@ -391,7 +400,7 @@ describe('html', () => {
     parent
       .querySelectorAll('li')
       .forEach((el) => listValues.push(el.textContent!))
-    expect(listValues).toEqual(['a', 'b', 'c'])
+    expect(listValues).toEqual(['a', 'foo', 'c'])
   })
 
   it('can render an empty list, render some items, remove the items, and render some again', async () => {
@@ -702,9 +711,9 @@ describe('html', () => {
     const parent = document.createElement('div')
     html`<ul>
       ${() =>
-        data.list.map((user: User) =>
-          html`<li>${() => user.name}</li>`.key(user.id)
-        )}
+        data.list.map((user: User) => {
+          return html`<li>${() => user.name}</li>`.key(user.id)
+        })}
     </ul>`(parent)
     data.list[0].name = 'Bob'
     data.list[1] = { name: 'Jeff', id: 1 }
@@ -712,6 +721,11 @@ describe('html', () => {
     await nextTick()
     expect(parent.innerHTML).toBe(`<ul>
       <li>Bob</li><li>Jeff</li><li>Fred</li>
+    </ul>`)
+    data.list[2].name = 'Ted'
+    await nextTick()
+    expect(parent.innerHTML).toBe(`<ul>
+      <li>Bob</li><li>Jeff</li><li>Ted</li>
     </ul>`)
   })
 
@@ -848,7 +862,7 @@ describe('html', () => {
   it('can bind to native events as easily as pecan pie', async () => {
     const parent = document.createElement('div')
     const data = reactive({ value: '' })
-    const update = (event: InputEvent) => {
+    const update = (event: Event) => {
       data.value = (event.target as HTMLInputElement).value
     }
     html`<input type="text" @input="${update}" />${() => data.value}`(parent)
@@ -917,6 +931,30 @@ describe('html', () => {
       data.show ? html`<button @click="${clickHandler}"></button>` : ''}`(
       parent
     )
+    let button = parent.querySelector('button') as HTMLButtonElement
+    click(button)
+    expect(clickHandler).toHaveBeenCalledTimes(1)
+    data.show = false
+    await nextTick()
+    click(button)
+    expect(clickHandler).toHaveBeenCalledTimes(1)
+    data.show = true
+    await nextTick()
+    button = parent.querySelector('button') as HTMLButtonElement
+    click(button)
+    expect(clickHandler).toHaveBeenCalledTimes(2)
+  })
+
+  it('removes deeply nested event listeners', async () => {
+    const clickHandler = vi.fn()
+    const parent = document.createElement('div')
+    const data = reactive({
+      show: true,
+    })
+    html`${() =>
+      data.show
+        ? html`<div><button @click="${clickHandler}"></button></div>`
+        : ''}`(parent)
     let button = parent.querySelector('button') as HTMLButtonElement
     click(button)
     expect(clickHandler).toHaveBeenCalledTimes(1)

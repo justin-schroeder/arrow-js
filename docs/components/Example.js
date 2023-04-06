@@ -30,7 +30,7 @@ export default function (example, component, language = 'javascript') {
       html`<div class="error">
         <img src="${stopUrl}" alt="stop" role="presentation" />${data.error}
       </div>`}
-    <pre><code class="language-${language}">${htmlEntities(
+    <pre><code class="${`language-${language}`}">${htmlEntities(
       example
     )}</code></pre>
     ${() => !!component && html`<div class="example">${component}</div>`}
