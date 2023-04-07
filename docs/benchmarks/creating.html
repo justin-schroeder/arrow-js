@@ -14,6 +14,7 @@
     <div class="benchmark-panel">
       <h2>Arrow</h2>
       <button id="run">Create rows</button>
+      <button id="swap">Swap rows</button>
       <div class="results">
         Results: <span id="result"></span>
       </div>
@@ -40,10 +41,24 @@
         rows: []
       })
 
+      document.getElementById('swap').addEventListener('click', async () => {
+        const start = performance.now()
+        const rows = data.rows
+        if (rows.length > 998) {
+          const d1 = rows[1]
+          const d998 = rows[998]
+          rows[1] = d998
+          rows[998] = d1
+        }
+        await new Promise(r => setTimeout(r, 0))
+        const end = performance.now()
+        results.innerText = `${end - start}ms`
+      })
+
       document.getElementById('run').addEventListener('click', async () => {
         const start = performance.now()
         data.rows = buildData(1000)
-        await nextTick()
+        await new Promise(r => setTimeout(r, 0))
         const end = performance.now()
         results.innerText = `${end - start}ms`
         // let measurementHtml = ''
@@ -64,7 +79,9 @@
 
       html`
         <tbody>
-          ${() => data.rows.map(row => html`
+          ${() => data.rows.map(row => {
+            console.log('row')
+            return html`
             <tr class="${() => row.id === data.selected ? 'danger' : false}">
               <td class="col-md-1">${() => row.id }</td>
               <td class="col-md-4">
@@ -76,7 +93,8 @@
                 </a>
               </td>
               <td class="col-md-6"></td>
-            </tr>`)}
+            </tr>`.memo(row.id)
+          })}
         </tbody>
       `(document.getElementById('arrow'))
     //   html`
@@ -127,5 +145,11 @@
         results2.innerText = `${end - start}ms`
       })
     </script>
+
+    <style>
+      tr.danger td {
+        background-color: lightgreen;
+      }
+    </style>
   </body>
 </html>

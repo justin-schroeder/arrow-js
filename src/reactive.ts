@@ -263,10 +263,8 @@ export function reactive<T extends DataSource>(
           _em(property, value, old)
         }
         if (proxy._p) {
-          // TODO: we should consider *not* updating the parent here when that
-          // parent is an array.
           // Notify parent observers of a change.
-          proxy._p[1]._em(...proxy._p)
+          if (!Array.isArray(proxy._p[1])) proxy._p[1]._em(...proxy._p)
         }
       }
       return didSet
@@ -384,7 +382,10 @@ export function watch<
   function callFn() {
     dependencyCollector.set(trackingId, new Map())
     const value: unknown = fn()
-    const newDeps = dependencyCollector.get(trackingId)!
+    const newDeps = dependencyCollector.get(trackingId) as Map<
+      ReactiveProxy<DataSource>,
+      Set<DataSourceKey>
+    >
     dependencyCollector.delete(trackingId)
     // Disable existing properties
     currentDeps.forEach((propertiesToUnobserve, proxy) => {

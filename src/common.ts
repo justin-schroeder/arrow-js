@@ -89,16 +89,16 @@ export const measurements: Record<string, number[]> = {}
  * @param fn - A function to measure or a number to record
  * @returns
  */
-// export function measure<T = unknown>(
-//   label: string,
-//   fn: CallableFunction | number
-// ): T {
-//   const start = performance.now()
-//   const isFn = typeof fn === 'function'
-//   label = isFn ? `${label} (ms)` : `${label} (calls)`
-//   const x = isFn ? fn() : fn
-//   const result = isFn ? performance.now() - start : fn
-//   if (!measurements[label]) measurements[label] = [result]
-//   else measurements[label].push(result)
-//   return x
-// }
+export function measure<T = unknown>(
+  label: string,
+  fn: CallableFunction | number
+): T {
+  const start = performance.now()
+  const isFn = typeof fn === 'function'
+  label = isFn ? `${label} (ms)` : `${label} (calls)`
+  const x = isFn ? fn() : fn
+  const result = isFn ? performance.now() - start : fn
+  if (!measurements[label]) measurements[label] = [result]
+  else measurements[label].push(result)
+  return x
+}

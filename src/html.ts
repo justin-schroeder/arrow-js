@@ -1,5 +1,5 @@
 import { watch } from './reactive'
-import { isTpl } from './common'
+import { isTpl, queue } from './common'
 /**
  * An arrow template one of the three primary ArrowJS utilities. Specifically,
  * templates are functions that return a function which mounts the template to
@@ -25,7 +25,13 @@ export interface ArrowTemplate {
    * @param key - A unique key that identifies this template instance (not index).
    * @returns
    */
-  key: (key: ArrowTemplateKey) => void
+  key: (key: ArrowTemplateKey) => ArrowTemplate
+  /**
+   * Allows memoization of a template, will prevent patching.
+   * @param memoKey - A unique key that identifies this template as "unchanged".
+   * @returns
+   */
+  memo: (memoKey: ArrowTemplateKey) => ArrowTemplate
   /**
    * Yields the underlying chunk object that is used to render this template.
    * @returns
@@ -47,6 +53,14 @@ export interface ArrowTemplate {
    * @internal
    */
   _e: () => ReactiveFunction[]
+  /**
+   * The template key.
+   */
+  _k: ArrowTemplateKey
+  /**
+   * The memo key.
+   */
+  _m: ArrowTemplateKey
 }
 
 /**
@@ -169,6 +183,10 @@ interface Chunk {
    * An abort controller to terminate all event listeners in this chunk.
    */
   a?: AbortController
+  /**
+   * A memoization key, used for rendering lists.
+   */
+  m?: ArrowTemplateKey
 }
 
 /**
@@ -206,6 +224,8 @@ export function html(
     if (!chunk) {
       chunk = createChunk([...strings]) as Chunk
       chunk._t = template
+      chunk.k = template._k
+      chunk.m = template._m
     }
     return chunk
   }
@@ -233,7 +253,12 @@ export function html(
     expressions?.forEach((e, i) => e._up(exprs[i]))
   template._e = getExpressions
   template.key = (key: ArrowTemplateKey): ArrowTemplate => {
-    getChunk().k = key
+    template._k = key
+    return template
+  }
+  template.memo = (key: ArrowTemplateKey): ArrowTemplate => {
+    template._m = key
+    chunk && (chunk.m = key)
     return template
   }
   return template
@@ -466,7 +491,6 @@ function createRenderFn(): (
           let anchor: ChildNode | undefined
           const renderedList: Array<Chunk | Text | Comment> = []
           const previousToRemove = new Set(previous)
-          // TODO: we probably dont need this updater fragment, performance benefit was minimal:
           if (renderableLength > previousLength && !updaterFrag) {
             updaterFrag = document.createDocumentFragment()
           }
@@ -486,7 +510,7 @@ function createRenderFn(): (
             let key: ArrowTemplateKey
             if (
               isTpl(item) &&
-              (key = item._c().k) !== undefined &&
+              (key = item._k) !== undefined &&
               key in keyedChunks
             ) {
               // This is a keyed item, so update the expressions and then
@@ -580,8 +604,10 @@ function createRenderFn(): (
       if (prev.data != renderable) prev.data = renderable as string
       return prev
     } else if (isTpl(renderable)) {
-      // TODO: if the prev is a chunk, and that chunk’s symbol is the same
-      // only update the expressions (unless the memo key matches).
+      if (renderable._m && isChunk(prev) && renderable._m === prev.m) {
+        return prev
+      }
+
       const chunk = renderable._c()
       if (chunk.k !== undefined && chunk.k in keyedChunks) {
         if (chunk === prev) return prev
@@ -591,6 +617,7 @@ function createRenderFn(): (
         // This is a template that has already been rendered, so we only need to
         // update the expressions
         prev._t._u(chunk._t._e())
+        chunk.m && prev._t.memo(chunk.m)
         return prev
       }
 
@@ -618,6 +645,37 @@ function createRenderFn(): (
     return prev!
   }
 }
+
+let unmountStack: Array<
+  | Chunk
+  | Text
+  | ChildNode
+  | Array<Chunk | Text | ChildNode>
+  | Set<Chunk | Text | ChildNode>
+> = []
+
+const queueUnmount = queue(() => {
+  const removeItems = (
+    chunk:
+      | Chunk
+      | Text
+      | ChildNode
+      | Array<Chunk | Text | ChildNode>
+      | Set<Chunk | Text | ChildNode>
+  ) => {
+    if (isChunk(chunk)) {
+      removeItems(chunk.ref)
+      if (chunk.a) chunk.a.abort()
+    } else if (Array.isArray(chunk) || chunk instanceof Set) {
+      chunk.forEach(removeItems)
+    } else {
+      chunk.remove()
+    }
+    return false
+  }
+  unmountStack = unmountStack.filter((chunk) => removeItems(chunk))
+})
+
 /**
  * Unmounts a chunk from the DOM or a Text node from the DOM
  */
@@ -631,14 +689,8 @@ function unmount(
     | undefined
 ) {
   if (!chunk) return
-  if (isChunk(chunk)) {
-    unmount(chunk.ref)
-    if (chunk.a) chunk.a.abort()
-  } else if (Array.isArray(chunk) || chunk instanceof Set) {
-    chunk.forEach(unmount)
-  } else {
-    chunk.remove()
-  }
+  unmountStack.push(chunk)
+  queueUnmount()
 }
 
 /**
