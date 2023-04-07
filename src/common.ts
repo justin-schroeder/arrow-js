@@ -1,5 +1,5 @@
 import { ReactiveFunction, ArrowTemplate } from './html'
-import { ReactiveProxy, DataSource, ObserverCallback } from './reactive'
+import { Reactive } from './reactive'
 
 /**
  * A queue of expressions to run as soon as an async slot opens up.
@@ -35,13 +35,12 @@ export function isTpl(template: unknown): template is ArrowTemplate {
   return typeof template === 'function' && !!(template as ArrowTemplate).isT
 }
 
-export function isR<T = DataSource>(obj: unknown): obj is ReactiveProxy<T> {
-  return (
-    typeof obj === 'object' &&
-    obj !== null &&
-    '$on' in obj &&
-    typeof obj.$on === 'function'
-  )
+export function isO(obj: unknown): obj is object {
+  return obj !== null && typeof obj === 'object'
+}
+
+export function isR(obj: unknown): obj is Reactive<unknown> {
+  return isO(obj) && '$on' in obj
 }
 
 export function isReactiveFunction(

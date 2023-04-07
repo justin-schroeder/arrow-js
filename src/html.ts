@@ -1,5 +1,5 @@
 import { watch } from './reactive'
-import { isTpl, queue } from './common'
+import { isO, isTpl, queue } from './common'
 /**
  * An arrow template one of the three primary ArrowJS utilities. Specifically,
  * templates are functions that return a function which mounts the template to
@@ -723,7 +723,7 @@ function getLastNode(
 }
 
 function isChunk(chunk: unknown): chunk is Chunk {
-  return typeof chunk === 'object' && chunk !== null && '$' in chunk
+  return isO(chunk) && '$' in chunk
 }
 
 /**
