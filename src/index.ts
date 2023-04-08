@@ -7,7 +7,7 @@ export { nextTick } from './common'
 
 export type { ArrowTemplate } from './html'
 
-export type { ReactiveProxy } from './reactive'
+export type { Reactive } from './reactive'
 
 // TODO: REMOVE THIS
-// export { measurements } from './common'
+export { measurements } from './common'

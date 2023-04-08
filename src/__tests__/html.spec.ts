@@ -586,7 +586,7 @@ describe('html', () => {
   })
 
   it('can render a list from an object', async () => {
-    const data = reactive({
+    const data = reactive<{ food: Record<string, string> }>({
       food: {
         main: 'Pizza',
         desert: 'ice cream',

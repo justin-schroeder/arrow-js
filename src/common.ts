@@ -1,5 +1,6 @@
+import { T } from 'vitest/dist/types-fafda418'
 import { ReactiveFunction, ArrowTemplate } from './html'
-import { Reactive } from './reactive'
+import { Reactive, PropertyObserver, ReactiveTarget } from './reactive'
 
 /**
  * A queue of expressions to run as soon as an async slot opens up.
@@ -35,11 +36,11 @@ export function isTpl(template: unknown): template is ArrowTemplate {
   return typeof template === 'function' && !!(template as ArrowTemplate).isT
 }
 
-export function isO(obj: unknown): obj is object {
+export function isO(obj: unknown): obj is ReactiveTarget {
   return obj !== null && typeof obj === 'object'
 }
 
-export function isR(obj: unknown): obj is Reactive<unknown> {
+export function isR(obj: unknown): obj is Reactive<ReactiveTarget> {
   return isO(obj) && '$on' in obj
 }
 
@@ -54,10 +55,10 @@ export function isReactiveFunction(
  * is used for `w()` to ensure multiple dependency mutations tracked on the
  * same expression do not result in multiple calls.
  * @param  {CallableFunction} fn
- * @returns ObserverCallback
+ * @returns PropertyObserver
  */
-export function queue(fn: ObserverCallback): ObserverCallback {
-  return (newValue?: unknown, oldValue?: unknown) => {
+export function queue(fn: PropertyObserver<T>): PropertyObserver<T> {
+  return (newValue?: T, oldValue?: T) => {
     function executeQueue() {
       // copy the current queues and clear it to allow new items to be added
       // during the execution of the current queue.

@@ -87,7 +87,7 @@ type ArrowRenderable =
  */
 export interface ReactiveFunction {
   (el?: Node): ArrowRenderable
-  (ev: Event, listener: EventListenerOrEventListenerObject): void
+  // (ev: Event, listener: EventListenerOrEventListenerObject): void
   $on: (observer: ArrowFunction | null) => ArrowFunction | null
   _up: (newExpression: ReactiveFunction) => void
   e: ArrowExpression
@@ -346,9 +346,8 @@ function createNodeBinding(
   } else if (typeof expression === 'function' && expression.s !== true) {
     // We are dealing with a reactive expression so perform watch binding.
     const render = createRenderFn()
-    fragment = watch(expression, (renderable: ArrowRenderable) =>
-      render(renderable)
-    )!
+    const [frag] = watch(expression, (renderable) => render(renderable))
+    fragment = frag!
   } else {
     fragment = isEmpty(expression.e)
       ? document.createComment('')
@@ -383,7 +382,7 @@ function createAttrBinding(
     node.removeAttribute(attrName)
   } else if (typeof expression === 'function' && !isTpl(expression)) {
     // We are dealing with a reactive expression so perform watch binding.
-    watch(expression, (value) => setAttr(node, attrName, value))
+    watch(expression, (value) => setAttr(node, attrName, value as string))
   } else {
     setAttr(node, attrName, expression as string | number | boolean | null)
   }

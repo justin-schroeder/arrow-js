@@ -1,5 +1,6 @@
-import { nextTick, reactive, watch, ReactiveProxy } from '..'
+import { nextTick, reactive, watch } from '..'
 import { describe, it, expect, vi } from 'vitest'
+import { Reactive } from '../reactive'
 describe('reactive', () => {
   it('allows simple property access', () => {
     const data = reactive({ x: 123, y: 'abc' })
@@ -8,14 +9,14 @@ describe('reactive', () => {
   })
 
   it('allows setting properties', () => {
-    const data = reactive({})
+    const data = reactive<{ x?: string }>({})
     expect(data.x).toBe(undefined)
     data.x = 'foo'
     expect(data.x).toBe('foo')
   })
 
   it('can record dependencies', async () => {
-    const data = reactive({
+    const data = reactive<Record<string, any>>({
       a: 'foo',
       b: 'boo',
       c: 'can',
@@ -143,6 +144,8 @@ describe('reactive', () => {
     expect(hasNameCb).toHaveBeenCalledTimes(2)
     data.name = 'hello'
     await nextTick()
+
+    // TODO: This is failing, that might be ok if it leads to fewer calls...
     expect(hasNameCb).toHaveBeenCalledTimes(3)
   })
 
@@ -165,7 +168,7 @@ describe('reactive', () => {
       list: [{ name: 'fred' }],
     })
     const callback = vi.fn()
-    data.list[0].$on('name', callback)
+    ;(data.list[0] as Reactive<{ name: string }>).$on('name', callback)
     data.list[0] = { name: 'fred' }
     expect(callback).toHaveBeenCalledTimes(0)
   })
@@ -177,7 +180,7 @@ describe('reactive', () => {
     })
     const listObserver = vi.fn()
     const userObserver = vi.fn()
-    data.users[0].$on('name', listObserver)
+    ;(data.users[0] as Reactive<{ name: string }>).$on('name', listObserver)
     user.$on('name', userObserver)
     data.users[0] = user
     expect(listObserver).toHaveBeenCalledTimes(1)
@@ -236,7 +239,7 @@ describe('reactive', () => {
     data.list = [
       { name: 'a', id: 145 },
       { name: 'b', id: 567 },
-    ] as ReactiveProxy<{ name: string; id: number }[]>
+    ] as Reactive<{ name: string; id: number }[]>
     expect(callback).toHaveBeenCalledTimes(1)
     data.list.splice(0, 1)
     await nextTick()
@@ -254,17 +257,21 @@ describe('reactive', () => {
     data.$on('list', callback)
     data.list.push('c')
     expect(callback).toHaveBeenCalledTimes(1)
-    data.list = reactive(['a', 'b'])
+    data.list = ['a', 'b']
     expect(callback).toHaveBeenCalledTimes(2)
     data.list.push('c')
     expect(callback).toHaveBeenCalledTimes(3)
+    data.list = reactive(['a', 'b'])
+    expect(callback).toHaveBeenCalledTimes(4)
+    data.list.push('c')
+    expect(callback).toHaveBeenCalledTimes(5)
   })
 
-  it('will notify root observers on objects of property mutations', () => {
+  it('will notify root observers on objects of property additions', () => {
     const initData = {
       food: {
-        fruit: 'apple' as string,
-      } as { [index: string]: string },
+        fruit: 'apple',
+      } as Record<string, string>,
     }
     const data = reactive(initData)
     const callback = vi.fn()
@@ -280,11 +287,11 @@ describe('reactive', () => {
       },
     })
     const callback = vi.fn()
-    data.user.$on('name', callback)
+    ;(data.user as Reactive<{ name: string }>).$on('name', callback)
     expect(callback).toHaveBeenCalledTimes(0)
     data.user.name = 'Dustin'
     expect(callback).toHaveBeenCalledTimes(1)
-    data.user = { name: 'Frank' } as ReactiveProxy<{ name: 'Frank' }>
+    data.user = { name: 'Frank' } as Reactive<{ name: 'Frank' }>
     expect(callback).toHaveBeenCalledTimes(2)
   })
 
