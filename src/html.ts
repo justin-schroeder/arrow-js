@@ -24,7 +24,7 @@ export interface ArrowTemplate {
    * @param key - A unique key that identifies this template instance (not index).
    * @returns
    */
-  key: (key: ArrowTemplateKey) => void
+  key: (key: ArrowTemplateKey) => ArrowTemplate
   /**
    * Returns internal properties of the template, specifically the HTML and
    * expressions, as well as the key if applicable.
