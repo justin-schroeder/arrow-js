@@ -31,86 +31,86 @@
 
     <!-- ARROW TEST -->
     <script type="module">
-      import { reactive, html, nextTick, measurements } from '@src/index'
+      import { reactive, html, nextTick } from '@src/index'
       import { buildData } from './utils'
       const results = document.getElementById('result')
       const internal = document.getElementById('measurements')
 
-      const data = reactive({
+      const state = reactive({
         selected: null,
         rows: []
       })
 
       document.getElementById('swap').addEventListener('click', async () => {
         const start = performance.now()
-        const rows = data.rows
+        const rows = state.rows
         if (rows.length > 998) {
           const d1 = rows[1]
           const d998 = rows[998]
           rows[1] = d998
           rows[998] = d1
         }
-        await new Promise(r => setTimeout(r, 0))
+        await nextTick()
         const end = performance.now()
         results.innerText = `${end - start}ms`
       })
 
       document.getElementById('run').addEventListener('click', async () => {
         const start = performance.now()
-        data.rows = buildData(1000)
-        await new Promise(r => setTimeout(r, 0))
+        state.rows = buildData(1000)
+        await Promise.resolve()
         const end = performance.now()
         results.innerText = `${end - start}ms`
-        let measurementHtml = ''
-        for (const measurement in measurements) {
-          measurementHtml += '<div class="results">' + measurement + ': ' + `${measurements[measurement].reduce((sum, t) => sum += t, 0)}` + '</div>'
-        }
-        window.measurements = measurements
-        internal.innerHTML = measurementHtml
+        // let measurementHtml = ''
+        // for (const measurement in measurements) {
+        //   measurementHtml += '<div class="results">' + measurement + ': ' + `${measurements[measurement].reduce((sum, t) => sum += t, 0)}` + '</div>'
+        // }
+        // window.measurements = measurements
+        // internal.innerHTML = measurementHtml
       })
 
       function remove (id) {
-        data.rows.splice(
-          data.rows.findIndex((d) => d.id === id),
+        state.rows.splice(
+          state.rows.findIndex((d) => d.id === id),
           1
         )
       }
 
-
       html`
         <tbody>
-          ${() => data.rows.map(row => html`
-            <tr class="${() => row.id === data.selected ? 'danger' : false}">
-              <td class="col-md-1">${() => row.id }</td>
-              <td class="col-md-4">
-                <a @click="${() => {data.selected = row.id}}">${() => row.label }</a>
-              </td>
-              <td class="col-md-1">
-                <a @click="${() => remove(row.id)}">
-                  Remove me
-                </a>
-              </td>
-              <td class="col-md-6"></td>
-            </tr>`.memo(row.id))}
+          ${() => state.rows.map(row => html`
+          <tr class="${() => row.id === state.selected ? 'danger' : false}">
+            <td class="col-md-1">${() => row.id }</td>
+            <td class="col-md-4">
+              <a @click="${() => {state.selected = row.id}}">${() => row.label }</a>
+            </td>
+            <td class="col-md-1">
+              <a @click="${() => remove(row.id)}">
+                <span class="glyphicon glyphicon-remove" aria-hidden="true">Remove</span>
+              </a>
+            </td>
+            <td class="col-md-6"></td>
+          </tr>`.id('tr').memo(row.id))}
         </tbody>
       `(document.getElementById('arrow'))
-    //   html`
-    //     <tbody>
-    //       ${() => data.rows.map(row => html`
-    //         <tr class="${() => row.id === data.selected ? 'danger' : false}">
-    //           <td class="col-md-1">${() => row.id }</td>
-    //           <td class="col-md-4">
-    //             <a @click="${() => {data.selected = row.id}}">${() => row.label }</a>
-    //           </td>
-    //           <td class="col-md-1">
-    //             <a @click="${() => remove(row.id)}">
-    //               Remove me
-    //             </a>
-    //           </td>
-    //           <td class="col-md-6"></td>
-    //         </tr>`)}
-    //     </tbody>
-    //   `(document.getElementById('arrow'))
+
+      // html`
+      //   <tbody>
+      //     ${() => state.rows.map(row => html`
+      //       <tr class="${() => row.id === state.selected ? 'danger' : false}">
+      //         <td class="col-md-1">${() => row.id }</td>
+      //         <td class="col-md-4">
+      //           <a @click="${() => {state.selected = row.id}}">${() => row.label }</a>
+      //         </td>
+      //         <td class="col-md-1">
+      //           <a @click="${() => remove(row.id)}">
+      //             Remove me
+      //           </a>
+      //         </td>
+      //         <td class="col-md-6"></td>
+      //       </tr>`)}
+      //   </tbody>
+      // `(document.getElementById('arrow'))
     </script>
 
 

@@ -1,4 +1,4 @@
-import { isR, isO, queue, measure } from './common'
+import { isR, isO, queue } from './common'
 
 /**
  * The target of a reactive object.
@@ -49,12 +49,13 @@ export interface PropertyObserver<T> {
 }
 
 /**
- * A simple registry of objects containing keys which are the ids of
- * reactive objects and values which are an array of properties.
+ * An array of dependency couples. The array is staggard between object ids and
+ * their respective properties. Duplicate properties are allowed.
+ * ```hs
+ * [1, 'property', 1, 'property2', 1, 'property']
+ * ```
  */
-interface Dependencies {
-  [id: number]: Set<PropertyKey>
-}
+type Dependencies = Array<number | PropertyKey>
 
 /**
  * A map of objects to their reactive proxies.
@@ -71,17 +72,15 @@ const ids = new WeakMap<ReactiveTarget, number>()
  * A registry of reactive objects to their property observers.
  */
 const listeners: {
-  [id: number]: {
-    [property: PropertyKey]: Set<PropertyObserver<unknown>>
-  }
-} = {}
+  [property: PropertyKey]: Set<PropertyObserver<unknown>>
+}[] = new Array(5000).fill({})
 
 /**
  * Gets the unique id of a given target.
  * @param target - The object to get the id of.
  * @returns
  */
-const id = (target: ReactiveTarget): number => ids.get(target)!
+const getId = (target: ReactiveTarget): number => ids.get(target)!
 
 /**
  * An index counter for the reactive objects.
@@ -99,23 +98,17 @@ let trackKey = 0
 /**
  * A registry of dependencies for each tracked key.
  */
-const trackedDependencies: {
-  [trackingKey: number]: Dependencies
-} = {}
+const trackedDependencies: Dependencies[] = []
 
 /**
  * A registry of dependencies that are being watched by a given watcher.
  */
-const watchedDependencies: {
-  [watcherKey: number]: Dependencies
-} = {}
+const watchedDependencies: Dependencies[] = []
 
 /**
  * A map of child ids to their parents (a child can have multiple parents).
  */
-const parents: {
-  [child: number]: Array<[parent: number, property: PropertyKey]>
-} = {}
+const parents: Array<[parent: number, property: PropertyKey]>[] = []
 
 /**
  * A reactive object is a proxy of the original object that allows for
@@ -134,9 +127,14 @@ export function reactive<T extends ReactiveTarget>(data: T): Reactive<T> {
   if (!isO(data)) throw Error('Non object passed to reactive.')
   // Create a new slot in the listeners registry and then store the relationship
   // of this object to its index.
-  listeners[++index] = {}
+  const id = ++index
+  listeners[id] = {}
   // Create the actual reactive proxy.
-  const proxy = new Proxy(data, { has, get, set }) as Reactive<T>
+  const proxy = new Proxy(data, {
+    has: has.bind(null, id),
+    set: set.bind(null, id),
+    get: get.bind(null, id),
+  }) as Reactive<T>
   // let the ids know about the index
   ids.set(data, index).set(proxy, index)
   return proxy
@@ -148,9 +146,9 @@ export function reactive<T extends ReactiveTarget>(data: T): Reactive<T> {
  * @param key - The property to check.
  * @returns
  */
-function has(target: ReactiveTarget, key: PropertyKey): boolean {
+function has(id: number, target: ReactiveTarget, key: PropertyKey): boolean {
   if (key in api) return true
-  track(target, key)
+  track(id, key)
   return key in target
 }
 
@@ -161,12 +159,17 @@ function has(target: ReactiveTarget, key: PropertyKey): boolean {
  * @param receiver - The proxy object.
  * @returns
  */
-function get(target: ReactiveTarget, key: PropertyKey, receiver: any): unknown {
+function get(
+  id: number,
+  target: ReactiveTarget,
+  key: PropertyKey,
+  receiver: any
+): unknown {
   if (key in api) return api[key as keyof typeof api](target)
-  track(target, key)
+  track(id, key)
   const result = Reflect.get(target, key, receiver)
   if (isO(result) && !isR(result)) {
-    const child = createChild(result, target, key)
+    const child = createChild(result, id, key)
     target[key as number] = child
     return child
   }
@@ -181,6 +184,7 @@ function get(target: ReactiveTarget, key: PropertyKey, receiver: any): unknown {
  * @returns
  */
 function set(
+  id: number,
   target: ReactiveTarget,
   key: PropertyKey,
   value: unknown,
@@ -190,7 +194,7 @@ function set(
   const isNewProperty = !(key in target)
   // If the newly assigned item is not reactive, make it so.
   const newReactive =
-    isO(value) && !isR(value) ? createChild(value, target, key) : null
+    isO(value) && !isR(value) ? createChild(value, id, key) : null
   // Retrieve the old value
   const oldValue = target[key as number]
   // The new value
@@ -199,9 +203,9 @@ function set(
   const didSucceed = Reflect.set(target, key, newValue, receiver)
   // If the old value was reactive, and the new value is
   if (oldValue !== newValue && isR(oldValue) && isR(newValue))
-    reassign(id(target), key, id(oldValue), id(newValue))
+    reassign(id, key, getId(oldValue), getId(newValue))
   // Notify all listeners
-  emit(id(target), key, value, oldValue, isNewProperty)
+  emit(id, key, value, oldValue, isNewProperty)
   return didSucceed
 }
 
@@ -214,12 +218,12 @@ function set(
  */
 function createChild(
   child: ReactiveTarget,
-  parent: ReactiveTarget,
+  parentId: number,
   key: PropertyKey
 ): Reactive<ReactiveTarget> {
   const r = reactive(child)
-  parents[id(child)] ??= []
-  parents[id(child)].push([id(parent), key])
+  parents[getId(child)] ??= []
+  parents[getId(child)].push([parentId, key])
   return r
 }
 
@@ -280,11 +284,11 @@ const api = {
   $on:
     (target: ReactiveTarget): ReactiveAPI<ReactiveTarget>['$on'] =>
     (property, callback) =>
-      addListener(id(target), property, callback),
+      addListener(getId(target), property, callback),
   $off:
     (target: ReactiveTarget): ReactiveAPI<ReactiveTarget>['$off'] =>
     (property, callback) =>
-      removeListener(id(target), property, callback),
+      removeListener(getId(target), property, callback),
 }
 
 /**
@@ -325,17 +329,16 @@ function removeListener(
  * @param target
  * @param key
  */
-function track(target: ReactiveTarget, property: PropertyKey): void {
+function track(id: number, property: PropertyKey): void {
   if (!trackKey) return
-  const properties = (trackedDependencies[trackKey][id(target)] ??= new Set())
-  properties.add(property)
+  trackedDependencies[trackKey].push(id, property)
 }
 
 /**
  * Begin tracking reactive dependencies.
  */
 function startTracking() {
-  trackedDependencies[++trackKey] = {}
+  trackedDependencies[++trackKey] = []
 }
 
 /**
@@ -360,9 +363,9 @@ function flushListeners(
   deps: Dependencies,
   callback: PropertyObserver<unknown>
 ) {
-  for (const key in deps) {
-    const properties = deps[key]
-    properties.forEach((prop) => listeners[key][prop].delete(callback))
+  if (!deps) return
+  for (let i = 0; i < deps.length; i += 2) {
+    listeners[deps[i]][deps[i + 1]].delete(callback)
   }
 }
 
@@ -372,9 +375,9 @@ function flushListeners(
  * @param callback - The callback to add.
  */
 function addListeners(deps: Dependencies, callback: PropertyObserver<unknown>) {
-  for (const key in deps) {
-    const properties = deps[key]
-    properties.forEach((prop) => addListener(Number(key), prop, callback))
+  const len = deps.length
+  for (let i = 0; i < len; i += 2) {
+    addListener(deps[i] as number, deps[i + 1], callback)
   }
 }
 

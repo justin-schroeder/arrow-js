@@ -33,6 +33,15 @@ export interface ArrowTemplate {
    */
   memo: (memoKey: ArrowTemplateKey) => ArrowTemplate
   /**
+   * A globally unique identifier for this template. If an explicit id is
+   * provided, the template will be stored under that id during memoization and
+   * the subsequent uses of `html` will use that lookup rather than the HTML
+   * itself.
+   * @param id - Globally unique identifier.
+   * @returns
+   */
+  id: (id: string) => ArrowTemplate
+  /**
    * Yields the underlying chunk object that is used to render this template.
    * @returns
    * @internal
@@ -169,7 +178,7 @@ interface Chunk {
    * An array of child nodes that are contained within this chunk. These
    * references stay active even after the nodes are mounted.
    */
-  ref: ChildNode[]
+  ref: DOMRef
   /**
    * A reference to the template that created this chunk.
    */
@@ -180,14 +189,43 @@ interface Chunk {
    */
   k?: ArrowTemplateKey
   /**
-   * An abort controller to terminate all event listeners in this chunk.
-   */
-  a?: AbortController
-  /**
    * A memoization key, used for rendering lists.
    */
   m?: ArrowTemplateKey
+  /**
+   * An abort controller to terminate all event listeners in this chunk.
+   */
+  a?: AbortController | null
 }
+
+/**
+ * A partial chunk is a chunk that has been partially mounted. It is missing
+ * some assignments, but already has their space reserved (mem performance).
+ */
+type PartialChunk = Omit<Chunk, '_t' | 'k' | 'a' | 'm' | 'ref'> & {
+  _t: () => null
+  k: null
+  a: null
+  m: null
+  ref: null
+}
+
+/**
+ * A reference to the DOM elements mounted by a chunk.
+ */
+interface DOMRef {
+  (): Generator<ChildNode, void, unknown>
+  last: () => ChildNode
+  replace: (oldNode: ChildNode, ...newNodes: ChildNode[]) => void
+}
+
+/**
+ * A mutable stack of bindings used to create reactive expressions. We
+ * initialize this with a large array to avoid memory allocation costs during
+ * node creation, and then perform occasional clean up work.
+ */
+let bindingStackPos = -1
+const bindingStack: Array<Node | string | number> = new Array(2000).fill({})
 
 /**
  * The delimiter that describes where expressions are located.
@@ -200,7 +238,48 @@ const attrComment = `<!--${attrDelimiter}-->`
 /**
  * A memo of pathed chunks that have been created.
  */
-const chunkMemo: Record<string, Omit<Chunk, '_t' | 'ref'>> = {}
+const chunkMemo: Record<string, PartialChunk> = {}
+
+/**
+ * A memo of root DOM elements that have been created by all chunks.
+ */
+const domMemo: ChildNode[] = []
+/**
+ * An array of chunk locations in the domMemo.
+ */
+const chunkLocations: number[] = []
+
+function createDOMRef(dom: DocumentFragment): DOMRef {
+  const start = domMemo.length
+  const length = dom.childNodes.length
+  domMemo.push(...dom.childNodes)
+  const iA = chunkLocations.length
+  chunkLocations.push(start, start + length - 1)
+  const ref = function* ref() {
+    for (let i = chunkLocations[iA]; i <= chunkLocations[iA + 1]; i++) {
+      yield domMemo[i]
+    }
+  }
+  ref.last = () => domMemo[chunkLocations[iA + 1]]
+  ref.replace = (oldNode, ...newNodes) => {
+    let index = -1
+    for (let i = chunkLocations[iA]; i <= chunkLocations[iA + 1]; i++) {
+      if (domMemo[i] === oldNode) index = i
+      break
+    }
+    if (index !== -1) {
+      domMemo.splice(index, 1, ...newNodes)
+      if (newNodes.length > 1) {
+        chunkLocations.forEach((_, i) => {
+          if (i > iA) {
+            chunkLocations[i] += newNodes.length - 1
+          }
+        })
+      }
+    }
+  }
+  return ref
+}
 
 /**
  * The template tagging function, used like: html`<div></div>`(mountEl)
@@ -208,21 +287,35 @@ const chunkMemo: Record<string, Omit<Chunk, '_t' | 'ref'>> = {}
  * @param  {any[]} ...expressions
  * @returns ArrowTemplate
  */
+export function html(id: string, ...expSlots: ArrowExpression[]): ArrowTemplate
 export function html(
-  strings: TemplateStringsArray,
+  strings: TemplateStringsArray | string[],
+  ...expSlots: ArrowExpression[]
+): ArrowTemplate
+export function html(
+  strings: TemplateStringsArray | string[] | string,
   ...expSlots: ArrowExpression[]
 ): ArrowTemplate {
-  let expressions: ReactiveFunction[] | null = null
+  let hasWrappedExpressions = false
+  const expressions: ReactiveFunction[] = new Array(expSlots.length).fill({})
   let chunk: Chunk
+  let memoId: string | null = null
+  if (!Array.isArray(strings)) {
+    memoId = strings as string
+    strings = []
+  }
   function getExpressions(): ReactiveFunction[] {
-    if (!expressions) {
-      expressions = expSlots.map((expr) => createExpression(expr))
+    if (!hasWrappedExpressions) {
+      hasWrappedExpressions = true
+      for (let i = 0; i < expSlots.length; i++) {
+        expressions[i] = createExpression(expSlots[i])
+      }
     }
     return expressions
   }
   function getChunk() {
     if (!chunk) {
-      chunk = createChunk([...strings]) as Chunk
+      chunk = createChunk(strings as string[], memoId) as unknown as Chunk
       chunk._t = template
       chunk.k = template._k
       chunk.m = template._m
@@ -240,7 +333,7 @@ export function html(
       return createBindings(getChunk(), { i: 0, e: getExpressions() })(el)
     } else {
       const chunk = getChunk()
-      chunk.dom.append(...chunk.ref)
+      chunk.dom.append(...chunk.ref())
       return el ? el.appendChild(chunk.dom) : chunk.dom
     }
   }) as ArrowTemplate
@@ -259,6 +352,10 @@ export function html(
   template.memo = (key: ArrowTemplateKey): ArrowTemplate => {
     template._m = key
     chunk && (chunk.m = key)
+    return template
+  }
+  template.id = (id: string): ArrowTemplate => {
+    memoId = id
     return template
   }
   return template
@@ -297,32 +394,42 @@ function createBindings(
   expressions: ReactiveExpressions
 ): ArrowFragment {
   const totalPaths = expressions.e.length
-  const stack: Array<CallableFunction> = []
+  const stackStart = bindingStackPos + 1
   for (; expressions.i < totalPaths; expressions.i++) {
-    const expression = expressions.e[expressions.i]
     const path = chunk.paths[expressions.i]
 
     const len = path.length
     let node: Node = chunk.dom
-    let segment: string | number
     for (let i = 0; i < len; i++) {
-      segment = path[i]
-      if (typeof segment === 'number') node = node.childNodes[segment]
-      else break
+      const segment = path[i]
+      if (typeof segment === 'number')
+        node = node.childNodes.item(segment as number)
+      if (i === len - 1) {
+        bindingStack[++bindingStackPos] = node
+        bindingStack[++bindingStackPos] = segment
+      }
     }
-    stack.push(
-      typeof segment! === 'string'
-        ? () =>
-            createAttrBinding(
-              node as ChildNode,
-              segment as string,
-              expression,
-              chunk
-            )
-        : () => createNodeBinding(node as ChildNode, expression, chunk)
-    )
   }
-  stack.forEach((fn) => fn())
+  const stackEnd = bindingStackPos
+  expressions.i = 0
+  for (let i = stackStart; i < stackEnd; i++) {
+    const node = bindingStack[i]
+    const segment = bindingStack[++i]
+    if (typeof segment === 'string') {
+      createAttrBinding(
+        node as ChildNode,
+        segment as string,
+        expressions.e[expressions.i++],
+        chunk
+      )
+    } else {
+      createNodeBinding(
+        node as ChildNode,
+        expressions.e[expressions.i++],
+        chunk
+      )
+    }
+  }
   return ((el?: ParentNode) =>
     el ? el.appendChild(chunk.dom) && el : chunk.dom) as ArrowFragment
 }
@@ -371,7 +478,7 @@ function createAttrBinding(
   expression: ReactiveFunction | ArrowRenderable,
   parentChunk: Chunk
 ) {
-  if (!(node instanceof Element)) return
+  if (node.nodeType !== 1) return
 
   if (attrName[0] === '@') {
     const event = attrName.substring(1)
@@ -434,14 +541,10 @@ function updateChunkRef(
   oldNode: ChildNode,
   newNode: ChildNode | DocumentFragment
 ) {
-  const commentRefIndex = parentChunk.ref.indexOf(oldNode)
-  if (commentRefIndex > -1) {
-    const nodes = (
-      newNode.nodeType === 11
-        ? [...(newNode.childNodes as unknown as Array<ChildNode>)]
-        : [newNode]
-    ) as ChildNode[]
-    parentChunk.ref.splice(commentRefIndex, 1, ...nodes)
+  if (newNode.nodeType === 11) {
+    parentChunk.ref.replace(oldNode, ...newNode.childNodes)
+  } else {
+    parentChunk.ref.replace(oldNode, newNode as ChildNode)
   }
 }
 
@@ -597,10 +700,12 @@ function createRenderFn(): (
     anchor?: ChildNode
   ): Chunk | Text | Comment | Array<Chunk | Text | Comment> {
     // This is an update:
-    if (!isEmpty(renderable) && prev instanceof Text) {
+    const nodeType = (prev as Node).nodeType ?? 0
+    if (!isEmpty(renderable) && nodeType === 3) {
       // The prev value was a text node and the new value is not empty
       // so we can just update the text node.
-      if (prev.data != renderable) prev.data = renderable as string
+      if ((prev as Text).data != renderable)
+        (prev as Text).data = renderable as string
       return prev
     } else if (isTpl(renderable)) {
       if (renderable._m && isChunk(prev) && renderable._m === prev.m) {
@@ -610,7 +715,7 @@ function createRenderFn(): (
       const chunk = renderable._c()
       if (chunk.k !== undefined && chunk.k in keyedChunks) {
         if (chunk === prev) return prev
-        getLastNode(prev, anchor).after(...chunk.ref)
+        getLastNode(prev, anchor).after(...chunk.ref())
         return chunk
       } else if (isChunk(prev) && prev.$ === chunk.$) {
         // This is a template that has already been rendered, so we only need to
@@ -626,18 +731,18 @@ function createRenderFn(): (
       // If this chunk had a key, set it in our keyed chunks.
       if (chunk.k !== undefined) keyedChunks[chunk.k] = chunk
       return chunk
-    } else if (isEmpty(renderable) && !(prev instanceof Comment)) {
+    } else if (isEmpty(renderable) && nodeType !== 8) {
       // This is an empty value and the prev value was not a comment
       // so we need to remove the prev value and replace it with a comment.
       const comment = document.createComment('')
       getLastNode(prev, anchor).after(comment)
       unmount(prev)
       return comment
-    } else if (!isEmpty(renderable) && prev instanceof Comment) {
+    } else if (!isEmpty(renderable) && nodeType === 8) {
       // This is a non-empty value and the prev value was a comment
       // so we need to remove the prev value and replace it with a text node.
       const text = document.createTextNode(renderable as string)
-      prev.after(text)
+      ;(prev as Comment).after(text)
       unmount(prev)
       return text
     }
@@ -663,7 +768,7 @@ const queueUnmount = queue(() => {
       | Set<Chunk | Text | ChildNode>
   ) => {
     if (isChunk(chunk)) {
-      removeItems(chunk.ref)
+      removeItems([...chunk.ref()])
       if (chunk.a) chunk.a.abort()
     } else if (Array.isArray(chunk) || chunk instanceof Set) {
       chunk.forEach(removeItems)
@@ -714,7 +819,7 @@ function getLastNode(
 ): ChildNode {
   if (!chunk && anchor) return anchor
   if (isChunk(chunk)) {
-    return chunk.ref[chunk.ref.length - 1]
+    return chunk.ref.last()
   } else if (Array.isArray(chunk)) {
     return getLastNode(chunk[chunk.length - 1])
   }
@@ -726,30 +831,49 @@ function isChunk(chunk: unknown): chunk is Chunk {
 }
 
 /**
+ * Creates a new Chunk object and memoizes it.
+ * @param rawStrings - Initialize the chunk and memoize it.
+ * @param memoKey - The key to memoize the chunk under.
+ * @returns
+ */
+function initChunk(
+  rawStrings: TemplateStringsArray | string[],
+  memoKey: string
+): PartialChunk {
+  const tpl = document.createElement('template')
+  tpl.innerHTML = createHTML([...rawStrings])
+  tpl.content.normalize()
+  return (chunkMemo[memoKey] = {
+    dom: tpl.content,
+    paths: createPaths(tpl.content),
+    $: Symbol(),
+    _t: () => null,
+    k: null,
+    a: null,
+    m: null,
+    ref: null,
+  })
+}
+
+/**
  * Given a string of raw interlaced HTML (the arrow comments are already in the
  * approximately correct place), produce a Chunk object and memoize it.
  * @param html - A raw string of HTML
  * @returns
  */
-export function createChunk(rawStrings: string[]): Omit<Chunk, '_t'> {
-  const memoKey = rawStrings.join(delimiterComment)
-  const chunk: Omit<Chunk, '_t' | 'ref'> =
-    chunkMemo[memoKey] ??
-    (() => {
-      const tpl = document.createElement('template')
-      tpl.innerHTML = createHTML(rawStrings)
-      tpl.content.normalize()
-      return (chunkMemo[memoKey] = {
-        dom: tpl.content,
-        paths: createPaths(tpl.content),
-        $: Symbol(),
-      })
-    })()
+export function createChunk(
+  rawStrings: TemplateStringsArray | string[],
+  memoKey?: string | null
+): Omit<PartialChunk, 'ref'> & { ref: DOMRef } {
+  memoKey ??= rawStrings.join(delimiterComment)
+  const chunk: PartialChunk =
+    chunkMemo[memoKey] ?? initChunk(rawStrings, memoKey)
   const dom = chunk.dom.cloneNode(true) as DocumentFragment
+  const ref = createDOMRef(dom)
   return {
     ...chunk,
     dom,
-    ref: [...(dom.childNodes as unknown as Array<ChildNode>)],
+    ref,
   }
 }
 
