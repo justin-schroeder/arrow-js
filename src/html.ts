@@ -264,8 +264,10 @@ function createDOMRef(dom: DocumentFragment): DOMRef {
   ref.replace = (oldNode, ...newNodes) => {
     let index = -1
     for (let i = chunkLocations[iA]; i <= chunkLocations[iA + 1]; i++) {
-      if (domMemo[i] === oldNode) index = i
-      break
+      if (domMemo[i] === oldNode) {
+        index = i
+        break
+      }
     }
     if (index !== -1) {
       domMemo.splice(index, 1, ...newNodes)
@@ -768,7 +770,7 @@ const queueUnmount = queue(() => {
       | Set<Chunk | Text | ChildNode>
   ) => {
     if (isChunk(chunk)) {
-      removeItems([...chunk.ref()])
+      for (const node of chunk.ref()) node.remove()
       if (chunk.a) chunk.a.abort()
     } else if (Array.isArray(chunk) || chunk instanceof Set) {
       chunk.forEach(removeItems)

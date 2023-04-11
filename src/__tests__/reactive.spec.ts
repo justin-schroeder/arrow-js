@@ -144,9 +144,8 @@ describe('reactive', () => {
     expect(hasNameCb).toHaveBeenCalledTimes(2)
     data.name = 'hello'
     await nextTick()
-
-    // TODO: This is failing, that might be ok if it leads to fewer calls...
-    expect(hasNameCb).toHaveBeenCalledTimes(3)
+    // should not be called since the new object is not directly observed.
+    expect(hasNameCb).toHaveBeenCalledTimes(2)
   })
 
   it('is able to react to nested reactive object mutations', async () => {
@@ -180,11 +179,18 @@ describe('reactive', () => {
     })
     const listObserver = vi.fn()
     const userObserver = vi.fn()
-    ;(data.users[0] as Reactive<{ name: string }>).$on('name', listObserver)
+    const listPropertyObserver = vi.fn()
+    data.$on('users', listObserver)
+    ;(data.users as Reactive<{ name: string }[]>).$on(0, listPropertyObserver)
     user.$on('name', userObserver)
     data.users[0] = user
-    expect(listObserver).toHaveBeenCalledTimes(1)
+    expect(listObserver).toHaveBeenCalledTimes(0)
+    expect(listPropertyObserver).toHaveBeenCalledTimes(1)
     expect(userObserver).toHaveBeenCalledTimes(0)
+    data.users[0].name = 'bob'
+    expect(userObserver).toHaveBeenCalledTimes(1)
+    expect(listObserver).toHaveBeenCalledTimes(0)
+    expect(listPropertyObserver).toHaveBeenCalledTimes(1)
   })
 
   it('is able to de-register nested dependencies when they move into logical shadow', async () => {
@@ -287,12 +293,17 @@ describe('reactive', () => {
       },
     })
     const callback = vi.fn()
+    const callback2 = vi.fn()
     ;(data.user as Reactive<{ name: string }>).$on('name', callback)
+    data.$on('user', callback2)
     expect(callback).toHaveBeenCalledTimes(0)
+    expect(callback2).toHaveBeenCalledTimes(0)
     data.user.name = 'Dustin'
     expect(callback).toHaveBeenCalledTimes(1)
+    expect(callback2).toHaveBeenCalledTimes(0)
     data.user = { name: 'Frank' } as Reactive<{ name: 'Frank' }>
-    expect(callback).toHaveBeenCalledTimes(2)
+    expect(callback).toHaveBeenCalledTimes(1)
+    expect(callback2).toHaveBeenCalledTimes(1)
   })
 
   it('can observe multiple data objects in watcher', async () => {

@@ -36,14 +36,14 @@
       const results = document.getElementById('result')
       const internal = document.getElementById('measurements')
 
-      const state = reactive({
+      const data = reactive({
         selected: null,
         rows: []
       })
 
       document.getElementById('swap').addEventListener('click', async () => {
         const start = performance.now()
-        const rows = state.rows
+        const rows = data.rows
         if (rows.length > 998) {
           const d1 = rows[1]
           const d998 = rows[998]
@@ -57,7 +57,7 @@
 
       document.getElementById('run').addEventListener('click', async () => {
         const start = performance.now()
-        state.rows = buildData(1000)
+        data.rows = buildData(1000)
         await Promise.resolve()
         const end = performance.now()
         results.innerText = `${end - start}ms`
@@ -70,37 +70,46 @@
       })
 
       function remove (id) {
-        state.rows.splice(
-          state.rows.findIndex((d) => d.id === id),
+        data.rows.splice(
+          data.rows.findIndex((d) => d.id === id),
           1
         )
       }
 
+      const listItem = html`
+        <tr class="${null}">
+          <td class="col-md-1">${null}</td>
+          <td class="col-md-4">
+            <a @click="${null}">${null}</a>
+          </td>
+          <td class="col-md-1">
+            <a @click="${null}">
+              Remove me
+            </a>
+          </td>
+          <td class="col-md-6"></td>
+        </tr>`.id('tr')()
+
       html`
         <tbody>
-          ${() => state.rows.map(row => html`
-          <tr class="${() => row.id === state.selected ? 'danger' : false}">
-            <td class="col-md-1">${() => row.id }</td>
-            <td class="col-md-4">
-              <a @click="${() => {state.selected = row.id}}">${() => row.label }</a>
-            </td>
-            <td class="col-md-1">
-              <a @click="${() => remove(row.id)}">
-                <span class="glyphicon glyphicon-remove" aria-hidden="true">Remove</span>
-              </a>
-            </td>
-            <td class="col-md-6"></td>
-          </tr>`.id('tr').memo(row.id))}
+          ${() => data.rows.map(row => html(
+            'tr',
+            () => row.id === data.selected ? 'danger' : false,
+            () => row.id,
+            () => {data.selected = row.id},
+            () => row.label,
+            () => remove(row.id)
+          ).memo(row.id))}
         </tbody>
       `(document.getElementById('arrow'))
 
       // html`
       //   <tbody>
-      //     ${() => state.rows.map(row => html`
-      //       <tr class="${() => row.id === state.selected ? 'danger' : false}">
+      //     ${() => data.rows.map(row => html`
+      //       <tr class="${() => row.id === data.selected ? 'danger' : false}">
       //         <td class="col-md-1">${() => row.id }</td>
       //         <td class="col-md-4">
-      //           <a @click="${() => {state.selected = row.id}}">${() => row.label }</a>
+      //           <a @click="${() => {data.selected = row.id}}">${() => row.label }</a>
       //         </td>
       //         <td class="col-md-1">
       //           <a @click="${() => remove(row.id)}">

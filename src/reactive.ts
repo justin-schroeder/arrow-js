@@ -1,4 +1,4 @@
-import { isR, isO, queue } from './common'
+import { isR, isO, queue, isReactiveFunction } from './common'
 
 /**
  * The target of a reactive object.
@@ -96,6 +96,21 @@ let watchIndex = 0
 let trackKey = 0
 
 /**
+ * Array methods that modify the array.
+ */
+const arrayMutations: PropertyKey[] = [
+  'push',
+  'pop',
+  'shift',
+  'unshift',
+  'splice',
+  'sort',
+  'copyWithin',
+  'fill',
+  'reverse',
+]
+
+/**
  * A registry of dependencies for each tracked key.
  */
 const trackedDependencies: Dependencies[] = []
@@ -166,14 +181,44 @@ function get(
   receiver: any
 ): unknown {
   if (key in api) return api[key as keyof typeof api](target)
-  track(id, key)
   const result = Reflect.get(target, key, receiver)
+  let child: Reactive<ReactiveTarget> | undefined
   if (isO(result) && !isR(result)) {
-    const child = createChild(result, id, key)
+    // Lazily create a child reactive object.
+    child = createChild(result, id, key)
     target[key as number] = child
-    return child
   }
-  return result
+  const value = child ?? result
+
+  if (Array.isArray(target)) {
+    // Explicitly don’t track the length property.
+    return trackArray(id, key, target, value)
+  }
+  track(id, key)
+  return value
+}
+
+/**
+ *
+ * @param parentId - The id of the parent object.
+ * @param property - The property of the parent object.
+ * @param value - The value of the property.
+ * @returns
+ */
+function trackArray(
+  id: number,
+  key: PropertyKey,
+  target: ReactiveTarget,
+  value: unknown
+) {
+  if (arrayMutations.includes(key) && typeof value === 'function') {
+    return (...args: unknown[]) => {
+      const result = value.apply(target, args)
+      parentEmit(id)
+      return result
+    }
+  }
+  return value
 }
 
 /**
@@ -202,10 +247,13 @@ function set(
   // Perform the actual set operation
   const didSucceed = Reflect.set(target, key, newValue, receiver)
   // If the old value was reactive, and the new value is
-  if (oldValue !== newValue && isR(oldValue) && isR(newValue))
+  if (oldValue !== newValue && isR(oldValue) && isR(newValue)) {
     reassign(id, key, getId(oldValue), getId(newValue))
+  }
   // Notify all listeners
   emit(id, key, value, oldValue, isNewProperty)
+  // If the array length is modified, notify all parents
+  if (Array.isArray(target) && key === 'length') parentEmit(id)
   return didSucceed
 }
 
@@ -256,25 +304,33 @@ function reassign(
 
 /**
  *
- * @param target - The object that changed.
+ * @param id - The reactive id that changed.
  * @param key - The property that changed.
  * @param newValue - The new value of the property.
  * @param oldValue - The old value of the property.
  */
 function emit(
-  i: number,
+  id: number,
   key: PropertyKey,
   newValue?: unknown,
   oldValue?: unknown,
   notifyParents?: boolean
 ) {
-  const targetListeners = listeners[i]
+  const targetListeners = listeners[id]
   if (targetListeners[key]) {
     targetListeners[key].forEach((callback) => callback(newValue, oldValue))
   }
   if (notifyParents) {
-    parents[i]?.forEach(([parentId, property]) => emit(parentId, property))
+    parents[id]?.forEach(([parentId, property]) => emit(parentId, property))
   }
+}
+
+/**
+ * Notify all parents that the child object has changed.
+ * @param id - The id of the parent object.
+ */
+function parentEmit(id: number) {
+  parents[id]?.forEach(([parentId, property]) => emit(parentId, property))
 }
 
 /**
@@ -412,5 +468,6 @@ export function watch<
     flushListeners(watchedDependencies[watchKey], rerun!)
     rerun = null
   }
+  if (isReactiveFunction(effect)) effect.$on(runEffect)
   return [runEffect(), stop]
 }
