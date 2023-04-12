@@ -420,8 +420,9 @@ function flushListeners(
   callback: PropertyObserver<unknown>
 ) {
   if (!deps) return
-  for (let i = 0; i < deps.length; i += 2) {
-    listeners[deps[i]][deps[i + 1]].delete(callback)
+  const len = deps.length
+  for (let i = 0; i < len; i += 2) {
+    listeners[deps[i] as number][deps[i + 1]].delete(callback)
   }
 }
 
