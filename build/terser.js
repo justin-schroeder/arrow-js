@@ -14,32 +14,25 @@ let result = await minify(fs.readFileSync(inputFile, 'utf-8'), {
   mangle: {
     module: true,
     reserved: [
-      '_k',
-      '_h',
-      '_g',
-      '_m',
-      '$on',
-      '$off',
-      '_do',
-      '_tk',
-      '_em',
-      '_p',
-      'key',
-      't',
-      'r',
-      'o',
-      'op',
-      'dc',
-      'html',
-      'exp',
-      'dom',
-      'tpl',
+      // '_m',
+      // '$on',
+      // '$off',
+      // '_em',
+      // 'key',
+      // 'memo',
+      // 't',
+      // 'r',
+      // 'w',
+      // 'html',
     ],
+    properties: {
+      reserved: ['$on', '$off', 'key', 'memo'],
+    },
   },
   compress: {
-    ecma: '2015',
+    ecma: '2022',
   },
-  ecma: '2015',
+  ecma: '2022',
   sourceMap: {
     content: fs.readFileSync(tsSourceMap, 'utf-8'),
     url: 'index.min.js.map',
@@ -51,7 +44,9 @@ fs.writeFileSync(outputFile, result.code, 'utf8')
 fs.writeFileSync(outputFile + '.map', result.map, 'utf8')
 
 // IIFE
-const iifeInputFile = fileURLToPath(new URL('../dist/index.js', import.meta.url))
+const iifeInputFile = fileURLToPath(
+  new URL('../dist/index.js', import.meta.url)
+)
 const iifeTsSourceMap = fileURLToPath(
   new URL('../dist/index.js.map', import.meta.url)
 )
@@ -63,27 +58,17 @@ let iifeResult = await minify(fs.readFileSync(iifeInputFile, 'utf-8'), {
   mangle: {
     module: true,
     reserved: [
-      '_k',
-      '_h',
-      '_g',
       '_m',
       '$on',
       '$off',
-      '_do',
-      '_tk',
       '_em',
-      '_p',
       'key',
+      'memo',
       't',
       'r',
-      'o',
-      'op',
-      'dc',
+      'w',
       'html',
-      'exp',
-      'dom',
-      'tpl',
-      '$arrow'
+      '$arrow',
     ],
   },
   compress: {

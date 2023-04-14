@@ -1,5 +1,11 @@
 import { watch } from './reactive'
-import { isO, isTpl, queue } from './common'
+import { isChunk, isTpl, isType, queue } from './common'
+import {
+  expressions,
+  onExpressionUpdate,
+  storeExpressions,
+  updateExpressions,
+} from './expressions'
 /**
  * An arrow template one of the three primary ArrowJS utilities. Specifically,
  * templates are functions that return a function which mounts the template to
@@ -48,20 +54,12 @@ export interface ArrowTemplate {
    */
   _c: () => Chunk
   /**
-   * Update the reactive expressions that are contained within this template.
-   * This function *must* be passed a matching quantity of reactive expressions.
-   * @param newExpressions - ArrowFunctions to reassign to the expressions.
-   * @returns
-   * @internal
-   */
-  _u: (newExpressions: ReactiveFunction[]) => void
-  /**
    * Yield the reactive expressions that are contained within this template.
    * Does not contain the expressions that are are not "reactive".
    * @returns
    * @internal
    */
-  _e: () => ReactiveFunction[]
+  _e: number
   /**
    * The template key.
    */
@@ -80,7 +78,7 @@ type ArrowTemplateKey = string | number | undefined
 /**
  * Types of return values that can be rendered.
  */
-type ArrowRenderable =
+export type ArrowRenderable =
   | string
   | number
   | boolean
@@ -118,7 +116,7 @@ export type ReactiveExpressions = {
 }
 
 /**
- * An internal primitive that is used to create a dom elements.
+ * An internal primitive that is used to e a dom elements.
  */
 export interface ArrowFragment {
   <T extends ParentNode>(parent?: T): T extends undefined ? DocumentFragment : T
@@ -158,7 +156,7 @@ export type ArrowExpression =
 /**
  * A chunk of HTML with paths to the expressions that are contained within it.
  */
-interface Chunk {
+export interface Chunk {
   /**
    * An array of array paths pointing to the expressions that are contained
    * within the HTML of this chunk.
@@ -231,9 +229,7 @@ const bindingStack: Array<Node | string | number> = new Array(2000).fill({})
  * The delimiter that describes where expressions are located.
  */
 const delimiter = '➳❍'
-const attrDelimiter = '❲❍❳'
 const delimiterComment = `<!--${delimiter}-->`
-const attrComment = `<!--${attrDelimiter}-->`
 
 /**
  * A memo of pathed chunks that have been created.
@@ -261,7 +257,7 @@ function createDOMRef(dom: DocumentFragment): DOMRef {
     }
   }
   ref.last = () => domMemo[chunkLocations[iA + 1]]
-  ref.replace = (oldNode, ...newNodes) => {
+  ref.replace = (oldNode: ChildNode, ...newNodes: ChildNode[]) => {
     let index = -1
     for (let i = chunkLocations[iA]; i <= chunkLocations[iA + 1]; i++) {
       if (domMemo[i] === oldNode) {
@@ -298,23 +294,14 @@ export function html(
   strings: TemplateStringsArray | string[] | string,
   ...expSlots: ArrowExpression[]
 ): ArrowTemplate {
-  let hasWrappedExpressions = false
-  const expressions: ReactiveFunction[] = new Array(expSlots.length).fill({})
   let chunk: Chunk
   let memoId: string | null = null
+  const expressionPointer = storeExpressions(expSlots)
   if (!Array.isArray(strings)) {
     memoId = strings as string
     strings = []
   }
-  function getExpressions(): ReactiveFunction[] {
-    if (!hasWrappedExpressions) {
-      hasWrappedExpressions = true
-      for (let i = 0; i < expSlots.length; i++) {
-        expressions[i] = createExpression(expSlots[i])
-      }
-    }
-    return expressions
-  }
+
   function getChunk() {
     if (!chunk) {
       chunk = createChunk(strings as string[], memoId) as unknown as Chunk
@@ -332,7 +319,7 @@ export function html(
   const template = ((el?: ParentNode) => {
     if (!hasMounted) {
       hasMounted = true
-      return createBindings(getChunk(), { i: 0, e: getExpressions() })(el)
+      return createBindings(getChunk(), expressionPointer)(el)
     } else {
       const chunk = getChunk()
       chunk.dom.append(...chunk.ref())
@@ -343,10 +330,8 @@ export function html(
   // If the template contains no expressions, it is 100% static so it's key
   // its own content
   template.isT = true
+  template._e = expressionPointer
   template._c = getChunk
-  template._u = (exprs: ReactiveFunction[]) =>
-    expressions?.forEach((e, i) => e._up(exprs[i]))
-  template._e = getExpressions
   template.key = (key: ArrowTemplateKey): ArrowTemplate => {
     template._k = key
     return template
@@ -364,28 +349,6 @@ export function html(
 }
 
 /**
- * Creates an updatable expression.
- * @param literalExpression - An arrow function that returns a renderable.
- * @returns
- */
-export function createExpression(
-  literalExpression: ArrowExpression
-): ReactiveFunction {
-  let observer: ArrowFunction | null
-  const expression = (...args: unknown[]): ArrowRenderable =>
-    expression.s
-      ? (expression.e as ArrowRenderable)
-      : (expression.e as unknown as ArrowFunction)(...args)
-  expression.e = literalExpression
-  expression.s = typeof literalExpression !== 'function'
-  expression.$on = (obs: ArrowFunction | null) => (observer = obs)
-  expression._up = (exp: ReactiveFunction) => {
-    ;(expression.e = exp.e), observer?.()
-  }
-  return expression
-}
-
-/**
  * Applies bindings to a pathed chunk and returns the resulting document
  * fragment that is ready to mount.
  * @param chunk - A chunk of HTML with paths to the expressions.
@@ -393,13 +356,12 @@ export function createExpression(
  */
 function createBindings(
   chunk: Chunk,
-  expressions: ReactiveExpressions
+  expressionPointer: number
 ): ArrowFragment {
-  const totalPaths = expressions.e.length
+  const totalPaths = expressions[expressionPointer] as number
   const stackStart = bindingStackPos + 1
-  for (; expressions.i < totalPaths; expressions.i++) {
-    const path = chunk.paths[expressions.i]
-
+  for (let i = 0; i < totalPaths; i++) {
+    const path = chunk.paths[i]
     const len = path.length
     let node: Node = chunk.dom
     for (let i = 0; i < len; i++) {
@@ -413,23 +375,13 @@ function createBindings(
     }
   }
   const stackEnd = bindingStackPos
-  expressions.i = 0
-  for (let i = stackStart; i < stackEnd; i++) {
-    const node = bindingStack[i]
-    const segment = bindingStack[++i]
+  for (let s = stackStart, e = expressionPointer + 1; s < stackEnd; s++, e++) {
+    const node = bindingStack[s]
+    const segment = bindingStack[++s]
     if (typeof segment === 'string') {
-      createAttrBinding(
-        node as ChildNode,
-        segment as string,
-        expressions.e[expressions.i++],
-        chunk
-      )
+      createAttrBinding(node as ChildNode, segment as string, e, chunk)
     } else {
-      createNodeBinding(
-        node as ChildNode,
-        expressions.e[expressions.i++],
-        chunk
-      )
+      createNodeBinding(node as ChildNode, e, chunk)
     }
   }
   return ((el?: ParentNode) =>
@@ -444,26 +396,29 @@ function createBindings(
  */
 function createNodeBinding(
   node: ChildNode,
-  expression: ReactiveFunction,
+  expressionPointer: number,
   parentChunk: Chunk
 ) {
   let fragment: DocumentFragment | Text | Comment
-  const expressionValue = expression.e
-  if (isTpl(expressionValue) || Array.isArray(expressionValue)) {
+  const expression = expressions[expressionPointer]
+  if (isTpl(expression) || Array.isArray(expression)) {
     // We are dealing with a template that is not reactive. Render it.
-    fragment = createRenderFn()(expressionValue)!
-  } else if (typeof expression === 'function' && expression.s !== true) {
+    fragment = createRenderFn()(expression)!
+  } else if (typeof expression === 'function') {
     // We are dealing with a reactive expression so perform watch binding.
     const render = createRenderFn()
-    const [frag] = watch(expression, (renderable) => render(renderable))
+    const [frag] = watch(expressionPointer, (renderable) => render(renderable))
     fragment = frag!
   } else {
-    fragment = isEmpty(expression.e)
+    fragment = isEmpty(expression)
       ? document.createComment('')
-      : document.createTextNode(expression.e as string)
+      : document.createTextNode(expression as string)
     // TODO: we need to add a way to swap between comments and text nodes when
     // expressions are updated.
-    expression.$on(() => (fragment.nodeValue = expression.e as string))
+    onExpressionUpdate(
+      expressionPointer,
+      (value: string) => (fragment.nodeValue = value)
+    )
   }
   updateChunkRef(parentChunk, node, fragment)
   node.parentNode?.replaceChild(fragment, node)
@@ -477,21 +432,30 @@ function createNodeBinding(
 function createAttrBinding(
   node: ChildNode,
   attrName: string,
-  expression: ReactiveFunction | ArrowRenderable,
+  expressionPointer: number,
   parentChunk: Chunk
 ) {
-  if (node.nodeType !== 1) return
-
+  if (!isType(node, 1)) return
+  const expression = expressions[expressionPointer]
   if (attrName[0] === '@') {
     const event = attrName.substring(1)
     if (!parentChunk.a) parentChunk.a = new AbortController()
-    node.addEventListener(event, expression as unknown as EventListener, {
-      signal: parentChunk.a.signal,
-    })
+    node.addEventListener(
+      event,
+      (...args) =>
+        (expressions[expressionPointer] as CallableFunction)?.(
+          ...args
+        ) as unknown as EventListener,
+      {
+        signal: parentChunk.a.signal,
+      }
+    )
     node.removeAttribute(attrName)
   } else if (typeof expression === 'function' && !isTpl(expression)) {
     // We are dealing with a reactive expression so perform watch binding.
-    watch(expression, (value) => setAttr(node, attrName, value as string))
+    watch(expressionPointer, (value) =>
+      setAttr(node, attrName, value as string)
+    )
   } else {
     setAttr(node, attrName, expression as string | number | boolean | null)
   }
@@ -543,7 +507,7 @@ function updateChunkRef(
   oldNode: ChildNode,
   newNode: ChildNode | DocumentFragment
 ) {
-  if (newNode.nodeType === 11) {
+  if (isType(newNode, 11)) {
     parentChunk.ref.replace(oldNode, ...newNode.childNodes)
   } else {
     parentChunk.ref.replace(oldNode, newNode as ChildNode)
@@ -587,8 +551,14 @@ function createRenderFn(): (
        * Patching:
        */
       if (Array.isArray(renderable)) {
-        if (Array.isArray(previous)) {
-          // // Rendering a list where previously there was a list.
+        if (!Array.isArray(previous)) {
+          // Rendering a list where previously there was not a list.
+          const [fragment, newList] = renderList(renderable)
+          getLastNode(previous).after(fragment)
+          unmount(previous)
+          previous = newList
+        } else {
+          // Patching a list.
           let i = 0
           const renderableLength = renderable.length
           const previousLength = previous.length
@@ -619,7 +589,7 @@ function createRenderFn(): (
             ) {
               // This is a keyed item, so update the expressions and then
               // used the keyed chunk instead.
-              keyedChunks[key]._t._u(item._e())
+              updateExpressions(item._e, keyedChunks[key]._t._e)
               item = keyedChunks[key]._t
             }
             if (i > previousLength - 1) {
@@ -641,12 +611,6 @@ function createRenderFn(): (
           }
           unmount(previousToRemove)
           previous = renderedList
-        } else {
-          // Rendering a list where previously there was not a list.
-          const [fragment, newList] = renderList(renderable)
-          getLastNode(previous).after(fragment)
-          unmount(previous)
-          previous = newList
         }
       } else {
         previous = patch(renderable, previous)
@@ -668,22 +632,24 @@ function createRenderFn(): (
       fragment.appendChild(placeholder)
       return [fragment, [placeholder]]
     }
-    const renderedItems = renderable.map((item): Chunk | Comment | Text => {
+    const renderedItems: Array<Chunk | Comment | Text> = []
+    for (let i = 0; i < renderable.length; i++) {
+      const item = renderable[i]
       if (isTpl(item)) {
         fragment.appendChild(item())
         const chunk = item._c()
         if (chunk.k !== undefined) {
           keyedChunks[chunk.k] = chunk
         }
-        return chunk
+        renderedItems[i] = chunk
+      } else {
+        fragment.appendChild(
+          (isEmpty(item)
+            ? document.createComment('')
+            : document.createTextNode(item as string)) as Text | Comment
+        )
       }
-      const text = (
-        isEmpty(item)
-          ? document.createComment('')
-          : document.createTextNode(item as string)
-      ) as Text | Comment
-      return fragment.appendChild(text)
-    })
+    }
     return [fragment, renderedItems]
   }
 
@@ -722,7 +688,7 @@ function createRenderFn(): (
       } else if (isChunk(prev) && prev.$ === chunk.$) {
         // This is a template that has already been rendered, so we only need to
         // update the expressions
-        prev._t._u(chunk._t._e())
+        updateExpressions(chunk._t._e, prev._t._e)
         chunk.m && prev._t.memo(chunk.m)
         return prev
       }
@@ -828,24 +794,17 @@ function getLastNode(
   return chunk!
 }
 
-function isChunk(chunk: unknown): chunk is Chunk {
-  return isO(chunk) && '$' in chunk
-}
-
 /**
  * Creates a new Chunk object and memoizes it.
  * @param rawStrings - Initialize the chunk and memoize it.
  * @param memoKey - The key to memoize the chunk under.
  * @returns
  */
-function initChunk(
-  rawStrings: TemplateStringsArray | string[],
-  memoKey: string
-): PartialChunk {
+function initChunk(html: string, id?: string | null): PartialChunk {
   const tpl = document.createElement('template')
-  tpl.innerHTML = createHTML([...rawStrings])
+  tpl.innerHTML = html
   tpl.content.normalize()
-  return (chunkMemo[memoKey] = {
+  return (chunkMemo[id ?? html] = {
     dom: tpl.content,
     paths: createPaths(tpl.content),
     $: Symbol(),
@@ -865,11 +824,12 @@ function initChunk(
  */
 export function createChunk(
   rawStrings: TemplateStringsArray | string[],
-  memoKey?: string | null
+  id?: string | null
 ): Omit<PartialChunk, 'ref'> & { ref: DOMRef } {
-  memoKey ??= rawStrings.join(delimiterComment)
+  const memoKey = id ?? rawStrings.join(delimiterComment)
   const chunk: PartialChunk =
-    chunkMemo[memoKey] ?? initChunk(rawStrings, memoKey)
+    chunkMemo[memoKey] ??
+    initChunk(id ? rawStrings.join(delimiterComment) : memoKey, id)
   const dom = chunk.dom.cloneNode(true) as DocumentFragment
   const ref = createDOMRef(dom)
   return {
@@ -877,6 +837,50 @@ export function createChunk(
     dom,
     ref,
   }
+}
+
+/**
+ * A list of attributes that can be located in the DOM that have expressions.
+ * The list is populated by the expression index followed by the attribute name:
+ * ```js
+ * [1, 'data-foo', 1, '@click', 7, 'class']
+ * ```
+ */
+const attrList: Array<string> = []
+
+/**
+ * Determines if the given node should be accepted or rejected by the tree
+ * walker. If the node is an element and contains delimiters, it will also
+ * populate the attrList array with the attribute names and expression counts.
+ * This side effect avoids having to walk each node again.
+ * @param el - The element to accept or reject.
+ * @returns
+ */
+function filterNode(el: Node): 1 | 2 {
+  if (el.nodeType === 8) return 1
+  if (el.nodeType === 1) {
+    const attrLen = (el as Element).attributes.length
+    if (attrList.length) attrList.length = 0
+    for (let i = 0; i < attrLen; i++) {
+      const attr = (el as Element).attributes[i]
+      if (attr.value === delimiterComment) attrList.push(attr.name)
+    }
+  }
+  return attrList.length ? 1 : 2
+}
+
+/**
+ * Given an expression index and a path, return an array of attribute paths.
+ * @param exp - The expression index
+ * @param path - The path to the expression
+ * @returns
+ */
+function attrsForNode(path: number[]): Array<number | string>[] {
+  const attrs: Array<number | string>[] = []
+  for (let i = 0; i < attrList.length; i++) {
+    attrs.push([...path, attrList[i]])
+  }
+  return attrs
 }
 
 /**
@@ -888,55 +892,17 @@ export function createChunk(
  */
 export function createPaths(dom: DocumentFragment): Chunk['paths'] {
   const paths: Chunk['paths'] = []
-  const nodes = document.createTreeWalker(dom, 128, (node) =>
-    node.nodeValue === delimiter || node.nodeValue === attrDelimiter ? 1 : 0
-  )
-  let node: ChildNode | null
-  let toRemove: ChildNode | null = null
-  while ((node = nodes.nextNode() as ChildNode)) {
-    // Remove the primary node from the previous iteration
-    toRemove?.remove()
-    toRemove = null
-    if (node.nodeValue === attrDelimiter) {
-      let nextSibling: Node | null = (toRemove = node)
-      let attrCount = 0
-      const parent = node.parentNode
-      do {
-        attrCount++
-        if (nextSibling !== node) parent?.removeChild(nextSibling)
-      } while (
-        (nextSibling = node.nextSibling) &&
-        nextSibling.nodeValue === attrDelimiter
-      )
-      const attrOwnerNode =
-        parent?.firstChild === node ? node.parentElement : node.previousSibling
-      const attrs: string[] = getAttrs(attrOwnerNode!, attrCount)
-      const path = getPath(attrOwnerNode)
-      paths.push(...attrs.map((attr) => [...path, attr]))
+  const nodes = document.createNodeIterator(dom, 1 | 128, filterNode)
+  let node: Node | null
+  while ((node = nodes.nextNode())) {
+    const path = getPath(node)
+    if (node.nodeType === 1) {
+      paths.push(...attrsForNode(path))
     } else {
-      paths.push(getPath(node))
+      paths.push(path)
     }
   }
-  if (toRemove) toRemove.remove()
   return paths
-}
-
-/**
- * Get a list of attributes on the DOM node that should have reactive values.
- * @param node - A DOM node (within a fragment)
- * @param attrCount - The total number of attributes to return
- * @returns
- */
-function getAttrs(node: Node, attrCount: number) {
-  if (!(node instanceof HTMLElement)) return []
-  const attrs: string[] = []
-  let attr: Attr | null
-  let i = 0
-  while ((attr = node.attributes[i++])) {
-    if (attr.value === attrDelimiter) attrs.push(attr.name)
-    if (attrs.length === attrCount) break
-  }
-  return attrs
 }
 
 /**
@@ -944,144 +910,19 @@ function getAttrs(node: Node, attrCount: number) {
  * @param node - A DOM node (within a fragment) to return a path for
  * @returns
  */
-export function getPath(node: Node | null): number[] {
-  if (!node) return []
+export function getPath(node: Node): number[] {
   const path: number[] = []
-  let attrComments = 0
   while (node.parentNode) {
     const children = node.parentNode.childNodes as NodeList
-    for (let i = 0; i < children.length; i++) {
+    const len = children.length
+    for (let i = 0; i < len; i++) {
       const child = children[i]
-      if (child.nodeType === 8 && child.nodeValue === attrDelimiter) {
-        attrComments++
-      } else if (child === node) {
-        path.unshift(i - attrComments)
+      if (child === node) {
+        path.unshift(i)
         break
       }
     }
-    attrComments = 0
     node = node.parentNode
   }
   return path
-}
-
-/**
- * Given a raw string of HTML (with arrow comments), prepare it for conversion
- * into to a DOM fragment. We do this by locating the arrow comments and
- * @param html - A raw string of HTML
- */
-export function createHTML(strings: string[]): string {
-  const len = strings.length
-  if (len === 1) return strings[0]
-  let html = ''
-  for (let i = 0; i < len; i++) {
-    const left = strings[i]
-    const l = strings[i].length
-    const right: string | null = strings[i + 1] ?? null
-    const hasRight = right !== null
-
-    /**
-     * Attempt to determine if this *could* be an attribute expression. This
-     * check is not perfect, but it's good enough to avoid a lot of false
-     * positives before further attribute checking is required. Several
-     * benchmarks have been run to determine the performance impact and this
-     * test is the fastest (inline regex, capturing, with concat array access).
-     */
-    if (
-      hasRight &&
-      /^((=('|"))|[a-zA-Z0-9]=)$/.test(`${left[l - 2]}${left[l - 1]}`)
-    ) {
-      const sliceLine = i + 1
-      // This slot may be an attribute expression, we need to check further
-      const [rightDelta, pos] = attrCommentPos(
-        strings.slice(0, sliceLine),
-        strings.slice(sliceLine)
-      )
-      if (pos !== null) {
-        // Now we know this is an attribute expression, and we know where the
-        // the comment node should be inserted (after tag ends), so we insert
-        // it on the right hand side at that location.
-        const rightStr = strings[sliceLine + rightDelta]
-        strings[sliceLine + rightDelta] = `${rightStr.substring(
-          0,
-          pos
-        )}${attrComment}${rightStr.substring(pos)}`
-        html += `${left}${attrDelimiter}`
-        continue
-      }
-    }
-    html += `${left}${hasRight ? delimiterComment : ''}`
-  }
-  return html
-}
-
-/**
- * Given two strings that have an expression between them, determine if that
- * expression is an attribute expression. If so, return the position of the
- * comment node that should be inserted on the right hand side.
- * @param left - The left hand side of a html string where an exp. is.
- * @param right -  The left hand side of a html string where an exp. is.
- */
-export function attrCommentPos(
-  left: string[],
-  right: string[]
-):
-  | [rightStackIndex: number, rightPos: number]
-  | [rightStackIndex: null, rightPos: null] {
-  let rightPos: number | null = null
-  let rightStackIndex: number | null = null
-  const locate = (
-    direction: 1 | -1,
-    stack: string[],
-    target: string,
-    breakOn: string
-  ): boolean => {
-    let depth = 0
-    const firstStack = direction === -1 ? stack.length - 1 : 0
-    let stackPos = firstStack
-    let currentString = stack[stackPos]
-    let currentStringLength = currentString.length
-    let pos = direction > 0 ? 0 : currentStringLength - 1
-    let char = ''
-    let quoteChar: string | null = null
-
-    // Checks if the current character is a quote — it only counts as a quote
-    // if the depth is 0 (it is not inside a quote already). If it is inside a
-    // quotation, then only the matching quotation can be used to close it.
-    const isQuote = (char: string) =>
-      (quoteChar ? quoteChar === char : /['"]/.test(char)) &&
-      currentString[pos - 1] !== '\\'
-
-    while ((char = currentString.charAt(pos))) {
-      if (
-        stackPos === firstStack &&
-        pos === (direction > 0 ? 0 : currentStringLength - 1) &&
-        isQuote(char)
-      ) {
-        // skip
-      } else if (isQuote(char)) {
-        depth = depth === 0 ? 1 : 0
-        quoteChar = depth ? char : null
-      } else if (!depth && char === target) {
-        if (direction > 0) {
-          rightPos = pos + 1
-          rightStackIndex = stackPos
-        }
-        return true
-      } else if (!depth && char === breakOn) {
-        return false
-      }
-      if ((pos += direction) === (direction > 0 ? currentStringLength : -1)) {
-        // We've run out of characters in the current string, move to the next
-        // string in the stack.
-        currentString = stack[(stackPos += direction)] ?? ''
-        currentStringLength = currentString ? currentString.length : 0
-        pos = direction > 0 ? 0 : currentStringLength - 1
-      }
-    }
-    return false
-  }
-  return locate(1, right, '>', '<') && locate(-1, left, '<', '>')
-    ? [rightStackIndex, rightPos]
-    : [null, null]
 }

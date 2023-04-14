@@ -1,4 +1,6 @@
-import { isR, isO, queue, isReactiveFunction } from './common'
+import { isR, isO, queue } from './common'
+import { expressions, onExpressionUpdate } from './expressions'
+import { ArrowFunction, ArrowRenderable } from './html'
 
 /**
  * The target of a reactive object.
@@ -443,6 +445,10 @@ function addListeners(deps: Dependencies, callback: PropertyObserver<unknown>) {
  * @param fn - A function to watch.
  * @param after - A function to call after the watched function with the result.
  */
+export function watch<A extends (arg: ArrowRenderable) => unknown>(
+  pointer: number,
+  afterEffect: A
+): [returnValue: ReturnType<A>, stop: () => void]
 export function watch<F extends (...args: any[]) => any>(
   effect: F
 ): [returnValue: ReturnType<F>, stop: () => void]
@@ -454,14 +460,19 @@ export function watch<
   F extends (...args: any[]) => any,
   A extends (arg: ReturnType<F>) => unknown
 >(
-  effect: F,
+  effect: F | number,
   afterEffect?: A
 ): [returnValue: ReturnType<F> | ReturnType<A>, stop: () => void] {
   const watchKey = ++watchIndex
+  const isPointer = Number.isInteger(effect)
   let rerun: null | PropertyObserver<any> = queue(runEffect)
   function runEffect() {
     startTracking()
-    const effectValue = effect()
+
+    const effectValue = isPointer
+      ? (expressions[effect as number] as ArrowFunction)()
+      : (effect as CallableFunction)()
+
     stopTracking(watchKey, rerun!)
     return afterEffect ? afterEffect(effectValue) : effectValue
   }
@@ -469,6 +480,6 @@ export function watch<
     flushListeners(watchedDependencies[watchKey], rerun!)
     rerun = null
   }
-  if (isReactiveFunction(effect)) effect.$on(runEffect)
+  if (isPointer) onExpressionUpdate(effect as number, rerun)
   return [runEffect(), stop]
 }

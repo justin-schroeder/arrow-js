@@ -4,7 +4,7 @@
   "ts-node": { "esm": true, "experimentalSpecifierResolution": "node" },
   "compilerOptions": {
     "module": "esnext",
-    "lib": ["dom", "esnext"],
+    "lib": ["dom", "dom.Iterable", "esnext"],
     "target": "ES2022",
     "importHelpers": true,
     // output .d.ts declaration files for consumers

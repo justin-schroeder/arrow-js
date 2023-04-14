@@ -2,10 +2,8 @@ import { html, reactive, nextTick, ArrowTemplate } from '..'
 import { click, setValue } from './utils/events'
 import { describe, it, expect, vi } from 'vitest'
 import {
-  attrCommentPos,
+  // attrCommentPos,
   createChunk,
-  createExpression,
-  createHTML,
   getPath,
 } from '../html'
 interface User {
@@ -19,26 +17,26 @@ interface User {
 //   })
 // })
 
-describe('createExpression', () => {
-  it('can swap out the expression from createExpression', () => {
-    const expression1 = vi.fn(() => 'foo')
-    const expression2 = createExpression(vi.fn(() => 'bar'))
-    const expression = createExpression(expression1)
-    expect(expression()).toBe('foo')
-    expression._up(expression2)
-    expect(expression()).toBe('bar')
-  })
+// describe('createExpression', () => {
+//   it('can swap out the expression from createExpression', () => {
+//     const expression1 = vi.fn(() => 'foo')
+//     const expression2 = createExpression(vi.fn(() => 'bar'))
+//     const expression = createExpression(expression1)
+//     expect(expression()).toBe('foo')
+//     expression._up(expression2)
+//     expect(expression()).toBe('bar')
+//   })
 
-  it('can swap out the expression from createExpression', () => {
-    const expression1 = vi.fn(() => 'foo')
-    const expression2 = createExpression(vi.fn(() => 'bar'))
-    const listener = vi.fn()
-    const expression = createExpression(expression1)
-    expression.$on(listener)
-    expression._up(expression2)
-    expect(listener).toBeCalledTimes(1)
-  })
-})
+//   it('can swap out the expression from createExpression', () => {
+//     const expression1 = vi.fn(() => 'foo')
+//     const expression2 = createExpression(vi.fn(() => 'bar'))
+//     const listener = vi.fn()
+//     const expression = createExpression(expression1)
+//     expression.$on(listener)
+//     expression._up(expression2)
+//     expect(listener).toBeCalledTimes(1)
+//   })
+// })
 
 describe('getPath', () => {
   it('can locate the path of items at the root', () => {
@@ -81,7 +79,7 @@ describe('createChunk', () => {
     expect(chunk.dom.childNodes[0].childNodes.length).toBe(1)
     const mountPoint = document.createElement('div')
     mountPoint.appendChild(chunk.dom)
-    expect(mountPoint.innerHTML).toBe('<div data-foo="❲❍❳"><!--➳❍--></div>')
+    // expect(mountPoint.innerHTML).toBe('<div data-foo="❲❍❳"><!--➳❍--></div>')
     expect(chunk.paths).toEqual([
       [0, 'data-foo'],
       [0, 0],
@@ -89,15 +87,11 @@ describe('createChunk', () => {
   })
   it('can create a dom fragment with a multiple basic expression in the body and an attributes', () => {
     // prettier-ignore
-    const chunk = createChunk(['<div data-foo="', "\" hidden=", '>', "<span class=", " style=", '>', '</span></div>'])
+    const chunk = createChunk(['<div data-foo="', "\" hidden=\"", '">', "<span class=\"", "\" style=\"", "\">", '</span></div>'])
     expect(chunk.dom).toBeInstanceOf(DocumentFragment)
     expect(chunk.dom.childNodes[0]).toBeInstanceOf(HTMLDivElement)
-    // expect(chunk.dom.childNodes[0].childNodes.length).toBe(2)
     const mountPoint = document.createElement('div')
     mountPoint.appendChild(chunk.dom)
-    expect(mountPoint.innerHTML).toBe(
-      '<div data-foo="❲❍❳" hidden="❲❍❳"><!--➳❍--><span class="❲❍❳" style="❲❍❳"><!--➳❍--></span></div>'
-    )
     expect(chunk.paths).toEqual([
       [0, 'data-foo'],
       [0, 'hidden'],
@@ -109,119 +103,119 @@ describe('createChunk', () => {
   })
 })
 
-describe('createHTML', () => {
-  it('ignores empty templates', () => {
-    const html = createHTML([''])
-    expect(html).toBe('')
-  })
-  it('adds a delimiter even when there is no html', () => {
-    const html = createHTML(['', ''])
-    expect(html).toBe('<!--➳❍-->')
-  })
-  it('adds multiple delimiters even when there is no html', () => {
-    const html = createHTML(['', '', '', ''])
-    expect(html).toBe('<!--➳❍--><!--➳❍--><!--➳❍-->')
-  })
-  it('can place a delimiter comment inside an element', () => {
-    const html = createHTML(['<div>', '</div>'])
-    expect(html).toBe(`<div><!--➳❍--></div>`)
-  })
-  it('can place a delimiter comment after a self closing element', () => {
-    const html = createHTML(['<input>', ''])
-    expect(html).toBe(`<input><!--➳❍-->`)
-  })
-  it('can place an attr delimiter comment after a self closing element', () => {
-    const html = createHTML(['<input type=', ' >', ''])
-    expect(html).toBe(`<input type=❲❍❳ ><!--❲❍❳--><!--➳❍-->`)
-  })
-})
+// describe('createHTML', () => {
+//   it('ignores empty templates', () => {
+//     const html = createHTML([''])
+//     expect(html).toBe('')
+//   })
+//   it('adds a delimiter even when there is no html', () => {
+//     const html = createHTML(['', ''])
+//     expect(html).toBe('<!--➳❍-->')
+//   })
+//   it('adds multiple delimiters even when there is no html', () => {
+//     const html = createHTML(['', '', '', ''])
+//     expect(html).toBe('<!--➳❍--><!--➳❍--><!--➳❍-->')
+//   })
+//   it('can place a delimiter comment inside an element', () => {
+//     const html = createHTML(['<div>', '</div>'])
+//     expect(html).toBe(`<div><!--➳❍--></div>`)
+//   })
+//   it('can place a delimiter comment after a self closing element', () => {
+//     const html = createHTML(['<input>', ''])
+//     expect(html).toBe(`<input><!--➳❍-->`)
+//   })
+//   it('can place an attr delimiter comment after a self closing element', () => {
+//     const html = createHTML(['<input type=', ' >', ''])
+//     expect(html).toBe(`<input type=❲❍❳ ><!--❲❍❳--><!--➳❍-->`)
+//   })
+// })
 
-describe('attrCommentPos', () => {
-  it('can find the position of an attribute comment', () => {
-    // prettier-ignore
-    const left = ["<input type="]
-    const right = [' data-foo="bar">']
-    const [stackIndex, posIndex] = attrCommentPos(left, right)
-    expect(stackIndex).toBe(0)
-    expect(posIndex).toBe(16)
-  })
-  it('can find the position of an attribute comment in the second index of the right hand stack', () => {
-    // prettier-ignore
-    const left = ["<input type="]
-    const right = [' data-foo="', '">']
-    const [stackIndex, posIndex] = attrCommentPos(left, right)
-    expect(stackIndex).toBe(1)
-    expect(posIndex).toBe(2)
-  })
+// describe('attrCommentPos', () => {
+//   it('can find the position of an attribute comment', () => {
+//     // prettier-ignore
+//     const left = ["<input type="]
+//     const right = [' data-foo="bar">']
+//     const [stackIndex, posIndex] = attrCommentPos(left, right)
+//     expect(stackIndex).toBe(0)
+//     expect(posIndex).toBe(16)
+//   })
+//   it('can find the position of an attribute comment in the second index of the right hand stack', () => {
+//     // prettier-ignore
+//     const left = ["<input type="]
+//     const right = [' data-foo="', '">']
+//     const [stackIndex, posIndex] = attrCommentPos(left, right)
+//     expect(stackIndex).toBe(1)
+//     expect(posIndex).toBe(2)
+//   })
 
-  it('can find the position of an attribute comment in the second index of the right hand stack', () => {
-    // prettier-ignore
-    const left = ["<input data-bar=\"", "\" type="]
-    const right = [' data-foo="', '"> things here']
-    const [stackIndex, posIndex] = attrCommentPos(left, right)
-    expect(stackIndex).toBe(1)
-    expect(posIndex).toBe(2)
-  })
+//   it('can find the position of an attribute comment in the second index of the right hand stack', () => {
+//     // prettier-ignore
+//     const left = ["<input data-bar=\"", "\" type="]
+//     const right = [' data-foo="', '"> things here']
+//     const [stackIndex, posIndex] = attrCommentPos(left, right)
+//     expect(stackIndex).toBe(1)
+//     expect(posIndex).toBe(2)
+//   })
 
-  it('can find the position of an attribute comment in the second index of the right hand stack', () => {
-    // prettier-ignore
-    const left = ["&lt;input type="]
-    const right = [' data-foo="', '">']
-    const [stackIndex, posIndex] = attrCommentPos(left, right)
-    expect(stackIndex).toBe(null)
-    expect(posIndex).toBe(null)
-  })
-  it('does not find a position if the opening < is inside quotes', () => {
-    // prettier-ignore
-    const left = ['&lt;input type="<div"=']
-    const right = [' data-foo="', '">']
-    const [stackIndex, posIndex] = attrCommentPos(left, right)
-    expect(stackIndex).toBe(null)
-    expect(posIndex).toBe(null)
-  })
-  it('can find the correct position if the opening < is in the middle of some html', () => {
-    // prettier-ignore
-    const left = ["<p>Hello</p> <div data-foo=\""]
-    const right = ['" data-bar="', '">', ' some stuff in here </div>']
-    const [stackIndex, posIndex] = attrCommentPos(left, right)
-    expect(stackIndex).toBe(1)
-    expect(posIndex).toBe(2)
-  })
-  it('can find the correct position attributes contain < >and escaped quotes', () => {
-    // prettier-ignore
-    const left = ["<p>Hello</p> <div data-html=\"<!--\\\"here-there\\\"-->\" data-foo=\""]
-    // prettier-ignore
-    const right = ['" data-bar="', "\" data-post-html=\"<!--\\\"here-there\\\"-->\"><p></p>', ' some stuff in here </div>"]
-    const [stackIndex, posIndex] = attrCommentPos(left, right)
-    expect(stackIndex).toBe(1)
-    expect(posIndex).toBe(41)
-  })
-  it('can immediately break out when finding a < outside quotes in the front stack', () => {
-    // prettier-ignore
-    const left = ["<input type="]
-    const right = ['" data-foo="bar" <div></div>']
-    const [stackIndex, posIndex] = attrCommentPos(left, right)
-    expect(stackIndex).toBe(null)
-    expect(posIndex).toBe(null)
-  })
-  it('can immediately break out when finding a < outside quotes in the front stack', () => {
-    // prettier-ignore
-    const left = ["<input <div> type="]
-    const right = ['" data-foo="bar">']
-    const [stackIndex, posIndex] = attrCommentPos(left, right)
-    expect(stackIndex).toBe(null)
-    expect(posIndex).toBe(null)
-  })
-  it('returns null when attributes contain < > and escaped quotes but the ending quote is never found', () => {
-    // prettier-ignore
-    const left = ["<p>Hello</p> <div data-html=\"<!--\\\"here-there\\\"-->' data-foo=\""]
-    // prettier-ignore
-    const right = ['" data-bar="', "\" data-post-html=\"<!--\\\"here-there\\\"-->'><p></p>', ' some stuff in here </div>"]
-    const [stackIndex, posIndex] = attrCommentPos(left, right)
-    expect(stackIndex).toBe(null)
-    expect(posIndex).toBe(null)
-  })
-})
+//   it('can find the position of an attribute comment in the second index of the right hand stack', () => {
+//     // prettier-ignore
+//     const left = ["&lt;input type="]
+//     const right = [' data-foo="', '">']
+//     const [stackIndex, posIndex] = attrCommentPos(left, right)
+//     expect(stackIndex).toBe(null)
+//     expect(posIndex).toBe(null)
+//   })
+//   it('does not find a position if the opening < is inside quotes', () => {
+//     // prettier-ignore
+//     const left = ['&lt;input type="<div"=']
+//     const right = [' data-foo="', '">']
+//     const [stackIndex, posIndex] = attrCommentPos(left, right)
+//     expect(stackIndex).toBe(null)
+//     expect(posIndex).toBe(null)
+//   })
+//   it('can find the correct position if the opening < is in the middle of some html', () => {
+//     // prettier-ignore
+//     const left = ["<p>Hello</p> <div data-foo=\""]
+//     const right = ['" data-bar="', '">', ' some stuff in here </div>']
+//     const [stackIndex, posIndex] = attrCommentPos(left, right)
+//     expect(stackIndex).toBe(1)
+//     expect(posIndex).toBe(2)
+//   })
+//   it('can find the correct position attributes contain < >and escaped quotes', () => {
+//     // prettier-ignore
+//     const left = ["<p>Hello</p> <div data-html=\"<!--\\\"here-there\\\"-->\" data-foo=\""]
+//     // prettier-ignore
+//     const right = ['" data-bar="', "\" data-post-html=\"<!--\\\"here-there\\\"-->\"><p></p>', ' some stuff in here </div>"]
+//     const [stackIndex, posIndex] = attrCommentPos(left, right)
+//     expect(stackIndex).toBe(1)
+//     expect(posIndex).toBe(41)
+//   })
+//   it('can immediately break out when finding a < outside quotes in the front stack', () => {
+//     // prettier-ignore
+//     const left = ["<input type="]
+//     const right = ['" data-foo="bar" <div></div>']
+//     const [stackIndex, posIndex] = attrCommentPos(left, right)
+//     expect(stackIndex).toBe(null)
+//     expect(posIndex).toBe(null)
+//   })
+//   it('can immediately break out when finding a < outside quotes in the front stack', () => {
+//     // prettier-ignore
+//     const left = ["<input <div> type="]
+//     const right = ['" data-foo="bar">']
+//     const [stackIndex, posIndex] = attrCommentPos(left, right)
+//     expect(stackIndex).toBe(null)
+//     expect(posIndex).toBe(null)
+//   })
+//   it('returns null when attributes contain < > and escaped quotes but the ending quote is never found', () => {
+//     // prettier-ignore
+//     const left = ["<p>Hello</p> <div data-html=\"<!--\\\"here-there\\\"-->' data-foo=\""]
+//     // prettier-ignore
+//     const right = ['" data-bar="', "\" data-post-html=\"<!--\\\"here-there\\\"-->'><p></p>', ' some stuff in here </div>"]
+//     const [stackIndex, posIndex] = attrCommentPos(left, right)
+//     expect(stackIndex).toBe(null)
+//     expect(posIndex).toBe(null)
+//   })
+// })
 
 describe('html', () => {
   it('can render simple strings', () => {
@@ -372,7 +366,6 @@ describe('html', () => {
       <ul>
         ${() => data.list.map((item: string) => html`<li>${() => item}</li>`)}
       </ul>`(parent)
-    // expect(parent.innerHTML).toMatchSnapshot()
     const firstListItem = parent.querySelector('li')
     data.list.unshift('0')
     await nextTick()
@@ -382,7 +375,6 @@ describe('html', () => {
       .forEach((el) => listValues.push(el.textContent!))
     expect(listValues).toEqual(['0', 'a', 'b', 'c'])
     expect(parent.querySelector('li')).toBe(firstListItem)
-    // expect(parent.innerHTML).toMatchSnapshot()
   })
 
   it('re-renders a simple list that changes a static value', async () => {

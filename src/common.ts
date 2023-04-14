@@ -1,5 +1,4 @@
-import { T } from 'vitest/dist/types-fafda418'
-import { ReactiveFunction, ArrowTemplate } from './html'
+import { ArrowTemplate, Chunk } from './html'
 import { Reactive, PropertyObserver, ReactiveTarget } from './reactive'
 
 /**
@@ -10,6 +9,15 @@ const queueStack: Set<CallableFunction> = new Set()
  * A stack of functions to run on the next tick.
  */
 const nextTicks: Set<CallableFunction> = new Set()
+
+/**
+ * A map of node types to their respective interfaces.
+ */
+interface NodeTypes {
+  [Node.ELEMENT_NODE]: Element
+  [Node.COMMENT_NODE]: Comment
+  [Node.DOCUMENT_FRAGMENT_NODE]: DocumentFragment
+}
 
 /**
  * Adds the ability to listen to the next tick.
@@ -44,10 +52,15 @@ export function isR(obj: unknown): obj is Reactive<ReactiveTarget> {
   return isO(obj) && '$on' in obj
 }
 
-export function isReactiveFunction(
-  fn: CallableFunction
-): fn is ReactiveFunction {
-  return '$on' in fn
+export function isChunk(chunk: unknown): chunk is Chunk {
+  return isO(chunk) && '$' in chunk
+}
+
+export function isType<T extends keyof NodeTypes>(
+  obj: Node,
+  type: T
+): obj is NodeTypes[T] {
+  return obj.nodeType === type
 }
 
 /**
@@ -57,7 +70,9 @@ export function isReactiveFunction(
  * @param  {CallableFunction} fn
  * @returns PropertyObserver
  */
-export function queue(fn: PropertyObserver<T>): PropertyObserver<T> {
+export function queue<T extends unknown>(
+  fn: PropertyObserver<T>
+): PropertyObserver<T> {
   return (newValue?: T, oldValue?: T) => {
     function executeQueue() {
       // copy the current queues and clear it to allow new items to be added
