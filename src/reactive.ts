@@ -1,5 +1,5 @@
 import { isR, isO, queue } from './common'
-import { expressions, onExpressionUpdate } from './expressions'
+import { expressionPool, onExpressionUpdate } from './expressions'
 import { ArrowFunction, ArrowRenderable } from './html'
 
 /**
@@ -470,7 +470,7 @@ export function watch<
     startTracking()
 
     const effectValue = isPointer
-      ? (expressions[effect as number] as ArrowFunction)()
+      ? (expressionPool[effect as number] as ArrowFunction)()
       : (effect as CallableFunction)()
 
     stopTracking(watchKey, rerun!)

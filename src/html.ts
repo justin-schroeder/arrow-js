@@ -1,7 +1,7 @@
 import { watch } from './reactive'
 import { isChunk, isTpl, isType, queue } from './common'
 import {
-  expressions,
+  expressionPool,
   onExpressionUpdate,
   storeExpressions,
   updateExpressions,
@@ -358,7 +358,7 @@ function createBindings(
   chunk: Chunk,
   expressionPointer: number
 ): ArrowFragment {
-  const totalPaths = expressions[expressionPointer] as number
+  const totalPaths = expressionPool[expressionPointer] as number
   const stackStart = bindingStackPos + 1
   for (let i = 0; i < totalPaths; i++) {
     const path = chunk.paths[i]
@@ -400,7 +400,7 @@ function createNodeBinding(
   parentChunk: Chunk
 ) {
   let fragment: DocumentFragment | Text | Comment
-  const expression = expressions[expressionPointer]
+  const expression = expressionPool[expressionPointer]
   if (isTpl(expression) || Array.isArray(expression)) {
     // We are dealing with a template that is not reactive. Render it.
     fragment = createRenderFn()(expression)!
@@ -436,14 +436,14 @@ function createAttrBinding(
   parentChunk: Chunk
 ) {
   if (!isType(node, 1)) return
-  const expression = expressions[expressionPointer]
+  const expression = expressionPool[expressionPointer]
   if (attrName[0] === '@') {
     const event = attrName.substring(1)
     if (!parentChunk.a) parentChunk.a = new AbortController()
     node.addEventListener(
       event,
       (...args) =>
-        (expressions[expressionPointer] as CallableFunction)?.(
+        (expressionPool[expressionPointer] as CallableFunction)?.(
           ...args
         ) as unknown as EventListener,
       {

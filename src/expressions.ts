@@ -1,6 +1,6 @@
 import { ArrowExpression } from './html'
 
-export const expressions: Array<number | ArrowExpression> = []
+export const expressionPool: Array<number | ArrowExpression> = []
 const expressionObservers: CallableFunction[] = []
 let cursor = 0
 
@@ -12,9 +12,9 @@ let cursor = 0
 export function storeExpressions(expSlots: ArrowExpression[]): number {
   const len = expSlots.length
   const pointer = cursor
-  expressions[cursor++] = len
+  expressionPool[cursor++] = len
   for (let i = 0; i < len; i++) {
-    expressions[cursor++] = expSlots[i]
+    expressionPool[cursor++] = expSlots[i]
   }
   return pointer
 }
@@ -28,13 +28,13 @@ export function updateExpressions(
   sourcePointer: number,
   toPointer: number
 ): void {
-  const len = expressions[sourcePointer] as number
+  const len = expressionPool[sourcePointer] as number
   for (let i = 1; i <= len; i++) {
-    expressions[toPointer + i] = expressions[sourcePointer + i]
+    expressionPool[toPointer + i] = expressionPool[sourcePointer + i]
     delete expressionObservers[sourcePointer + i]
   }
   for (let i = 1; i <= len; i++) {
-    expressionObservers[toPointer + i]?.(expressions[toPointer + i])
+    expressionObservers[toPointer + i]?.(expressionPool[toPointer + i])
   }
 }
 
