@@ -1,5 +1,6 @@
 import { watch } from './reactive'
-import { isChunk, isTpl, isType, queue } from './common'
+import { isChunk, isTpl, isType } from './common'
+import { createQueueable, queue } from './scheduler'
 import {
   expressionPool,
   onExpressionUpdate,
@@ -726,26 +727,30 @@ let unmountStack: Array<
   | Set<Chunk | Text | ChildNode>
 > = []
 
-const queueUnmount = queue(() => {
-  const removeItems = (
-    chunk:
-      | Chunk
-      | Text
-      | ChildNode
-      | Array<Chunk | Text | ChildNode>
-      | Set<Chunk | Text | ChildNode>
-  ) => {
-    if (isChunk(chunk)) {
-      for (const node of chunk.ref()) node.remove()
-      if (chunk.a) chunk.a.abort()
-    } else if (Array.isArray(chunk) || chunk instanceof Set) {
-      chunk.forEach(removeItems)
-    } else {
-      chunk.remove()
-    }
-    return false
+function removeItems(
+  stackItem:
+    | Chunk
+    | Text
+    | ChildNode
+    | Array<Chunk | Text | ChildNode>
+    | Set<Chunk | Text | ChildNode>
+): void {
+  if (isChunk(stackItem)) {
+    for (const node of stackItem.ref()) node.remove()
+    if (stackItem.a) stackItem.a.abort()
+  } else if (Array.isArray(stackItem) || stackItem instanceof Set) {
+    stackItem.forEach(removeItems)
+  } else {
+    stackItem.remove()
   }
-  unmountStack = unmountStack.filter((chunk) => removeItems(chunk))
+}
+
+/**
+ * A queue that is used to batch up unmounts.
+ */
+const queuePointer = createQueueable(() => {
+  unmountStack.filter((stackItem) => removeItems(stackItem))
+  unmountStack = []
 })
 
 /**
@@ -762,7 +767,7 @@ function unmount(
 ) {
   if (!chunk) return
   unmountStack.push(chunk)
-  queueUnmount()
+  queue(queuePointer)
 }
 
 /**

@@ -1,4 +1,4 @@
-import { nextTick, reactive, watch } from '../'
+import { reactive, watch } from '../'
 import { describe, it, expect, vi } from 'vitest'
 type Data = {
   value: number | null
@@ -13,13 +13,13 @@ describe('w', () => {
     })
 
     watch(callback)
-    await nextTick()
+    await Promise.resolve()
     expect(callback).toHaveBeenCalledTimes(1)
     d.value = 10
-    await nextTick()
+    await Promise.resolve()
     expect(callback).toHaveBeenCalledTimes(2)
     d.value = 20
-    await nextTick()
+    await Promise.resolve()
     expect(callback).toHaveBeenCalledTimes(3)
   })
 
@@ -36,15 +36,15 @@ describe('w', () => {
 
     watch(callback)
 
-    await nextTick()
+    await Promise.resolve()
     expect(inner).toHaveBeenCalledTimes(0) // if value is null, inner should not be called
 
     d.value = 10
-    await nextTick()
+    await Promise.resolve()
     expect(inner).toHaveBeenCalledTimes(1)
 
     d.value = null
-    await nextTick()
+    await Promise.resolve()
     expect(inner).toHaveBeenCalledTimes(1)
   })
 
@@ -59,7 +59,6 @@ describe('w', () => {
       if (d1.value === 1) {
         // triggers other watcher
         d2.value = 2
-        // triggers itself
         d1.value = 2
       } else if (d1.value === 2) {
         cb1()
@@ -76,11 +75,11 @@ describe('w', () => {
     expect(cb2).toHaveBeenCalledTimes(0)
 
     d1.value = 1
-    await nextTick()
+    await new Promise((r) => setTimeout(r, 10))
     expect(cb1).toHaveBeenCalledTimes(1)
     expect(cb2).toHaveBeenCalledTimes(1)
 
-    await nextTick()
+    await Promise.resolve()
     expect(cb1).toHaveBeenCalledTimes(1)
     expect(cb2).toHaveBeenCalledTimes(1)
     expect(d1.value).toStrictEqual(2)
@@ -106,7 +105,7 @@ describe('w', () => {
 
     expect(cb1).toHaveBeenCalledTimes(0)
 
-    await nextTick()
+    await Promise.resolve()
     expect(cb1).toHaveBeenCalledTimes(1)
     expect(d.value).toStrictEqual(2)
   })
@@ -117,7 +116,7 @@ describe('w', () => {
     watch(() => data.list, callback)
     expect(callback).toHaveBeenCalledTimes(1)
     data.list.length = 0
-    await nextTick()
+    await Promise.resolve()
     expect(callback).toHaveBeenCalledTimes(2)
   })
 
@@ -127,10 +126,10 @@ describe('w', () => {
     watch(() => data.list, callback)
     expect(callback).toHaveBeenCalledTimes(1)
     data.list.splice(0, 1)
-    await nextTick()
+    await Promise.resolve()
     expect(callback).toHaveBeenCalledTimes(2)
     data.list.splice(0, 1)
-    await nextTick()
+    await Promise.resolve()
     expect(callback).toHaveBeenCalledTimes(3)
     expect(data.list).toEqual([])
   })

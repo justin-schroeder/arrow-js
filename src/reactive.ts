@@ -1,4 +1,5 @@
-import { isR, isO, queue } from './common'
+import { isR, isO } from './common'
+import { queue, createQueueable } from './scheduler'
 import { expressionPool, onExpressionUpdate } from './expressions'
 import { ArrowFunction, ArrowRenderable } from './html'
 
@@ -74,7 +75,7 @@ const ids = new WeakMap<ReactiveTarget, number>()
  * A registry of reactive objects to their property observers.
  */
 const listeners: {
-  [property: PropertyKey]: Set<PropertyObserver<unknown>>
+  [property: PropertyKey]: Set<number | PropertyObserver<unknown>>
 }[] = new Array(5000).fill({})
 
 /**
@@ -320,7 +321,11 @@ function emit(
 ) {
   const targetListeners = listeners[id]
   if (targetListeners[key]) {
-    targetListeners[key].forEach((callback) => callback(newValue, oldValue))
+    targetListeners[key].forEach((callback) => {
+      Number.isFinite(callback)
+        ? queue(callback as number)
+        : (callback as PropertyObserver<unknown>)(newValue, oldValue)
+    })
   }
   if (notifyParents) {
     parents[id]?.forEach(([parentId, property]) => emit(parentId, property))
@@ -358,7 +363,7 @@ const api = {
 function addListener(
   id: number,
   property: PropertyKey,
-  callback: PropertyObserver<any>
+  callback: PropertyObserver<any> | number
 ) {
   const targetListeners = listeners[id]
   targetListeners[property] ??= new Set()
@@ -404,10 +409,10 @@ function startTracking() {
  * the tracked dependencies change.
  * @param callback - A function to re-run when dependencies change.
  */
-function stopTracking(watchKey: number, callback: PropertyObserver<unknown>) {
+function stopTracking(watchKey: number, queuePointer: number) {
   const key = trackKey--
-  flushListeners(watchedDependencies[watchKey], callback)
-  addListeners(trackedDependencies[key], callback)
+  flushListeners(watchedDependencies[watchKey], queuePointer)
+  addListeners(trackedDependencies[key], queuePointer)
   watchedDependencies[watchKey] = trackedDependencies[key]
 }
 
@@ -417,14 +422,11 @@ function stopTracking(watchKey: number, callback: PropertyObserver<unknown>) {
  * @param deps - The dependencies to flush.
  * @param callback - The callback to remove.
  */
-function flushListeners(
-  deps: Dependencies,
-  callback: PropertyObserver<unknown>
-) {
+function flushListeners(deps: Dependencies, queuePointer: number) {
   if (!deps) return
   const len = deps.length
   for (let i = 0; i < len; i += 2) {
-    listeners[deps[i] as number][deps[i + 1]].delete(callback)
+    listeners[deps[i] as number][deps[i + 1]].delete(queuePointer)
   }
 }
 
@@ -433,10 +435,10 @@ function flushListeners(
  * @param deps - The dependencies to add listeners for.
  * @param callback - The callback to add.
  */
-function addListeners(deps: Dependencies, callback: PropertyObserver<unknown>) {
+function addListeners(deps: Dependencies, queuePointer: number) {
   const len = deps.length
   for (let i = 0; i < len; i += 2) {
-    addListener(deps[i] as number, deps[i + 1], callback)
+    addListener(deps[i] as number, deps[i + 1], queuePointer)
   }
 }
 
@@ -465,7 +467,7 @@ export function watch<
 ): [returnValue: ReturnType<F> | ReturnType<A>, stop: () => void] {
   const watchKey = ++watchIndex
   const isPointer = Number.isInteger(effect)
-  let rerun: null | PropertyObserver<any> = queue(runEffect)
+  const queuePointer: number = createQueueable(runEffect)
   function runEffect() {
     startTracking()
 
@@ -473,13 +475,12 @@ export function watch<
       ? (expressionPool[effect as number] as ArrowFunction)()
       : (effect as CallableFunction)()
 
-    stopTracking(watchKey, rerun!)
+    stopTracking(watchKey, queuePointer!)
     return afterEffect ? afterEffect(effectValue) : effectValue
   }
   const stop = () => {
-    flushListeners(watchedDependencies[watchKey], rerun!)
-    rerun = null
+    flushListeners(watchedDependencies[watchKey], queuePointer!)
   }
-  if (isPointer) onExpressionUpdate(effect as number, rerun)
+  if (isPointer) onExpressionUpdate(effect as number, () => queue(queuePointer))
   return [runEffect(), stop]
 }

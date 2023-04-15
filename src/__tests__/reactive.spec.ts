@@ -28,7 +28,7 @@ describe('reactive', () => {
     watch(x)
     data.foo = 'bar' // should not trigger since it wasnt recorded.
     data.a = 'hello'
-    await nextTick()
+    await Promise.resolve()
     expect(x).toHaveBeenCalledTimes(2)
     expect(x.mock.results[1].value).toBe('hellocan')
   })
@@ -41,10 +41,10 @@ describe('reactive', () => {
     const listener = vi.fn()
     data.$on('bar', listener)
     data.foo = 'hello'
-    await nextTick()
+    await Promise.resolve()
     expect(listener).toHaveBeenCalledTimes(0)
     data.bar = 'baz'
-    await nextTick()
+    await Promise.resolve()
     expect(listener).toHaveBeenCalledTimes(1)
     expect(listener.mock.calls[0]).toEqual(['baz', 'foo'])
   })
@@ -57,11 +57,11 @@ describe('reactive', () => {
     const listener = vi.fn()
     data.$on('bar', listener)
     data.bar = 'baz'
-    await nextTick()
+    await Promise.resolve()
     expect(listener).toHaveBeenCalledTimes(1)
     data.$off('bar', listener)
     data.bar = 'fizz'
-    await nextTick()
+    await Promise.resolve()
     expect(listener).toHaveBeenCalledTimes(1)
   })
 
@@ -75,13 +75,13 @@ describe('reactive', () => {
     watch(hasName, setValue)
     expect(setValue).toHaveBeenCalledTimes(1)
     data.name = 'Jonny'
-    await nextTick()
+    await Promise.resolve()
     expect(setValue).toHaveBeenCalledTimes(1)
     data.value = 1
-    await nextTick()
+    await Promise.resolve()
     expect(setValue).toHaveBeenCalledTimes(2)
     data.name = 'Jill'
-    await nextTick()
+    await Promise.resolve()
     expect(setValue).toHaveBeenCalledTimes(3)
   })
 
@@ -93,7 +93,7 @@ describe('reactive', () => {
     watch(() => data.list.map((item: string) => item), callback)
     expect(callback).toHaveBeenCalledTimes(1)
     data.list.unshift('first')
-    await nextTick()
+    await Promise.resolve()
     expect(callback).toHaveBeenCalledTimes(2)
   })
 
@@ -108,13 +108,13 @@ describe('reactive', () => {
     expect(setValue).toHaveBeenCalledTimes(1)
     data.value = 1
     data.name = 'hello'
-    await nextTick()
+    await Promise.resolve()
     expect(setValue).toHaveBeenCalledTimes(2)
     data.value = 0
-    await nextTick()
+    await Promise.resolve()
     expect(setValue).toHaveBeenCalledTimes(3)
     data.name = 'molly'
-    await nextTick()
+    await Promise.resolve()
     expect(setValue).toHaveBeenCalledTimes(3)
   })
 
@@ -139,11 +139,11 @@ describe('reactive', () => {
     expect(hasNameCb).toHaveBeenCalledTimes(1)
     expect(printNameCb).toHaveBeenCalledTimes(0)
     data.value = 2
-    await nextTick()
+    await Promise.resolve()
     expect(printNameCb).toHaveBeenCalledTimes(1) // Previously shadowed
     expect(hasNameCb).toHaveBeenCalledTimes(2)
     data.name = 'hello'
-    await nextTick()
+    await Promise.resolve()
     // should not be called since the new object is not directly observed.
     expect(hasNameCb).toHaveBeenCalledTimes(2)
   })
@@ -157,7 +157,7 @@ describe('reactive', () => {
     watch(() => data.user.last, callback)
     expect(callback).toHaveBeenCalledTimes(1)
     data.user.last = 'Poppies'
-    await nextTick()
+    await Promise.resolve()
     expect(callback).toHaveBeenCalledTimes(2)
     expect(callback.mock.calls[1][0]).toBe('Poppies')
   })
@@ -205,14 +205,14 @@ describe('reactive', () => {
     )
     expect(callback).toHaveBeenCalledTimes(1)
     data.user.username = 'poppy22'
-    await nextTick()
+    await Promise.resolve()
     expect(callback).toHaveBeenCalledTimes(2)
     expect(callback.mock.calls[1][0]).toBe('poppy22')
     data.first = 'Justin'
-    await nextTick()
+    await Promise.resolve()
     expect(callback).toHaveBeenCalledTimes(3)
     data.user.username = 'jenny33'
-    await nextTick()
+    await Promise.resolve()
     expect(callback).toHaveBeenCalledTimes(3)
   })
 
@@ -248,7 +248,7 @@ describe('reactive', () => {
     ] as Reactive<{ name: string; id: number }[]>
     expect(callback).toHaveBeenCalledTimes(1)
     data.list.splice(0, 1)
-    await nextTick()
+    await Promise.resolve()
     expect(callback).toHaveBeenCalledTimes(2)
     data.list.splice(0, 1)
     expect(callback).toHaveBeenCalledTimes(3)
@@ -313,10 +313,10 @@ describe('reactive', () => {
     watch(() => a.price * b.quantity, callback)
     expect(callback.mock.calls[0][0]).toBe(1125)
     a.price = 100
-    await nextTick()
+    await Promise.resolve()
     expect(callback.mock.calls[1][0]).toBe(2500)
     b.quantity = 5
-    await nextTick()
+    await Promise.resolve()
     expect(callback.mock.calls[2][0]).toBe(500)
   })
 })
