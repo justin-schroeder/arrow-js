@@ -1,16 +1,20 @@
 /**
  * A memory pool of queues to use for `queue()`.
  */
-const callbackPool: Array<CallableFunction> = new Array(500).fill(null)
+const callbackPool: Array<CallableFunction> = new Array(2000).fill(null)
 
 /**
  * The actual queue of callbacks to execute.
  */
 export const schedules: [
-  tick: Set<number>,
-  tock: Set<number>,
-  nextTick: Set<number>
-] = [new Set<number>(), new Set<number>(), new Set<number>()]
+  tick: (number | null)[],
+  tock: (number | null)[],
+  nextTick: (number | null)[]
+] = [
+  new Array(1000).fill(null),
+  new Array(1000).fill(null),
+  new Array(50).fill(null),
+]
 /**
  * A flag to determine if the queue is currently scheduled to run.
  */
@@ -20,6 +24,11 @@ let isScheduled = false
  * A pointer to the current schedule pool cursor.
  */
 let activeSchedule = 0
+
+/**
+ * Index of next insertion in the active schedule pool.
+ */
+let schedulePos = 0
 
 /**
  * A pointer to the current queue pool cursor.
@@ -45,7 +54,7 @@ export function createQueueable(fn: CallableFunction): number {
  * @param pointer - The pointer of the callback to queue.
  */
 export function queue(pointer: number): void {
-  schedules[activeSchedule].add(pointer)
+  schedules[activeSchedule][schedulePos++] = pointer
   if (!isScheduled) {
     isScheduled = true
     queueMicrotask(execute)
@@ -67,7 +76,7 @@ export function nextTick<T extends (...args: any[]) => unknown>(
     const pointer = createQueueable(() => {
       resolve(callback?.() as ReturnType<T> | void)
     })
-    schedules[2].add(pointer)
+    schedules[2].push(pointer)
     if (!isScheduled) execute()
   })
 }
@@ -80,24 +89,28 @@ function flushNextTicks() {
   for (const p of schedules[2]) {
     callbackPool[p!]()
   }
-  schedules[2].clear()
+  for (let i = 0; i < schedules[2].length; i++) {
+    schedules[2][i] = null
+  }
 }
 
 /**
  * Execute all queued callbacks.
  */
 function execute() {
-  const schedule = activeSchedule
+  const tickTock = activeSchedule
+  const len = schedulePos
   // Reset the queue on the alternative scheduler pool. This is done to ensure
   // any effects of running these callbacks will still accumulate and be run
   // in the next microtask.
   isScheduled = false
   activeSchedule = +!activeSchedule
-  for (const p of schedules[schedule]) {
-    callbackPool[p!]()
+  schedulePos = 0
+  for (let i = 0; i < len; i++) {
+    callbackPool[schedules[tickTock][i]!]()
+    schedules[tickTock][i] = null
   }
-  schedules[schedule].clear()
   // If the next schedule queue is empty after having run all effects, flush
   // the nextTicks queue.
-  if (!schedules[activeSchedule].size) flushNextTicks()
+  if (!schedules[activeSchedule].length) flushNextTicks()
 }

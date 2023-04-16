@@ -467,7 +467,6 @@ export function watch<
 ): [returnValue: ReturnType<F> | ReturnType<A>, stop: () => void] {
   const watchKey = ++watchIndex
   const isPointer = Number.isInteger(effect)
-  const queuePointer: number = createQueueable(runEffect)
   function runEffect() {
     startTracking()
 
@@ -478,6 +477,7 @@ export function watch<
     stopTracking(watchKey, queuePointer!)
     return afterEffect ? afterEffect(effectValue) : effectValue
   }
+  const queuePointer: number = createQueueable(runEffect)
   const stop = () => {
     flushListeners(watchedDependencies[watchKey], queuePointer!)
   }
