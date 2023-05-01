@@ -74,6 +74,21 @@
       import highlight from './js/highlight.js';
       const el = document.getElementById('app');
 
+      function liveInput () {
+        const data = reactive({
+          value: ''
+        })
+
+        return html`
+          <input
+            type="text"
+            @input="${e => { data.value = e.target.value }}"
+          >
+          <em>${() => data.value}</em>
+        `
+      }
+
+
       html`
         <div class="container">
           ${homeHero}

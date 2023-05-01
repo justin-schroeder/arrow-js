@@ -1,42 +1,11 @@
 import { html, reactive, nextTick, ArrowTemplate } from '..'
 import { click, setValue } from './utils/events'
 import { describe, it, expect, vi } from 'vitest'
-import {
-  // attrCommentPos,
-  createChunk,
-  getPath,
-} from '../html'
+import { createChunk, getPath } from '../html'
 interface User {
   name: string
   id: number
 }
-
-// describe.only('pathed chunks', () => {
-//   it('can produce DOM nodes with no expressions', () => {
-//     expect(false).toBe(true)
-//   })
-// })
-
-// describe('createExpression', () => {
-//   it('can swap out the expression from createExpression', () => {
-//     const expression1 = vi.fn(() => 'foo')
-//     const expression2 = createExpression(vi.fn(() => 'bar'))
-//     const expression = createExpression(expression1)
-//     expect(expression()).toBe('foo')
-//     expression._up(expression2)
-//     expect(expression()).toBe('bar')
-//   })
-
-//   it('can swap out the expression from createExpression', () => {
-//     const expression1 = vi.fn(() => 'foo')
-//     const expression2 = createExpression(vi.fn(() => 'bar'))
-//     const listener = vi.fn()
-//     const expression = createExpression(expression1)
-//     expression.$on(listener)
-//     expression._up(expression2)
-//     expect(listener).toBeCalledTimes(1)
-//   })
-// })
 
 describe('getPath', () => {
   it('can locate the path of items at the root', () => {
