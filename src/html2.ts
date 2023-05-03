@@ -1,4 +1,3 @@
-import { ArrowExpression } from './html'
 import { createPool, Pool } from './pool'
 
 /**
@@ -12,6 +11,7 @@ type ArrowKey = string | number
 interface Mount {
   (): Node | Node[]
   (target: Element): ArrowTemplate
+  (target?: Element): Node | Node[] | ArrowTemplate
 }
 
 export interface ArrowTemplate {
@@ -107,7 +107,7 @@ const templatePool = createPool(
     _m: null,
     _h: null,
     _id: null,
-    _e: ArrowExpressions,
+    _e: [],
     id(id: string) {
       this._id = id
       return this
@@ -120,9 +120,10 @@ const templatePool = createPool(
       this._m = args
       return this
     },
-    mount: (el?: Element) => {
-      if (el) el.appendChild(build(this))
-      else return build(this)
+    mount(el?: Element): ArrowTemplate | Node | Node[] {
+      const nodes = build(this)
+      if (el) Array.isArray(nodes) ? el.append(...nodes) : el.append(nodes)
+      else return nodes
       return this
     },
   }),
