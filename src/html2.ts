@@ -5,15 +5,6 @@ import { createPool, Pool } from './pool'
  */
 type ArrowKey = string | number
 
-/**
- * Mount method interface.
- */
-interface Mount {
-  (): Node | Node[]
-  (target: Element): ArrowTemplate
-  (target?: Element): Node | Node[] | ArrowTemplate
-}
-
 export interface ArrowTemplate {
   /**
    * The unique key assigned to this template.
@@ -41,7 +32,11 @@ export interface ArrowTemplate {
    * @param target - A target to mount the template to.
    * @returns {ArrowTemplate}
    */
-  mount: Mount
+  mount: {
+    (): Node | Node[]
+    (target: Element): ArrowTemplate
+    (target?: Element): Node | Node[] | ArrowTemplate
+  }
   /**
    * Generally used for lists of items. Used to maintain a stateful element
    * when list rendering.
@@ -55,7 +50,7 @@ export interface ArrowTemplate {
    * @param memoKeys - Unique key to memoize this template.
    * @returns
    */
-  memo: (...memoKeys: ArrowKey[]) => ArrowTemplate
+  memo: (memoKeys: ArrowKey[]) => ArrowTemplate
   /**
    * All templates are automatically memoized by their HTML content. Use this
    * method to assign an alternative memoization key. This can be used to recall
@@ -69,7 +64,7 @@ export interface ArrowTemplate {
    * pool.
    * @returns
    */
-  next: ArrowTemplate
+  next?: ArrowTemplate
 }
 
 /**
@@ -100,6 +95,10 @@ export type ArrowExpression =
   | EventListener
   | ((evt: InputEvent) => void)
 
+/**
+ * Creates the memory pool of templates. This is used to recycle template
+ * objects for increased performance from reduced garbage collection.
+ */
 const templatePool = createPool(
   1000,
   (): ArrowTemplate => ({
@@ -108,6 +107,7 @@ const templatePool = createPool(
     _h: null,
     _id: null,
     _e: [],
+    next: undefined,
     id(id: string) {
       this._id = id
       return this
@@ -116,36 +116,88 @@ const templatePool = createPool(
       this._k = k
       return this
     },
-    memo(...args: ArrowKey[]) {
-      this._m = args
+    memo(m: ArrowKey[]) {
+      this._m = m
       return this
     },
-    mount(el?: Element): ArrowTemplate | Node | Node[] {
-      const nodes = build(this)
-      if (el) Array.isArray(nodes) ? el.append(...nodes) : el.append(nodes)
-      else return nodes
-      return this
-    },
+    mount,
   }),
   allocateTemplate
 )
 
+/**
+ * Returns the DOM nodes created by this template without performing any
+ * further action.
+ * @param this - The template to render.
+ */
+function mount(this: ArrowTemplate): Node | Node[]
+/**
+ * Mounts the template into the given element. This performs an append of the
+ * rendered nodes.
+ * @param this - The template to mount.
+ * @param el
+ */
+function mount(this: ArrowTemplate, el: Element): ArrowTemplate
+function mount(
+  this: ArrowTemplate,
+  el?: Element
+): ArrowTemplate | Node | Node[] {
+  const nodes = build(this)
+  if (el) Array.isArray(nodes) ? el.append(...nodes) : el.append(nodes)
+  else return nodes
+  return this
+}
+
+/**
+ *
+ * @param this - The template pool.
+ * @param html - The HTML template strings.
+ * @param expressions - The reactive expressions.
+ * @returns
+ */
 function allocateTemplate(
   this: Pool<ArrowTemplate, typeof allocateTemplate>,
   html: string | TemplateStringsArray[] | string[],
-  ...expressions: ArrowExpression[]
+  expressions: ArrowExpression[]
 ): ArrowTemplate {
   const template = this.next()
-  template._h = typeof html === 'string' ? xxx : html
+  template._h = typeof html === 'string' ? null : html
   template._e = expressions
   return template
 }
 
-export function html(id: string, ...expSlots: ArrowExpression[]): ArrowTemplate
+/**
+ * Used as a tag for tagged template literal. This function creates a new
+ * ArrowTemplate with the given HTML template strings and reactive expressions:
+ *
+ * ```ts
+ * const data = reactive({ name: 'John' })
+ * html`<div>${() => data.name}</div>`.mount(document.body)
+ * ```
+ *
+ * @param strings - The HTML template strings.
+ * @param expSlots - The reactive and static expressions from the template.
+ * @returns {ArrowTemplate}
+ */
 export function html(
   strings: TemplateStringsArray[] | string[],
   ...expSlots: ArrowExpression[]
 ): ArrowTemplate
+/**
+ * The main function used to create an ArrowTemplate, when only a single string
+ * is passed as the first argument it is assumed that string is a unique id
+ * that was already stored in memo using the ArrowTemplate.id() method.
+ * @param id - A globally unique identifier for this template.
+ * @param expSlots - The reactive and static expressions.
+ * @returns {ArrowTemplate}
+ */
+export function html(id: string, ...expSlots: ArrowExpression[]): ArrowTemplate
+/**
+ * Generic implementation of the html function.
+ * @param html - Unique id or template strings.
+ * @param expSlots - Expressions to render.
+ * @returns
+ */
 export function html(
   html: string | TemplateStringsArray[] | string[],
   ...expSlots: ArrowExpression[]
@@ -153,6 +205,4 @@ export function html(
   return templatePool.allocate(html, expSlots)
 }
 
-function build(template: ArrowTemplate): Node | Node[] {
-  // TODO: implement
-}
+function build(template: ArrowTemplate): Node | Node[] {}
