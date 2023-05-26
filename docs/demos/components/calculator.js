@@ -8,8 +8,8 @@ const data = reactive({
 const operations = {
   '+': (carry, input) => carry + input,
   '-': (carry, input) => carry - input,
-  '&#xf7;': (carry, input) => carry / input,
-  '&times;': (carry, input) => carry * input,
+  '\u00f7': (carry, input) => carry / input,
+  '\u00d7': (carry, input) => carry * input,
 }
 
 function calculate() {
