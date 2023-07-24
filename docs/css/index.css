@@ -179,6 +179,13 @@
 
 html {
   scroll-behavior: smooth;
+  background-color: var(--white);
+}
+
+@media (prefers-color-scheme: dark) {
+  html {
+    background-color: var(--black-soft);
+  }
 }
 
 body {
@@ -189,7 +196,6 @@ body {
   font-size: 16px;
   -webkit-font-smoothing: antialiased;
   color: var(--c-body-text);
-  background-color: var(--c-body-bg);
 }
 
 .container {
