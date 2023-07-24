@@ -1,3 +1,5 @@
+document.documentElement.style.backgroundColor = 'var(--c-body-bg)'
+
 if (typeof window !== 'undefined') {
   // assumes a Light Mode default
   if (
