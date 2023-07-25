@@ -117,7 +117,7 @@ html\`
 }
 
 export const list = {
-  code: `import { html, reactive } from '@arrow/core'
+  code: `import { html, reactive } from '@arrow-js/core'
 
 const data = reactive({
   items: [
