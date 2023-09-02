@@ -74,6 +74,38 @@ describe('reactive', () => {
     expect(buttonPropertyWatcher).not.toHaveBeenCalled()
   })
 
+  it('common collection types', async () => {
+    const data = reactive({
+      map: new Map(),
+      set: new Set(),
+      weakMap: new WeakMap(),
+      weakSet: new WeakSet(),
+    })
+
+    expect(data.map.size).toEqual(0)
+    expect(data.set.size).toEqual(0)
+    expect(data.weakMap.size).toEqual(undefined)
+    expect(data.weakSet.size).toEqual(undefined)
+
+    const mockWatcher = vi.fn()
+    data.$on('map', mockWatcher)
+    data.$on('set', mockWatcher)
+    data.$on('weakSet', mockWatcher)
+    data.$on('weakMap', mockWatcher)
+
+    data.map.set('a', '123')
+    data.set.add('a')
+    data.weakMap.set(data.map, '123')
+    data.weakSet.add(data.map, '123')
+
+    // 'Map', 'Set', 'WeakMap', 'WeakSet' are not supported for watch yet
+    expect(mockWatcher).toHaveBeenCalledTimes(0)
+
+    expect(data.map.size).toEqual(1)
+    expect(data.set.size).toEqual(1)
+    expect(data.weakMap.get(data.map)).toEqual('123')
+  })
+
   it('can record dependencies', async () => {
     const data = reactive({
       a: 'foo',
