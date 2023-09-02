@@ -16,7 +16,7 @@ describe('reactive', () => {
 
   it('allows setting HTMLElement and NodeList without making them reactive', async () => {
     const buttonClickHandler = vi.fn()
-    document.body.innerHTML = `<button>123</button>`
+    document.body.innerHTML = `<button data-testid="button">123</button>`
     document.querySelector('button')!.onclick = buttonClickHandler
 
     const data = reactive({
@@ -24,7 +24,11 @@ describe('reactive', () => {
       buttons: document.querySelectorAll('button'),
     })
 
-    // check the references are to the correct DOM node
+    // maintains property access
+    expect(data.button!.dataset.testid).toEqual('button')
+    expect(data.buttons.length).toEqual(1)
+
+    // references are to the correct DOM node
     data.button!.click()
     expect(buttonClickHandler).toHaveBeenCalledTimes(1)
     data.buttons[0]!.click()
