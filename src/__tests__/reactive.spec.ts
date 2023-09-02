@@ -14,6 +14,62 @@ describe('reactive', () => {
     expect(data.x).toBe('foo')
   })
 
+  it('allows setting HTMLElement and NodeList without making them reactive', async () => {
+    const buttonClickHandler = vi.fn()
+    document.body.innerHTML = `<button>123</button>`
+    document.querySelector('button')!.onclick = buttonClickHandler
+
+    const data = reactive({
+      button: document.querySelector('button'),
+      buttons: document.querySelectorAll('button'),
+    })
+
+    // check the references are to the correct DOM node
+    data.button!.click()
+    expect(buttonClickHandler).toHaveBeenCalledTimes(1)
+    data.buttons[0]!.click()
+    expect(buttonClickHandler).toHaveBeenCalledTimes(2)
+
+    const buttonPropertyWatcher = vi.fn()
+    data.$on('button', buttonPropertyWatcher)
+    data.$on('buttons', buttonPropertyWatcher)
+
+    // ensure the properties are not reactive
+    data.button!.autofocus = true
+    data.buttons[0].autofocus = true
+    await nextTick()
+    expect(buttonPropertyWatcher).not.toHaveBeenCalled()
+  })
+
+  it('allows updating a reactive field to a non-reactive HTMLElement/NodeList', async () => {
+    const buttonClickHandler = vi.fn()
+    document.body.innerHTML = `<button>123</button>`
+    document.querySelector('button')!.onclick = buttonClickHandler
+
+    const data = reactive({
+      button: {},
+      buttons: [],
+    })
+    data.button = document.querySelector('button')
+    data.buttons = document.querySelectorAll('button')
+
+    // check the references are to the correct DOM node
+    data.button!.click()
+    expect(buttonClickHandler).toHaveBeenCalledTimes(1)
+    data.buttons[0]!.click()
+    expect(buttonClickHandler).toHaveBeenCalledTimes(2)
+
+    const buttonPropertyWatcher = vi.fn()
+    data.$on('button', buttonPropertyWatcher)
+    data.$on('buttons', buttonPropertyWatcher)
+
+    // ensure the properties are not reactive
+    data.button!.autofocus = true
+    data.buttons[0].autofocus = true
+    await nextTick()
+    expect(buttonPropertyWatcher).not.toHaveBeenCalled()
+  })
+
   it('can record dependencies', async () => {
     const data = reactive({
       a: 'foo',
