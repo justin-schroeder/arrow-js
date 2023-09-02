@@ -121,7 +121,8 @@ export function r<T extends DataSource>(
   state: ReactiveProxyState = {}
 ): ReactiveProxy<T> {
   // If this is already reactive, a non object, or an object than shouldn't be made reactive just return it.
-  if (isR(data) || typeof data !== 'object' || !canReactiveWrap(data)) return data
+  if (isR(data) || typeof data !== 'object' || !canReactiveWrap(data))
+    return data
   // This is the observer registry itself, with properties as keys and callbacks as watchers.
   const observers: ReactiveProxyObservers = state.o || new Map()
   // This is a reverse map of observers with callbacks as keys and properties that callback is watching as values.
