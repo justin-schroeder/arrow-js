@@ -325,8 +325,14 @@ function arrayOperation(
     case 'fill':
       return (...args: any[]) => synthetic(...args.map((arg) => r(arg)))
     case 'splice':
-      return (start: number, remove?: number, ...inserts: any[]) =>
-        synthetic(start, remove, ...inserts.map((arg) => r(arg)))
+      return function (start: number, remove?: number, ...inserts: any[]) {
+        // Preserve the argument count when there's only one argument,
+        // because if a second argument is passed but undefined,
+        // it gets treated as 0.
+        return arguments.length === 1 ?
+          synthetic(start) :
+          synthetic(start, remove, ...inserts.map((arg) => r(arg)))
+      }
     default:
       return native
   }
