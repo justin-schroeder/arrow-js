@@ -3,6 +3,16 @@ import { html } from '@src/index'
 export default function () {
   return html`<h1 id="changelog">Changelog</h1>
     <section>
+      <h2>Alpha 10</h2>
+      <ul>
+        <li>
+          Fixes bug related to calling <code>Array.splice()</code> with a single
+          argument.
+        </li>
+        <li>
+          Fixes TypeScript return value for <code>ArrowTemplate.key()</code>.
+        </li>
+      </ul>
       <h2>Alpha 9</h2>
       <ul>
         <li>
