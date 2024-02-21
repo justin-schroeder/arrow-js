@@ -14,6 +14,98 @@ describe('reactive', () => {
     expect(data.x).toBe('foo')
   })
 
+  it('allows setting HTMLElement and NodeList without making them reactive', async () => {
+    const buttonClickHandler = vi.fn()
+    document.body.innerHTML = `<button data-testid="button">123</button>`
+    document.querySelector('button')!.onclick = buttonClickHandler
+
+    const data = reactive({
+      button: document.querySelector('button'),
+      buttons: document.querySelectorAll('button'),
+    })
+
+    // maintains property access
+    expect(data.button!.dataset.testid).toEqual('button')
+    expect(data.buttons.length).toEqual(1)
+
+    // references are to the correct DOM node
+    data.button!.click()
+    expect(buttonClickHandler).toHaveBeenCalledTimes(1)
+    data.buttons[0]!.click()
+    expect(buttonClickHandler).toHaveBeenCalledTimes(2)
+
+    const buttonPropertyWatcher = vi.fn()
+    data.$on('button', buttonPropertyWatcher)
+    data.$on('buttons', buttonPropertyWatcher)
+
+    // ensure the properties are not reactive
+    data.button!.autofocus = true
+    data.buttons[0].autofocus = true
+    await nextTick()
+    expect(buttonPropertyWatcher).not.toHaveBeenCalled()
+  })
+
+  it('allows updating a reactive field to a non-reactive HTMLElement/NodeList', async () => {
+    const buttonClickHandler = vi.fn()
+    document.body.innerHTML = `<button>123</button>`
+    document.querySelector('button')!.onclick = buttonClickHandler
+
+    const data = reactive({
+      button: {},
+      buttons: [],
+    })
+    data.button = document.querySelector('button')
+    data.buttons = document.querySelectorAll('button')
+
+    // check the references are to the correct DOM node
+    data.button!.click()
+    expect(buttonClickHandler).toHaveBeenCalledTimes(1)
+    data.buttons[0]!.click()
+    expect(buttonClickHandler).toHaveBeenCalledTimes(2)
+
+    const buttonPropertyWatcher = vi.fn()
+    data.$on('button', buttonPropertyWatcher)
+    data.$on('buttons', buttonPropertyWatcher)
+
+    // ensure the properties are not reactive
+    data.button!.autofocus = true
+    data.buttons[0].autofocus = true
+    await nextTick()
+    expect(buttonPropertyWatcher).not.toHaveBeenCalled()
+  })
+
+  it('common collection types', async () => {
+    const data = reactive({
+      map: new Map(),
+      set: new Set(),
+      weakMap: new WeakMap(),
+      weakSet: new WeakSet(),
+    })
+
+    expect(data.map.size).toEqual(0)
+    expect(data.set.size).toEqual(0)
+    expect(data.weakMap.size).toEqual(undefined)
+    expect(data.weakSet.size).toEqual(undefined)
+
+    const mockWatcher = vi.fn()
+    data.$on('map', mockWatcher)
+    data.$on('set', mockWatcher)
+    data.$on('weakSet', mockWatcher)
+    data.$on('weakMap', mockWatcher)
+
+    data.map.set('a', '123')
+    data.set.add('a')
+    data.weakMap.set(data.map, '123')
+    data.weakSet.add(data.map, '123')
+
+    // 'Map', 'Set', 'WeakMap', 'WeakSet' are not supported for watch yet
+    expect(mockWatcher).toHaveBeenCalledTimes(0)
+
+    expect(data.map.size).toEqual(1)
+    expect(data.set.size).toEqual(1)
+    expect(data.weakMap.get(data.map)).toEqual('123')
+  })
+
   it('can record dependencies', async () => {
     const data = reactive({
       a: 'foo',
