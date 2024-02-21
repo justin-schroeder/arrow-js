@@ -50,13 +50,13 @@ export function isR<T = DataSource>(obj: unknown): obj is ReactiveProxy<T> {
  * Examples of objects that cause issues: NodeList, HTMLElement
  * @see {@link https://github.com/vuejs/core/blob/8998afa42755cbdb3403cd6c0fe158980da8492c/packages/reactivity/src/reactive.ts#L43-L62}
  */
-export function canReactiveWrap(maybeObj: any): boolean {
-  return ['Object', 'Array'].includes(
-    // from https://github.com/vuejs/core/blob/8998afa42755cbdb3403cd6c0fe158980da8492c/packages/shared/src/general.ts#L64-L67
-    // extracts "Type" from "[object Type]"
-    Object.prototype.toString.call(maybeObj).slice(8, -1)
-  )
-}
+// export function canReactiveWrap(maybeObj: any): boolean {
+//   return ['Object', 'Array'].includes(
+//     // from https://github.com/vuejs/core/blob/8998afa42755cbdb3403cd6c0fe158980da8492c/packages/shared/src/general.ts#L64-L67
+//     // extracts "Type" from "[object Type]"
+//     Object.prototype.toString.call(maybeObj).slice(8, -1)
+//   )
+// }
 
 export function isReactiveFunction(
   fn: CallableFunction
