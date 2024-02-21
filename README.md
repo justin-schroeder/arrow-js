@@ -1,4 +1,5 @@
-# <img src="./docs/img/logo.png#gh-light-mode-only" width="200" alt="ArrowJS logo" /><img src="./docs/img/logo-invert.png#gh-dark-mode-only" width="200" alt="ArrowJS logo" />
+![ArrowJS Logo](./docs/img/logo.png#gh-light-mode-only)
+![ArrowJS Logo](./docs/img/logo-invert.png#gh-dark-mode-only)
 
 ![test badge](https://github.com/justin-schroeder/arrow-js/actions/workflows/tests.yml/badge.svg)
 ![size badge](https://img.badgesize.io/https://cdn.jsdelivr.net/npm/@arrow-js/core@latest/dist/index.min.mjs.svg?compression=brotli)
