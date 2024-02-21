@@ -301,4 +301,11 @@ describe('reactive', () => {
     await nextTick()
     expect(callback.mock.calls[2][0]).toBe(500)
   })
+
+  it('should preserve argument count for splice', () => {
+    const data = reactive([1, 2, 3, 4, 5])
+    const tail = data.splice(2)
+    expect(data).toEqual([1, 2])
+    expect(tail).toEqual([3, 4, 5])
+  })
 })
