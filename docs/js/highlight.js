@@ -1,3 +1,5 @@
+import { codeToHtml } from 'https://esm.sh/shiki@1.1.6'
+
 export default async function () {
   const langs = {
     javascript: 'js',
@@ -5,17 +7,22 @@ export default async function () {
     html: 'html',
   }
 
-  const highlighter = await shiki.getHighlighter({
-    theme: 'css-variables',
-    langs: ['js', 'html', 'shell'],
-  })
   const codeBlocks = document.querySelectorAll('pre code[class*="language-"]')
-
-  codeBlocks.forEach((block) => {
-    const lang = block.className.replace('language-', '')
-    const html = highlighter.codeToHtml(block.textContent, {
-      lang: langs[lang] || lang,
-    })
-    block.innerHTML = html
+  const observer = new window.MutationObserver(theme)
+  observer.observe(document.documentElement, {
+    attributes: true,
+    subtree: false,
   })
+  function theme() {
+    const colorMode = document.documentElement.getAttribute('data-theme')
+    codeBlocks.forEach(async (block) => {
+      const lang = block.className.replace('language-', '')
+      const html = await codeToHtml(block.textContent, {
+        theme: colorMode === 'light' ? 'github-light' : 'monokai',
+        lang: langs[lang] || lang,
+      })
+      block.innerHTML = html
+    })
+  }
+  theme()
 }
