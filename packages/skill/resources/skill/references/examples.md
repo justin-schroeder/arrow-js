@@ -50,6 +50,35 @@ export function routeToPage(url: string) {
 }
 ```
 
+## Disclosure with reactive ARIA
+
+```ts
+import { html, reactive } from '@arrow-js/core'
+
+const state = reactive({ open: false })
+
+html`
+  <button
+    aria-expanded="${() => (state.open ? 'true' : 'false')}"
+    aria-controls="panel"
+    @click="${() => (state.open = !state.open)}"
+  >
+    Details
+  </button>
+  <div id="panel" hidden="${() => !state.open}">…</div>
+`
+```
+
+## Live region
+
+```ts
+import { html, reactive } from '@arrow-js/core'
+
+const status = reactive({ message: '' })
+
+html`<div role="status">${() => status.message}</div>`
+```
+
 ## SSR + hydration
 
 ```ts
