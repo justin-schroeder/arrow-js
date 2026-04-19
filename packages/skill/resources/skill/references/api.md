@@ -15,6 +15,9 @@ Use this reference when you need the main runtime semantics quickly.
 - `${() => data.foo}` stays live.
 - Return arrays of templates to render lists.
 - Use `.key(...)` when DOM identity must survive reorders.
+- **Attribute expressions must be the entire attribute value.** Partial interpolation like `id="tab-${key}"` throws `Invalid HTML position`.
+  - Precompute: `const tabId = \`tab-${key}\`` → `id="${tabId}"`. Applies to class, `data-*`, hrefs, etc.
+  - Text slots (`<span>tab-${key}</span>`) are unaffected.
 
 ## `component()`
 
