@@ -14,7 +14,10 @@ Use this reference when you need the main runtime semantics quickly.
 - `${data.foo}` is static.
 - `${() => data.foo}` stays live.
 - Return arrays of templates to render lists.
+  - Reactive lists need a callable wrap: `${() => items.map(item => html\`...\`.key(item.id))}`. A bare `${items.map(...)}` renders once.
 - Use `.key(...)` when DOM identity must survive reorders.
+- Event handlers must be assignable to `EventListener`.
+  - Narrower TS signatures like `(e: KeyboardEvent) => void` fail typecheck — Widen and cast inside: `const onKey: EventListener = (e) => { const key = (e as KeyboardEvent).key; ... }`.
 - **Attribute expressions must be the entire attribute value.** Partial interpolation like `id="tab-${key}"` throws `Invalid HTML position`.
   - Precompute: `const tabId = \`tab-${key}\`` → `id="${tabId}"`. Applies to class, `data-*`, hrefs, etc.
   - Text slots (`<span>tab-${key}</span>`) are unaffected.
