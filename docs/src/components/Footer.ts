@@ -16,6 +16,14 @@ export function Footer() {
           >
             Standard Agents</a
           >. Open Source under MIT.
+          <a
+            href="https://www.wearebraid.com"
+            class="hover:text-arrow-500 transition-colors"
+            target="_blank"
+            rel="noopener"
+          >
+            Site by Braid</a
+          >.
         </p>
         <div class="flex items-center gap-6">
           <a
