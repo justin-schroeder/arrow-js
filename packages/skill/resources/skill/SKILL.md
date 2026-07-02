@@ -14,6 +14,7 @@ Use this skill when the project uses Arrow packages such as `@arrow-js/core`, `@
    - Getting started / scaffold shape: `references/getting-started.md`
    - API surface and package split: `references/api.md`
    - Common patterns and examples: `references/examples.md`
+   - Accessibility principles and APG index: `references/accessibility.md`
 3. Prefer idiomatic Arrow:
    - `reactive()` for state
    - `html` tagged templates for DOM
@@ -28,6 +29,7 @@ Use this skill when the project uses Arrow packages such as `@arrow-js/core`, `@
 - Pass reactive state directly as component props unless narrowing is clearly needed.
 - Compose views with nested templates and component calls instead of imperative DOM work.
 - Keep no-build Arrow honest. Avoid introducing benchmark-only patterns or unnecessary compiler assumptions.
+- Semantic HTML first; reactive `aria-*` needs callable expressions. See `references/accessibility.md` before building interactive widgets.
 - In framework apps, remember the package split:
   - `@arrow-js/core`: reactive state, templates, components, watch
   - `@arrow-js/framework`: render, async component runtime, boundary
@@ -39,3 +41,4 @@ Use this skill when the project uses Arrow packages such as `@arrow-js/core`, `@
 - `references/getting-started.md`
 - `references/api.md`
 - `references/examples.md`
+- `references/accessibility.md`
